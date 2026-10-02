@@ -1,1 +1,1 @@
-# Sistema-de-Gesti-n-de-Recursos-Alimentarios-
+. # Sistema-de-Gesti-n-de-Recursos-Alimentarios-
