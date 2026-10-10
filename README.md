@@ -9,6 +9,7 @@ Plataforma orientada a mitigar el desperdicio de alimentos y productos consumibl
 - `data/`: Conjuntos de datos y archivos de prueba (CSVs, JSONs).
 - `tests/`: Pruebas unitarias y de integración.
 
+![Google Gemini](https://img.shields.io/badge/google%20gemini-%238E75B2.svg?style=for-the-badge&logo=google%20gemini&logoColor=white)
 ## Requisitos e Instalación
 
 1. Clonar el repositorio:
