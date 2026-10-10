@@ -18,19 +18,17 @@
 
 ##  Descripción
 
-- `src/`: Código fuente del sistema (modelos, controladores, vistas y utilidades).
-- `docs/`: Documentación técnica, requerimientos y diagramas de arquitectura/UML.
-- `data/`: Conjuntos de datos y archivos de prueba (CSVs, JSONs).
-- `tests/`: Pruebas unitarias y de integración.
+- Proyecto Integrador desarrollado en la Universidad del Valle de México (UVM) - Campus Reforma, para la carrera de Ingeniería en Sistemas Computacionales, cursando el tercer semestre en Programación Orientada a Objetos, impartida por el profesor César Antonio Ríos Olivares.
+
 
 ---
 
 ##  Características Principales
 
--  **Rendimiento y velocidad:** Implementación optimizada con C++.
--  **Integración inteligente:** Procesamiento y desarrollo mediante Google Gemini.
--  **Interfaz intuitiva:** Experiencia de usuario limpia y accesible.
--  **Manejo de flujos de trabajo:** Gestión y estructuración de datos en tiempo real.
+-  **Implementación optimizada con C++**
+-  **Procesamiento y desarrollo mediante Google Gemini**
+-  **Experiencia de usuario limpia y accesible**
+-  **Gestión y estructuración de datos en tiempo real**
 
 ---
 
