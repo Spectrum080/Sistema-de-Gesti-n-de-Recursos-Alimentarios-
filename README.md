@@ -18,7 +18,7 @@
 
 ##  Descripción
 
-- Proyecto Integrador desarrollado en la Universidad del Valle de México (UVM) - Campus Reforma, para la carrera de Ingeniería en Sistemas Computacionales, cursando el tercer semestre en Programación Orientada a Objetos, impartida por el profesor César Antonio Ríos Olivares.
+- Proyecto Integrador desarrollado en la Universidad del Valle de México <img src="https://img.shields.io/badge/UVM-E31B23?style=for-the-badge" alt="UVM" /> - Campus Reforma, para la carrera de Ingeniería en Sistemas Computacionales, cursando el tercer semestre en Programación Orientada a Objetos, impartida por el profesor César Antonio Ríos Olivares.
 
 
 ---
