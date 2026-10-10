@@ -10,6 +10,7 @@ Plataforma orientada a mitigar el desperdicio de alimentos y productos consumibl
 - `tests/`: Pruebas unitarias y de integración.
 
 ![Google Gemini](https://img.shields.io/badge/google%20gemini-%238E75B2.svg?style=for-the-badge&logo=google%20gemini&logoColor=white)
+![C++](https://img.shields.io/badge/c%2B%2B-%2300599C.svg?style=for-the-badge&logo=cplusplus&logoColor=white)
 ## Requisitos e Instalación
 
 1. Clonar el repositorio:
