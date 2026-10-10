@@ -38,8 +38,8 @@
 
 | Categoría | Tecnología |
 | :--- | :--- |
-| **Lenguaje Core** | `C++` (Lógica y rendimiento) |
-| **Inteligencia Artificial** | `Google Gemini API` |
+| **Lenguaje Core** | `C++` |
+| **Inteligencia Artificial** | `Google Gemini` |
 | **Control de Versiones** | `Git` & `GitHub` |
 
 ---
