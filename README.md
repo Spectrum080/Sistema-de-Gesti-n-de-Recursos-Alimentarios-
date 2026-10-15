@@ -26,7 +26,7 @@
 
 ##  Características Principales
 
--  **Implementación optimizada con C++**
+-  **Implementación optimizada con DJANGO**
 -  **Procesamiento y desarrollo mediante Google Gemini**
 -  **Experiencia de usuario limpia y accesible**
 -  **Gestión y estructuración de datos en tiempo real**
