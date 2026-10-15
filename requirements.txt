@@ -1,1 +1,14 @@
+# Framework Web
+Django>=5.0,<6.0
 
+# SDK Oficial de Google Gemini
+google-generativeai>=0.8.0
+
+# Manejo de variables de entorno (.env) para llaves de API y SECRET_KEY
+python-dotenv>=1.0.1
+
+# Manejo de imágenes (si subes fotos de alimentos o perfiles con ImageField)
+Pillow>=10.2.0
+
+# Soporte para peticiones HTTP y utilidades
+requests>=2.31.0
