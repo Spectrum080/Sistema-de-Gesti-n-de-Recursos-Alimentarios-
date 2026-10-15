@@ -37,7 +37,7 @@
 
 | Categoría | Tecnología |
 | :--- | :--- |
-| **Lenguaje Core** | `C++` |
+| **Lenguaje Core** | `Python` |
 | **Inteligencia Artificial** | `Google Gemini` |
 | **Control de Versiones** | `Git` & `GitHub` |
 
