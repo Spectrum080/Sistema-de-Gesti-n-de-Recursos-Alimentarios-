@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Login{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"> <!-- Estilo de letra o fuente sacada de api google fonts -->
+</head>
+<body style="margin:0; font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+
+<div style="width:100%; min-height:100vh; display:flex;"> <!-- contenedor principal -->
+
+
+    <!-- PANEL IZQUIERDO -->
+<div style="width:30%; box-sizing:border-box; padding:56px; position:relative; overflow:hidden; background:linear-gradient(160deg,#8aa0ff 0%,#7287fe 45%,#5a6ded 100%); display:flex; flex-direction:column; justify-content:space-between; gap:32px;">
+
+    <!-- Círculos decorativos de fondo -->
+    <div style="position:absolute; top:-120px; right:-120px; width:340px; height:340px; border-radius:50%; background:rgba(255,255,255,0.14); filter:blur(8px);"></div>
+    <div style="position:absolute; bottom:-160px; left:-100px; width:400px; height:400px; border-radius:50%; background:rgba(40,50,160,0.28); filter:blur(30px);"></div>
+    
+    <!-- Logo -->
+    <div style="position:relative;">
+        <div style="display:inline-block; border-radius:18px; overflow:hidden; border:1px solid rgba(255,255,255,0.35); box-shadow:0 10px 28px rgba(30,40,120,0.28);">
+            <img src="{% static 'users/img/logo.jpg' %}" alt="Hambre Cero" style="display:block; width:140px; height:auto;">
+        </div>
+    </div>
+
+    <!-- Información -->
+    <div style="position:relative;">
+        <p style="font-size:42px; line-height:1.15; font-weight:800; letter-spacing:-0.5px; color:#fff; margin:0 0 18px; max-width:480px;">Conecta y gestiona los recursos alimentarios</p>
+        <p style="font-size:17px; line-height:1.7; color:rgba(255,255,255,0.9); margin:0 0 26px; max-width:440px;">Plataforma inteligente para canalizar excedentes de comida en tiempo real con quienes más lo necesitan.</p>
+
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <span style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); border-radius:999px; padding:8px 16px; font-size:13px; font-weight:600; color:#fff;">Tiempo real</span>
+            <span style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); border-radius:999px; padding:8px 16px; font-size:13px; font-weight:600; color:#fff;">Cero desperdicio</span>
+            <span style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); border-radius:999px; padding:8px 16px; font-size:13px; font-weight:600; color:#fff;">Impacto social</span>
+        </div>
+    </div>
+
+    <!-- Imagen -->
+    <div style="position:relative; text-align:center;">
+        <img src="{% static 'users/img/ImgRecurso.jpg' %}" alt="Ilustración" style="display:block; width:100%; max-width:320px; height:auto; margin:0 auto; border-radius:16px;">
+    </div>
+</div>
+   
+{% block contenido %}
+    <!-- PANEL DERECHO: LOGIN -->
+    <div style="width:70%; box-sizing:border-box; padding:50px; background:#fcfcfe; display:flex; align-items:center; justify-content:center;">
+
+        <main style="width:100%; max-width:440px; color:#2b3044;">
+            <h1 style="font-size:2.4rem; font-weight:800; margin:0 0 8px;">Iniciar sesión</h1>
+            <p style="font-size:0.9rem; color:#6b7084; margin:0 0 36px;">Ingresa tus datos para continuar</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% if form.errors %}
+        <p style="color:#e5484d; font-size:0.85rem; margin:0 0 20px;">Usuario o contraseña incorrectos.</p>
+    {% endif %}
+
+    <!-- Username -->
+    <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Usuario</span>
+        <input type="text" name="username" required placeholder="Ingresa tu usuario" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+    </label>
+
+    <!-- Password -->
+    <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Contraseña</span>
+        <input type="password" name="password" required placeholder="••••••••" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+    </label>
+
+    <!-- Remember me / Forgot password -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin:8px 0 32px; font-size:0.82rem;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:22px; height:22px; border-radius:6px; background:#7287fe; display:grid; place-items:center;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            Recordarme
+        </div>
+        <a href="{% url 'reset_password' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">¿Olvidaste tu contraseña?</a>
+    </div>
+
+    <!-- Botón -->
+    <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">Ingresar</button>
+</form>
+
+
+            <!-- Separador -->
+            <div style="display:flex; align-items:center; gap:14px; margin:32px 0 26px; font-size:0.82rem; color:#6b7084;">
+                <div style="flex:1; height:1px; background:#e4e7f2;"></div>
+                ó
+                <div style="flex:1; height:1px; background:#e4e7f2;"></div>
+            </div>
+
+            <!-- Redes sociales -->
+            <div style="display:flex; justify-content:center; gap:18px; margin-bottom:28px;">
+                <button type="button" aria-label="Continuar con Facebook" style="width:54px; height:54px; border-radius:50%; border:none; background:#fff; display:grid; place-items:center; cursor:pointer; box-shadow:0 8px 22px rgba(60,70,120,0.12);">
+                    <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1877f2"/><path fill="#fff" d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.5 1.6-1.5h1.7V4.4c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2v2.3H7.6V14h2.7v8z"/></svg>
+                </button>
+                <!-- <button type="button" aria-label="Continuar con Google" style="width:54px; height:54px; border-radius:50%; border:none; background:#fff; display:grid; place-items:center; cursor:pointer; box-shadow:0 8px 22px rgba(60,70,120,0.12);">
+                    <svg width="26" height="26" viewBox="0 0 48 48"><path fill="#ea4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285f4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#fbbc05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34a853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+                </button> -->
+            </div>
+
+            <p style="text-align:center; font-size:0.82rem; margin:0;">Todavía no tienes cuenta? <a href="{% url 'Sing_up' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">Crear una cuenta</a></p>
+        </main>
+        
+    </div>
+{% endblock %}
+</div>
+
+</body>
+
+</html>

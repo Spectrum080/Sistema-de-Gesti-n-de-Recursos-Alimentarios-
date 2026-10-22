@@ -1,0 +1,54 @@
+{% extends "users/login.html" %}
+{% load static %}
+
+{% block title %}Sign up{% endblock %}
+
+{% block contenido %}
+<div style="width:70%; box-sizing:border-box; padding:50px; background:#fcfcfe; display:flex; align-items:center; justify-content:center;">
+<main style="width:100%; max-width:440px; color:#2b3044;">
+    <h1 style="font-size:2.4rem; font-weight:800; margin:0 0 8px;">Registrarse</h1>
+    <p style="font-size:0.9rem; color:#6b7084; margin:0 0 36px;">Crea una cuenta nueva para continuar</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Campo Usuario para Registro -->
+        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Usuario</span>
+            <input type="text" name="username" required placeholder="nombre de usuario" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+
+        <select id="paises" name="paises" style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <option value="Donante">Donante</option>
+            <option value="Receptor">Receptor</option>
+        </select>
+
+        <!-- Campo Email para Registro -->
+        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Email</span>
+            <input type="email" name="email" required placeholder="correo@ejemplo.com" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+
+        <!-- Campo Password para Registro -->
+        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:32px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Contraseña</span>
+            <input type="password" name="password" required placeholder="••••••••" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+
+        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:32px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Confirmar contraseña</span>
+            <input type="password" name="confirm_password" required placeholder="••••••••" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+        <!-- Botón de Registro -->
+        <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">Crear cuenta</button>
+    </form>
+        <div style="display:flex; align-items:center; gap:14px; margin:32px 0 26px; font-size:0.82rem; color:#6b7084;">
+                <div style="flex:1; height:1px; background:#e4e7f2;"></div>
+                ó
+                <div style="flex:1; height:1px; background:#e4e7f2;"></div>
+            </div>
+
+    <p style="text-align:center; font-size:0.82rem; margin-top:28px;">¿Ya tienes cuenta? <a href="{% url 'login' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">Inicia sesión</a></p>
+</main> 
+</div>
+{% endblock %}
