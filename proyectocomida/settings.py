@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'users',
+    'alertas',
 ]
 
 AUTH_USER_MODEL = 'users.Usuario'
@@ -131,5 +132,5 @@ MAILERS = {
 }
 
 LOGIN_URL = '/users/login/'
-LOGIN_REDIRECT_URL = '/users/dashboard/'
-LOGOUT_REDIRECT_URL = '/users/login/'
+LOGIN_REDIRECT_URL = '/users/dashboard/' # a dónde va después de iniciar sesión
+LOGOUT_REDIRECT_URL = '/users/login/' # a dónde va después de cerrar sesión

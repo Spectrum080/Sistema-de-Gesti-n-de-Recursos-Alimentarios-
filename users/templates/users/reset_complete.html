@@ -1,0 +1,11 @@
+{% extends "users/login.html" %}
+{% block title %}Contraseña cambiada{% endblock %}
+{% block contenido %}
+<div style="width:70%; padding:50px; background:#fcfcfe; display:flex; align-items:center; justify-content:center;">
+<main style="width:100%; max-width:440px; color:#2b3044;">
+    <h1 style="font-size:2.4rem; font-weight:800; margin:0 0 8px;">¡Listo!</h1>
+    <p style="font-size:0.9rem; color:#6b7084;">Tu contraseña fue cambiada.</p>
+    <p style="margin-top:28px;"><a href="{% url 'login' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">Iniciar sesión</a></p>
+</main>
+</div>
+{% endblock %}

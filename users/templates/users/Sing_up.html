@@ -11,17 +11,15 @@
 
     <form method="post">
         {% csrf_token %}
+        {% for m in messages %}
+        <p style="color:#e5484d; font-size:0.85rem;">{{ m }}</p>
+        {% endfor %}
 
         <!-- Campo Usuario para Registro -->
         <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
             <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Usuario</span>
             <input type="text" name="username" required placeholder="nombre de usuario" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
         </label>
-
-        <select id="paises" name="paises" style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-            <option value="Donante">Donante</option>
-            <option value="Receptor">Receptor</option>
-        </select>
 
         <!-- Campo Email para Registro -->
         <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
@@ -39,6 +37,13 @@
             <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Confirmar contraseña</span>
             <input type="password" name="confirm_password" required placeholder="••••••••" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
         </label>
+
+        <select id="UserTypes" name="UserTypes" required style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; width:100%; border:none; outline:none; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; color:#6b7084;">
+            <option value="" disabled selected hidden>Seleccionar tipo de usuario</option>
+            <option value="Donante">Donante</option>
+            <option value="Receptor">Receptor</option>
+        </select>
+
         <!-- Botón de Registro -->
         <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">Crear cuenta</button>
     </form>

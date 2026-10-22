@@ -1,0 +1,33 @@
+{% extends "users/login.html" %}
+{% block title %}Nueva contraseña{% endblock %}
+{% block contenido %}
+<div style="width:70%; padding:50px; background:#fcfcfe; display:flex; align-items:center; justify-content:center;">
+<main style="width:100%; max-width:440px; color:#2b3044;">
+{% if validlink %}
+    <h1 style="font-size:2.4rem; font-weight:800; margin:0 0 8px;">Nueva contraseña</h1>
+    <p style="font-size:0.9rem; color:#6b7084; margin:0 0 36px;">Escribe tu nueva contraseña</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for error in form.new_password2.errors %}
+          <p style="color:#e5484d; font-size:0.85rem;">{{ error }}</p>
+        {% endfor %}
+
+        <label style="display:block; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Nueva contraseña</span>
+            <input type="password" name="new_password1" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+        <label style="display:block; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:32px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Confirmar contraseña</span>
+            <input type="password" name="new_password2" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+        <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">Guardar contraseña</button>
+    </form>
+{% else %}
+    <h1 style="font-size:2rem; font-weight:800;">Enlace inválido</h1>
+    <p style="font-size:0.9rem; color:#6b7084;">El enlace ya se usó o expiró.</p>
+    <p style="margin-top:28px;"><a href="{% url 'reset_password' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">Solicitar uno nuevo</a></p>
+{% endif %}
+</main>
+</div>
+{% endblock %}
