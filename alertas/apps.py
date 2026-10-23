@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class AlertasConfig(AppConfig):
-    name = 'Alertas'
+class alertasConfig(AppConfig):
+    name = 'alertas'
