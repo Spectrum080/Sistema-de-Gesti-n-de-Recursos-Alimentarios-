@@ -1,3 +1,5 @@
+from django.http import request
 from django.shortcuts import render
 
-# Create your views here.
+def consultarDonaciones(request):
+    return render(request, 'alertas/consultarDonaciones.html')
