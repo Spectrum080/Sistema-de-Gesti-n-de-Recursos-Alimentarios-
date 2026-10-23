@@ -5,6 +5,11 @@ from .models import Usuario, Donante, Receptor
 
 @login_required
 def dashboard(request):
+    context = {
+        'total_donaciones': 2,
+        'peso_total': '35 KG',
+        'estatus': 'ACTIVO',
+    }
     return render(request, 'users/dashboard.html')
 
 def Sing_up(request):
