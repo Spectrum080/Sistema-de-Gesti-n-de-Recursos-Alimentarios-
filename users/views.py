@@ -4,13 +4,38 @@ from django.contrib.auth.decorators import login_required
 from .models import Usuario, Donante, Receptor
 
 @login_required
-def dashboard(request):
+def dashboard_unificado(request):
+    # Verificamos si la instancia de Usuario tiene un perfil Donante asignado
+    if hasattr(request.user, 'donante'):
+        return redirect('dashboardDonante')
+    
+    # Verificamos si tiene un perfil Receptor asignado
+    elif hasattr(request.user, 'receptor'):
+        return redirect('dashboardReceptor')
+    
+    # Verificamos si es Administrador o Superusuario
+    elif hasattr(request.user, 'administrador') or request.user.is_superuser:
+        return redirect('admin:index') # O tu ruta de dashboard de admin
+    
+    else:
+        messages.error(request, 'El usuario no tiene un rol o tipo asignado.')
+        return redirect('login')
+    
+def dashboardDonante(request):
     context = {
         'total_donaciones': 2,
         'peso_total': '35 KG',
         'estatus': 'ACTIVO',
     }
-    return render(request, 'users/dashboard.html')
+    return render(request, 'users/dashboardDonante.html', context)
+
+@login_required
+def dashboardReceptor(request):
+    return render(request, 'users/dashboardReceptor.html')
+
+
+
+
 
 def Sing_up(request):
     if request.method == 'POST':

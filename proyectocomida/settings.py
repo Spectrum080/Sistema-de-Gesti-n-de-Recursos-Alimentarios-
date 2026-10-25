@@ -132,5 +132,5 @@ MAILERS = {
 }
 
 LOGIN_URL = '/users/login/'
-LOGIN_REDIRECT_URL = '/users/dashboard/' # a dónde va después de iniciar sesión
+LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = '/users/login/' # a dónde va después de cerrar sesión

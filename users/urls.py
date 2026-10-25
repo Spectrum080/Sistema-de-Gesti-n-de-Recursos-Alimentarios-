@@ -6,7 +6,9 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('Sing_up/', views.Sing_up, name='Sing_up'),
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/', views.dashboard_unificado, name='dashboard'),
+    path('dashboardDonante/', views.dashboardDonante, name='dashboardDonante'),
+    path('dashboardReceptor/', views.dashboardReceptor, name='dashboardReceptor'),
     
     # Rutas para restablecer contraseña
     path('reset_password/', 
