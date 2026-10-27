@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>perfil</title>
+</head>
+<body style="margin:0; padding:44px 50px; background:hsl(210, 100%, 100%); color:hsl(229, 23%, 23%); text-align:center;">
+    <h1 style="font-size:1.9rem; font-weight:800; margin:0 0 6px;">Mi perfil</h1>
+    <p style="font-size:0.88rem; color:hsl(227, 10%, 46%); margin:0 0 30px;">Bienvenido, {{ user.username }}!</p>
+    <table style="width:460px; margin:0 auto; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+        <thead>
+            <tr>
+                <th style="padding:14px 16px; border:1px solid hsl(240, 7%, 95%); font-size:0.75rem; text-transform:uppercase; color:#6b7084;">dato</th>
+                <th style="padding:14px 16px; border:1px solid hsl(225, 13%, 94%); font-size:0.75rem; text-transform:uppercase; color:#6b7084;">valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding:16px; border:1px solid hsl(240, 17%, 98%); font-weight:700;">usuario</td>
+                <td style="padding:16px; border:1px solid hsl(0, 0%, 96%); font-weight:600;">{{ user.username }}</td>
+            </tr>
+            <tr>
+                <td style="padding:16px; border:1px solid hsl(220, 10%, 94%); font-weight:700;">correo</td>
+                <td style="padding:16px; border:1px solid hsl(228, 20%, 95%); font-weight:600;">{{ user.email|default:"sin correo" }}</td>
+            </tr>
+            <tr>
+                <td style="padding:16px; border:1px solid hsl(228, 14%, 93%); font-weight:700;">tipo de cuenta</td>
+                <td style="padding:16px; border:1px solid hsl(220, 8%, 93%); font-weight:600;">{% if user.donante %}Donante{% elif user.receptor %}Receptor{% else %}Administrador{% endif %}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" style="padding:16px; border:1px solid hsl(229, 20%, 89%); text-align:center; color:#6b7084; font-weight:600;">hambre cero</td>
+            </tr>
+        </tfoot>
+    </table>
+    <br>
+    <a href="{% url 'dashboard' %}" style="color:hsl(231, 79%, 72%); font-weight:700; text-decoration:none;">volver</a>
+</body>
+</html>
