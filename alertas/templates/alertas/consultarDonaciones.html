@@ -1,33 +1,26 @@
-<!-- HERENCIA DE LA PLANTILLA PRINCIPAL -->
-{% extends 'users/dashboardDonante.html' %}
+{% extends 'users/dashboard.html' %}
 
-<!-- TÍTULO DE LA PESTAÑA -->
 {% block title %}Consultar Donaciones - Hambre Cero{% endblock %}
 
-<!-- CONTENIDO PRINCIPAL -->
-{% block content %}
+{% block contenido %}
 
 <!-- ENCABEZADO Y DESCRIPCIÓN -->
 <div style="margin-bottom: -16px;">
-    <h1 style="font-size:2rem; font-weight:800; margin:0 0 4px; color:#2b3044;">Consultar Donaciones</h1>
-    <p style="font-size:0.9rem; color:#6b7084; margin:0;">Consulta general de donaciones registradas</p>
+    <h1 class="txt-principal" style="font-size:2rem; font-weight:800; margin:0 0 4px; color:#2b3044;">Consultar Donaciones</h1>
+    <p class="txt-secundario" style="font-size:0.9rem; color:#6b7084; margin:0;">Consulta general de donaciones registradas</p>
 </div>
 
 <!-- CONTENEDORA DE TABLA -->
-<div style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); box-sizing:border-box;">
+<div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); box-sizing:border-box;">
 
-    <!-- ENCABEZADO -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Registro de Donaciones</h2>
+        <h2 class="txt-principal" style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Registro de Donaciones</h2>
     </div>
 
-    <!-- TABLA -->
     <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
-
-            <!-- ENCABEZADOS DE COLUMNAS -->
             <thead>
-                <tr style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
+                <tr class="linea-divisoria txt-secundario" style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
                     <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">ID</th>
                     <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Donante</th>
                     <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Alimento</th>
@@ -37,20 +30,17 @@
                 </tr>
             </thead>
 
-            <!-- CUERPO DE LA TABLA -->
             <tbody>
-                <!-- DONACIONES -->
                 {% for d in donaciones %}
-                <tr style="border-bottom:1px solid #f4f6fb;">
+                <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
                     <td style="padding:16px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
-                    <td style="padding:16px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
-                    <td style="padding:16px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
-                    <td style="padding:16px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
                     <td style="padding:16px;">
-                        <span style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">{{ d.tipo }}</span>
+                        <span class="elem-gris" style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">{{ d.tipo }}</span>
                     </td>
                     <td style="padding:16px;">
-                        <!-- ESTADO DINÁMICO -->
                         {% if d.estado == 'Recibido' or d.estado == 'Activa' %}
                             <span style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
                         {% else %}
@@ -58,16 +48,14 @@
                         {% endif %}
                     </td>
                 </tr>
-
-                <!-- DATOS -->
                 {% empty %}
-                <tr style="border-bottom:1px solid #f4f6fb;">
+                <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
                     <td style="padding:16px; font-weight:800; color:#7287fe;">#001</td>
-                    <td style="padding:16px; font-weight:600; color:#2b3044;">Banco de Alimentos Regional</td>
-                    <td style="padding:16px; font-weight:700; color:#2b3044;">Despensas básicas</td>
-                    <td style="padding:16px; font-weight:700; color:#2b3044;">30 cajas</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">Banco de Alimentos Regional</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">Despensas básicas</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">30 cajas</td>
                     <td style="padding:16px;">
-                        <span style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">No perecedero</span>
+                        <span class="elem-gris" style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">No perecedero</span>
                     </td>
                     <td style="padding:16px;">
                         <span style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem;">Recibido</span>
@@ -75,11 +63,11 @@
                 </tr>
                 <tr>
                     <td style="padding:16px; font-weight:800; color:#7287fe;">#002</td>
-                    <td style="padding:16px; font-weight:600; color:#2b3044;">Supermercado Central</td>
-                    <td style="padding:16px; font-weight:700; color:#2b3044;">Enlatados y Leche</td>
-                    <td style="padding:16px; font-weight:700; color:#2b3044;">80 unidades</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">Supermercado Central</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">Enlatados y Leche</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">80 unidades</td>
                     <td style="padding:16px;">
-                        <span style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">No perecedero</span>
+                        <span class="elem-gris" style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">No perecedero</span>
                     </td>
                     <td style="padding:16px;">
                         <span style="background:#fef4e6; color:#e67e22; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem;">Pendiente</span>
