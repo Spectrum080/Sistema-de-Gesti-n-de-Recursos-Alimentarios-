@@ -1,56 +1,55 @@
-{% extends 'users/dashboardDonante.html' %}
+{% extends 'users/dashboard.html' %}
 
 {% block title %}Subir Donación - Hambre Cero{% endblock %}
 
-{% block content %}
+{% block contenido %}
 
 <div>
-    <h1 style="font-size:1.9rem; font-weight:800; margin:0 0 6px; color:#2b3044;">Subir Donación</h1>
-    <p style="font-size:0.88rem; color:#6b7084; margin:0;">Registra los alimentos excedentes para canalizarlos a un receptor.</p>
+    <h1 class="txt-principal" style="font-size:1.9rem; font-weight:800; margin:0 0 6px; color:#2b3044;">Subir Donación</h1>
+    <p class="txt-secundario" style="font-size:0.88rem; color:#6b7084; margin:0;">Registra los alimentos excedentes para canalizarlos a un receptor.</p>
 </div>
 
-<div style="width:100%; max-width:550px; background:#fff; padding:40px; border-radius:18px; box-shadow:0 10px 28px rgba(30,40,120,0.08); box-sizing:border-box;">
+<div class="caja-blanca" style="width:100%; max-width:550px; background:#fff; padding:40px; border-radius:18px; box-shadow:0 10px 28px rgba(30,40,120,0.08); box-sizing:border-box;">
 
     <form method="post" action="{% url 'cargarDonaciones' %}">
         {% csrf_token %}
 
         <!-- Título del Alimento -->
-        <label style="display:block; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Título del Alimento</span>
-            <input type="text" name="titulo" required placeholder="Ej. Charolas de comida, Frutas variadas..." style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        <label class="elem-gris" style="display:block; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Título del Alimento</span>
+            <input type="text" name="titulo" required placeholder="Ej. Charolas de comida, Frutas variadas..." class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
         </label>
 
         <!-- Tipo y Cantidad -->
         <div style="display:flex; gap:20px; margin-bottom:20px;">
-            <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:14px 20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Tipo</span>
-                <select name="tipo" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+            <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:14px 20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Tipo</span>
+                <select name="tipo" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
                     <option value="" disabled selected>Selecciona tipo</option>
-                    <option value="PERECEDERO">Perecedero</option>
-                    <option value="NO_PERECEDERO">No Perecedero</option>
+                    <option value="PERECEDERO" style="color:#2b3044;">Perecedero</option>
+                    <option value="NO_PERECEDERO" style="color:#2b3044;">No Perecedero</option>
                 </select>
             </label>
 
-            <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:14px 20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Cantidad</span>
-                <input type="text" name="cantidad" required placeholder="Ej. 10 kg, 5 cajas..." style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+            <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:14px 20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Cantidad</span>
+                <input type="text" name="cantidad" required placeholder="Ej. 10 kg, 5 cajas..." class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
             </label>
         </div>
 
         <!-- Fecha de Caducidad -->
-        <label style="display:block; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Fecha de Caducidad</span>
-            <input type="date" name="fecha_caducidad" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+        <label class="elem-gris" style="display:block; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Fecha de Caducidad</span>
+            <input type="date" name="fecha_caducidad" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
         </label>
 
         <!-- Detalles adicionales -->
-        <label style="display:block; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:32px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-            <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Detalles adicionales</span>
-            <textarea name="descripcion" rows="2" placeholder="Información extra (ej. requiere refrigeración)" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; resize:none;"></textarea>
-            <span style="display:block; font-size:0.68rem; color:#94a3b8; margin-top:6px; font-weight:500;">*Campo No Obligatorio</span>
+        <label class="elem-gris" style="display:block; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:32px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:6px; font-weight:600;">Detalles adicionales</span>
+            <textarea name="descripcion" rows="2" placeholder="Información extra (ej. requiere refrigeración)" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; resize:none;"></textarea>
+            <span class="txt-secundario" style="display:block; font-size:0.68rem; color:#94a3b8; margin-top:6px; font-weight:500;">*Campo No Obligatorio</span>
         </label>
 
-        <!-- Botón -->
         <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">
             Publicar Donación
         </button>
