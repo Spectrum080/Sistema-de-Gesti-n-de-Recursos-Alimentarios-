@@ -152,19 +152,19 @@
             
             {% block navegacion %}
             <div style="display:flex; flex-direction:column; gap:8px;">
-                {% if request.user.receptor or request.session.rol_activo == 'receptor' or request.resolver_match.url_name == 'dashboardReceptor' %}
+                {% if es_receptor or request.GET.rol == 'receptor' or request.resolver_match.url_name == 'dashboardReceptor' or request.user.receptor or request.session.rol_activo == 'receptor' and request.GET.rol != 'donante' and request.resolver_match.url_name != 'dashboardDonante' %}
                     <!-- BOTONES DE RECEPTOR -->
                     <a href="{% url 'dashboardReceptor' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboardReceptor' %}activo{% endif %}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                         Resumen
                     </a>
 
-                    <a href="{% url 'consultarDonaciones' %}" class="nav-link {% if request.resolver_match.url_name == 'consultarDonaciones' %}activo{% endif %}">
+                    <a href="{% url 'consultarDonaciones' %}?rol=receptor" class="nav-link {% if request.resolver_match.url_name == 'consultarDonaciones' %}activo{% endif %}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H4v12h8"></path><path d="M16 16l3 3 5-5"></path></svg>
                         Aceptar Donaciones
                     </a>
 
-                    <a href="{% url 'cargarDonaciones' %}" class="nav-link {% if request.resolver_match.url_name == 'cargarDonaciones' %}activo{% endif %}">
+                    <a href="{% url 'historialDonaciones' %}?rol=receptor" class="nav-link {% if request.resolver_match.url_name == 'historialDonaciones' %}activo{% endif %}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                         Historial de Donaciones
                     </a>
@@ -180,12 +180,12 @@
                         Resumen
                     </a>
 
-                    <a href="{% url 'consultarDonaciones' %}" class="nav-link {% if request.resolver_match.url_name == 'consultarDonaciones' %}activo{% endif %}">
+                    <a href="{% url 'consultarDonaciones' %}?rol=donante" class="nav-link {% if request.resolver_match.url_name == 'consultarDonaciones' %}activo{% endif %}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H4v12h8"></path><path d="M16 16l3 3 5-5"></path></svg>
                         Mis Donaciones
                     </a>
 
-                    <a href="{% url 'cargarDonaciones' %}" class="nav-link {% if request.resolver_match.url_name == 'cargarDonaciones' %}activo{% endif %}">
+                    <a href="{% url 'cargarDonaciones' %}?rol=donante" class="nav-link {% if request.resolver_match.url_name == 'cargarDonaciones' %}activo{% endif %}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                         Nueva Donación
                     </a>
@@ -232,10 +232,12 @@
                         Exportar Informe
                     </label>
 
+                    {% if not request.user.receptor and request.session.rol_activo != 'receptor' and request.resolver_match.url_name != 'dashboardReceptor' %}
                     <a href="{% url 'cargarDonaciones' %}" style="background:#7287fe; border:none; border-radius:12px; padding:11px 20px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#ffffff; text-decoration:none; display:flex; align-items:center; gap:8px; box-shadow:0 8px 20px rgba(114,135,254,0.3);">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         Nueva Entrega
                     </a>
+                    {% endif %}
                 </div>
             </div>
 
@@ -283,7 +285,7 @@
                 <div class="caja-blanca" style="background:#ffffff; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; align-items:center; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <span class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Donaciones</span>
-                        <span class="txt-principal" style="font-size:2rem; font-weight:800; color:#2b3044;">{{ total_donaciones|default:"2" }}</span>
+                        <span id="metrica-total-donaciones" class="txt-principal" style="font-size:2rem; font-weight:800; color:#2b3044;">{{ total_donaciones|default:"0" }}</span>
                     </div>
                     <div style="width:48px; height:48px; border-radius:14px; background:#eff2fe; display:grid; place-items:center; color:#7287fe;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
@@ -293,7 +295,7 @@
                 <div class="caja-blanca" style="background:#ffffff; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; align-items:center; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <span class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Peso Acumulado</span>
-                        <span class="txt-principal" style="font-size:2rem; font-weight:800; color:#2b3044;">{{ peso_total|default:"35 KG" }}</span>
+                        <span id="metrica-peso-total" class="txt-principal" style="font-size:2rem; font-weight:800; color:#2b3044;">{{ peso_total|default:"0 KG" }}</span>
                     </div>
                     <div style="width:48px; height:48px; border-radius:14px; background:#eff2fe; display:grid; place-items:center; color:#7287fe;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -303,59 +305,13 @@
                 <div class="caja-blanca" style="background:#ffffff; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; align-items:center; justify-content:space-between; box-sizing:border-box;">
                     <div>
                         <span class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Estatus</span>
-                        <span style="display:inline-block; font-size:0.95rem; font-weight:800; color:#12a559; background:#eaf8f0; padding:6px 14px; border-radius:999px;">
+                        <span id="metrica-estatus" style="display:inline-block; font-size:0.95rem; font-weight:800; color:#12a559; background:#eaf8f0; padding:6px 14px; border-radius:999px;">
                             {{ estatus|default:"ACTIVO" }}
                         </span>
                     </div>
                     <div style="width:48px; height:48px; border-radius:14px; background:#eff2fe; display:grid; place-items:center; color:#7287fe;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
-                </div>
-            </div>
-
-            <!-- TABLA PRINCIPAL DE ALIMENTOS -->
-            <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); box-sizing:border-box;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2 class="txt-principal" style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Registro de Alimentos</h2>
-                    <span class="txt-secundario" style="font-size:0.8rem; color:#6b7084; font-weight:600;">Actualizado en tiempo real</span>
-                </div>
-
-                <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
-                        <thead>
-                            <tr class="linea-divisoria txt-secundario" style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
-                                <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Alimento</th>
-                                <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Cantidad</th>
-                                <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Tipo</th>
-                                <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Caducidad</th>
-                                <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
-                                <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">Lentejas</td>
-                                <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">10 kg</td>
-                                <td style="padding:16px;">
-                                    <span class="elem-gris" style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">Preparado</span>
-                                </td>
-                                <td style="padding:16px; font-weight:600; color:#e5484d;">Hoy 21:30</td>
-                                <td style="padding:16px;">
-                                    <span style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem;">Activa</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">Arroz</td>
-                                <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">25 kg</td>
-                                <td style="padding:16px;">
-                                    <span class="elem-gris" style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">No perecedero</span>
-                                </td>
-                                <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">12/07/2026</td>
-                                <td style="padding:16px;">
-                                    <span style="background:#fef4e6; color:#e67e22; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem;">Reservada</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
 

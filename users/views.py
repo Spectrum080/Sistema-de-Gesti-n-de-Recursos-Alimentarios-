@@ -1,9 +1,29 @@
 import csv
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from alertas.models import Donacion, Alimento
 from .models import Usuario, Donante, Receptor
+
+
+def _obtener_contexto_dashboard():
+    donaciones_qs = Donacion.objects.select_related(
+        'alimento', 'donante', 'receptor', 'centro_acopio'
+    ).all()
+    total_donaciones = donaciones_qs.count()
+    suma_peso = donaciones_qs.aggregate(total=Sum('peso_kg'))['total'] or 0
+    peso_formateado = f"{float(suma_peso):,.1f} KG".replace('.0 KG', ' KG')
+
+    return {
+        'total_donaciones': total_donaciones,
+        'peso_total': peso_formateado,
+        'estatus': 'ACTIVO' if total_donaciones > 0 else 'SIN REGISTROS',
+        'donaciones': donaciones_qs,
+        'alimentos': Alimento.objects.select_related('categoria', 'centro_acopio').all(),
+    }
+
 
 @login_required
 def dashboard(request):
@@ -17,27 +37,23 @@ def dashboard(request):
         return redirect('dashboardReceptor')
     else:
         request.session['rol_activo'] = 'donante'
-        return render(request, 'users/dashboard.html')
+        context = _obtener_contexto_dashboard()
+        return render(request, 'users/dashboard.html', context)
+
 
 @login_required
 def dashboardDonante(request):
     request.session['rol_activo'] = 'donante'
-    context = {
-        'total_donaciones': 2,
-        'peso_total': '35 KG',
-        'estatus': 'ACTIVO',
-    }
+    context = _obtener_contexto_dashboard()
     return render(request, 'users/dashboardDonante.html', context)
+
 
 @login_required
 def dashboardReceptor(request):
     request.session['rol_activo'] = 'receptor'
-    context = {
-        'total_donaciones': 2,
-        'peso_total': '35 KG',
-        'estatus': 'ACTIVO',
-    }
+    context = _obtener_contexto_dashboard()
     return render(request, 'users/dashboardReceptor.html', context)
+
 
 def Sing_up(request):
     if request.method == 'POST':
@@ -64,8 +80,10 @@ def Sing_up(request):
 
     return render(request, 'users/Sing_up.html')
 
+
 def reset_password(request):
     return render(request, 'users/reset_password.html')
+
 
 @login_required
 def configuracion(request):
@@ -74,22 +92,36 @@ def configuracion(request):
         request.session['alto_contraste'] = request.POST.get('alto_contraste') == 'on'
         request.session['tamano_fuente'] = request.POST.get('tamano_fuente', '100%')
         request.session['notif_caducidad'] = request.POST.get('notif_caducidad') == 'on'
-        
+
         request.session.modified = True
         return redirect('configuracion')
 
     return render(request, 'users/configuracion.html')
 
+
 @login_required
 def exportar_informe(request):
     formato = request.GET.get('formato', 'csv')
 
-    # TODO: Preparar la consulta real a la base de datos (ej. Donacion.objects.all())
-    # Por el momento dejamos los valores estáticos listos para meter la base de datos
-    registros = [
-        ['Lentejas', '10 kg', 'Preparado', 'Hoy 21:30', 'Activa'],
-        ['Arroz', '25 kg', 'No perecedero', '12/07/2026', 'Reservada']
-    ]
+    donaciones_qs = Donacion.objects.select_related('alimento', 'donante').all()
+    registros = []
+    for d in donaciones_qs:
+        caducidad_str = (
+            d.fecha_caducidad.strftime('%d/%m/%Y')
+            if d.fecha_caducidad
+            else (
+                d.alimento.fecha_caducidad.strftime('%d/%m/%Y')
+                if d.alimento and d.alimento.fecha_caducidad
+                else 'N/A'
+            )
+        )
+        registros.append([
+            d.alimento.nombre if d.alimento else 'Alimento',
+            d.cantidad,
+            d.get_tipo_display(),
+            caducidad_str,
+            d.estado,
+        ])
 
     if formato == 'pdf':
         # Generación de PDF
@@ -100,15 +132,20 @@ def exportar_informe(request):
             "------------------------------------------------------------------",
         ]
         for r in registros:
-            # Espaciado para mantener orden en texto plano
-            lineas.append(f"{r[0]:<18} {r[1]:<12} {r[2]:<15} {r[3]:<13} {r[4]}")
+            nombre_corto = (r[0][:16] + '..') if len(r[0]) > 18 else r[0]
+            cant_corta = (r[1][:10] + '..') if len(r[1]) > 12 else r[1]
+            lineas.append(f"{nombre_corto:<18} {cant_corta:<12} {r[2]:<15} {r[3]:<13} {r[4]}")
 
         contenido_stream = "BT /F1 10 Tf 40 750 Td 16 TL "
         for linea in lineas:
-            texto_limpio = linea.replace("(", "\\(").replace(")", "\\)")
+            texto_limpio = (
+                linea.encode('latin-1', errors='replace').decode('latin-1')
+                .replace("(", "\\(")
+                .replace(")", "\\)")
+            )
             contenido_stream += f"({texto_limpio}) Tj T* "
         contenido_stream += "ET"
-        stream_bytes = contenido_stream.encode('latin-1')
+        stream_bytes = contenido_stream.encode('latin-1', errors='replace')
 
         objetos = [
             b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
@@ -134,7 +171,7 @@ def exportar_informe(request):
         response['Content-Disposition'] = 'attachment; filename="informe_donaciones.pdf"'
         return response
 
-    # Exportación a formato CSV 
+    # Exportación a formato CSV
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="informe_donaciones.csv"'
     response.write('\ufeff')  # BOM para compatibilidad de acentos con Excel
