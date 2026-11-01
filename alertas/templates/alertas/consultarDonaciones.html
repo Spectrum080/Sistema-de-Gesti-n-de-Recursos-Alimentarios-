@@ -1,22 +1,9 @@
-<!-- Heredamos la barra superior y el menú lateral de la plantilla principal -->
 {% extends 'users/dashboard.html' %}
 
-<<<<<<< HEAD
-<!-- Nombre que aparece arriba en la pestaña del navegador -->
-{% block title %}Consultar Donaciones - Hambre Cero{% endblock %}
-=======
 {% block title %}{% if es_receptor %}Aceptar Donaciones{% else %}Mis Donaciones{% endif %} - Hambre Cero{% endblock %}
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
 
-<!-- Todo lo que se ponga adentro se mostrará en el centro de la pantalla -->
 {% block contenido %}
 
-<<<<<<< HEAD
-<!-- Título principal y subtítulo de la sección -->
-<div style="margin-bottom: 24px;">
-    <h1 class="txt-principal" style="font-size: 1.9rem; font-weight: 800; margin: 0 0 6px; color: #2b3044;">Consultar Donaciones</h1>
-    <p class="txt-secundario" style="font-size: 0.88rem; color: #6b7084; margin: 0;">Consulta general de donaciones registradas</p>
-=======
 <form id="form-estado-oculto" method="POST" action="{% url 'consultarDonaciones' %}?rol=receptor" style="display:none;">
     {% csrf_token %}
     <input type="hidden" name="donacion_id" id="input-donacion-id" value="">
@@ -52,66 +39,19 @@
             <option value="OTRO">Otro</option>
         </select>
     </div>
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
 </div>
 
-<!-- Tarjeta/Borde contenedor (la clase 'caja-blanca' hace que cambie a oscura automáticamente) -->
-<div class="caja-blanca" style="background: #ffffff; border-radius: 18px; padding: 28px; box-shadow: 0 6px 20px rgba(60,70,120,0.06); box-sizing: border-box;">
+<!-- CONTENEDORA DE TABLA -->
+<div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); box-sizing:border-box;">
 
-<<<<<<< HEAD
-    <!-- Título superior dentro del cuadro (contorno de la tabla) -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 class="txt-principal" style="font-size: 1.15rem; font-weight: 800; margin: 0; color: #2b3044;">Detalles de los Alimentos Registrados</h2>
-        <span class="txt-secundario" style="font-size: 0.8rem; color: #6b7084; font-weight: 600;">Actualizado en tiempo real</span>
-=======
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2 class="txt-principal" style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Registro de Donaciones</h2>
         <span id="contador-consulta" class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ donaciones|length }} registros</span>
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
     </div>
 
-    <!-- Ayuda a que se pueda deslizar la tabla hacia los lados en pantallas chicas tipo en celulares -->
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
-
-            <!-- Nuevas columnas -->
+    <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
             <thead>
-<<<<<<< HEAD
-                <tr class="linea-divisoria txt-secundario" style="border-bottom: 1.5px solid #edf0f7; color: #6b7084;">
-                    <th style="padding: 14px 16px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">ID</th>
-                    <th style="padding: 14px 16px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Categoría</th>
-                    <th style="padding: 14px 16px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Descripción</th>
-                    <th style="padding: 14px 16px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Cantidad</th>
-                    <th style="padding: 14px 16px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Unidad</th>
-                    <th style="padding: 14px 16px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Fecha Caducidad</th>
-                    <th style="padding: 14px 16px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Conservación</th>
-                    <th style="padding: 14px 16px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">Estado</th>
-                </tr>
-            </thead>
-
-            <!-- Filas con la información -->
-            <tbody>
-                <!-- El for recorre y dibuja cada donación que enviamos desde views.py -->
-                {% for d in donaciones %}
-                <tr class="linea-divisoria" style="border-bottom: 1px solid #f4f6fb;">
-                    <td style="padding: 16px; font-weight: 800; color: #7287fe;">#{{ d.id }}</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 600; color: #2b3044;">{{ d.categoria }}</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 700; color: #2b3044;">{{ d.descripcion }}</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 700; color: #2b3044;">{{ d.cantidad }}</td>
-                    <td class="txt-secundario" style="padding: 16px; color: #6b7084;">{{ d.unidad }}</td>
-                    <td class="txt-principal" style="padding: 16px; color: #2b3044;">{{ d.caducidad }}</td>
-                    <td style="padding: 16px;">
-                        <span class="elem-gris" style="background: #f4f6fb; color: #6b7084; padding: 5px 12px; border-radius: 999px; font-weight: 600; font-size: 0.78rem;">
-                            {{ d.conservacion }}
-                        </span>
-                    </td>
-                    <td style="padding: 16px;">
-                        <!-- Si está recibida o activa se pinta verde, si no (pendiente) se pinta naranja -->
-                        {% if d.estado == 'Recibido' or d.estado == 'Activa' %}
-                            <span style="background: #eaf8f0; color: #12a559; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 0.78rem;">{{ d.estado }}</span>
-                        {% else %}
-                            <span style="background: #fef4e6; color: #e67e22; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 0.78rem;">{{ d.estado }}</span>
-=======
                 <tr class="linea-divisoria txt-secundario" style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
                     <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">ID</th>
                     <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Donante</th>
@@ -123,7 +63,7 @@
                 </tr>
             </thead>
 
-            <tbody id="cuerpo-consulta">
+            <tbody id="cuerpo-consulta" data-es-receptor="{% if es_receptor %}true{% else %}false{% endif %}">
                 {% for d in donaciones %}
                 <tr class="fila-consulta linea-divisoria" data-raw-id="{{ d.raw_id }}" data-clasificacion="{{ d.clasificacion_clave }}" style="border-bottom:1px solid #f4f6fb;">
                     <td style="padding:16px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
@@ -162,49 +102,13 @@
                             {% else %}
                                 <span class="badge-estado-lectura" data-raw-id="{{ d.raw_id }}" style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block;">{{ d.estado }}</span>
                             {% endif %}
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
                         {% endif %}
                     </td>
                 </tr>
-
-                <!-- Si la lista 'donaciones' está vacía se muestran estos dos ejemplos -->
                 {% empty %}
-<<<<<<< HEAD
-                <tr class="linea-divisoria" style="border-bottom: 1px solid #f4f6fb;">
-                    <td style="padding: 16px; font-weight: 800; color: #7287fe;">#001</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 600; color: #2b3044;">Granos y Semillas</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 700; color: #2b3044;">Frijol negro en grano</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 700; color: #2b3044;">50</td>
-                    <td class="txt-secundario" style="padding: 16px; color: #6b7084;">Kilogramos (kg)</td>
-                    <td class="txt-principal" style="padding: 16px; color: #2b3044;">2026-12-15</td>
-                    <td style="padding: 16px;">
-                        <span class="elem-gris" style="background: #f4f6fb; color: #6b7084; padding: 5px 12px; border-radius: 999px; font-weight: 600; font-size: 0.78rem;">
-                            Temperatura ambiente
-                        </span>
-                    </td>
-                    <td style="padding: 16px;">
-                        <span style="background: #eaf8f0; color: #12a559; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 0.78rem;">Recibido</span>
-                    </td>
-                </tr>
-                <tr class="linea-divisoria">
-                    <td style="padding: 16px; font-weight: 800; color: #7287fe;">#002</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 600; color: #2b3044;">Lácteos</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 700; color: #2b3044;">Leche entera ultrapasteurizada</td>
-                    <td class="txt-principal" style="padding: 16px; font-weight: 700; color: #2b3044;">120</td>
-                    <td class="txt-secundario" style="padding: 16px; color: #6b7084;">Litros (L)</td>
-                    <td class="txt-principal" style="padding: 16px; color: #2b3044;">2026-11-20</td>
-                    <td style="padding: 16px;">
-                        <span class="elem-gris" style="background: #f4f6fb; color: #6b7084; padding: 5px 12px; border-radius: 999px; font-weight: 600; font-size: 0.78rem;">
-                            Refrigeración
-                        </span>
-                    </td>
-                    <td style="padding: 16px;">
-                        <span style="background: #fef4e6; color: #e67e22; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 0.78rem;">Pendiente</span>
-=======
                 <tr>
                     <td colspan="7" class="txt-secundario" style="padding:24px; text-align:center; font-weight:600; color:#6b7084;">
                         No hay donaciones registradas actualmente.
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
                     </td>
                 </tr>
                 {% endfor %}
@@ -222,9 +126,6 @@
     </div>
 </div>
 
-<<<<<<< HEAD
-{% endblock %}
-=======
 <!-- MENÚ FLOTANTE PARA CAMBIAR ESTADO (RECEPTOR) -->
 {% if es_receptor %}
 <div id="popover-estado-donacion" class="caja-blanca" style="display:none; position:fixed; z-index:9999; background:#ffffff; border:1px solid #e4e7f2; border-radius:14px; padding:6px; box-shadow:0 12px 28px rgba(30,40,120,0.16); min-width:145px;">
@@ -245,14 +146,14 @@
 
 <script>
 (function() {
-    const ES_RECEPTOR = {{ es_receptor|yesno:"true,false" }};
+    const cuerpoTabla = document.getElementById('cuerpo-consulta');
+    const ES_RECEPTOR = cuerpoTabla && cuerpoTabla.getAttribute('data-es-receptor') === 'true';
     const FILAS_POR_PAGINA = 5;
     let paginaActual = 1;
     let botonActivoMenu = null;
 
     const selectFiltro = document.getElementById('filtro-consulta');
     const opcionTodas = document.getElementById('opcion-todas-consulta');
-    const cuerpoTabla = document.getElementById('cuerpo-consulta');
     const infoPaginacion = document.getElementById('info-paginacion-consulta');
     const controlesPaginacion = document.getElementById('controles-paginacion-consulta');
     const contadorSuperior = document.getElementById('contador-consulta');
@@ -389,7 +290,6 @@
         }
     }
 
-    // Manejo del menú desplegable para el Receptor (sin API externa, envía POST directo a la vista)
     if (ES_RECEPTOR && popoverEstado) {
         cuerpoTabla.addEventListener('click', function(e) {
             const btn = e.target.closest('.btn-estado-selector');
@@ -492,4 +392,3 @@
 </script>
 
 {% endblock %}
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)

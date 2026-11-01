@@ -1,26 +1,12 @@
-<<<<<<< HEAD
-import json
-import re
-from django.db.models import Sum
-from django.http import JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-=======
 import re
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
 from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, MovimientoInventario
 from users.models import Donante, Receptor
 
 
 def _es_rol_receptor(request):
-<<<<<<< HEAD
-    rol_param = request.GET.get('rol')
-=======
     rol_param = request.GET.get('rol') or request.POST.get('rol')
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
     if rol_param in ('receptor', 'donante'):
         request.session['rol_activo'] = rol_param
         request.session.modified = True
@@ -80,8 +66,6 @@ def _obtener_lista_donaciones():
 
 def consultarDonaciones(request):
     es_receptor = _es_rol_receptor(request)
-<<<<<<< HEAD
-=======
 
     if request.method == 'POST':
         donacion_id = request.POST.get('donacion_id')
@@ -111,7 +95,6 @@ def consultarDonaciones(request):
                     donacion.alimento.estado = 'EN_REVISION'
                 donacion.alimento.save(update_fields=['estado'])
 
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
     donaciones = _obtener_lista_donaciones()
     return render(request, 'alertas/consultarDonaciones.html', {
         'donaciones': donaciones,
@@ -129,77 +112,6 @@ def historialDonaciones(request):
         'es_receptor': es_receptor,
     })
 
-<<<<<<< HEAD
-
-def api_donaciones(request):
-    donaciones = _obtener_lista_donaciones()
-    suma_peso = Donacion.objects.aggregate(total=Sum('peso_kg'))['total'] or 0
-    peso_formateado = f"{float(suma_peso):,.1f} KG".replace('.0 KG', ' KG')
-    total_donaciones = len(donaciones)
-    return JsonResponse({
-        'ok': True,
-        'total_donaciones': total_donaciones,
-        'peso_total': peso_formateado,
-        'estatus': 'ACTIVO' if total_donaciones > 0 else 'SIN REGISTROS',
-        'donaciones': donaciones,
-    })
-
-
-@csrf_exempt
-def actualizar_estado_donacion(request, donacion_id):
-    if request.method != 'POST':
-        return JsonResponse({'ok': False, 'error': 'Método no permitido'}, status=405)
-
-    donacion = get_object_or_404(Donacion.objects.select_related('alimento', 'centro_acopio'), pk=donacion_id)
-
-    try:
-        data = json.loads(request.body.decode('utf-8')) if request.body else {}
-    except json.JSONDecodeError:
-        data = {}
-
-    accion = (data.get('estado') or request.POST.get('estado') or '').strip()
-    mapa_estados = {
-        'aceptar': 'Aceptado',
-        'Aceptar': 'Aceptado',
-        'Aceptado': 'Aceptado',
-        'Aceptada': 'Aceptado',
-        'Recibido': 'Recibido',
-        'reservar': 'Reservado',
-        'Reservar': 'Reservado',
-        'Reservado': 'Reservado',
-        'Reservada': 'Reservado',
-        'rechazar': 'Rechazado',
-        'Rechazar': 'Rechazado',
-        'Rechazado': 'Rechazado',
-        'Rechazada': 'Rechazado',
-    }
-    nuevo_estado = mapa_estados.get(accion)
-    if not nuevo_estado:
-        return JsonResponse({'ok': False, 'error': 'Estado inválido'}, status=400)
-
-    donacion.estado = nuevo_estado
-    if nuevo_estado == 'Aceptado':
-        donacion.fecha_recepcion = timezone.now()
-    donacion.save(update_fields=['estado', 'fecha_recepcion'] if nuevo_estado == 'Aceptado' else ['estado'])
-
-    if donacion.alimento:
-        if nuevo_estado == 'Aceptado':
-            donacion.alimento.estado = 'ENTREGADO'
-        elif nuevo_estado == 'Reservado':
-            donacion.alimento.estado = 'RESERVADA'
-        elif nuevo_estado == 'Rechazado':
-            donacion.alimento.estado = 'EN_REVISION'
-        donacion.alimento.save(update_fields=['estado'])
-
-    return JsonResponse({
-        'ok': True,
-        'raw_id': donacion.id,
-        'id': f"{donacion.id:03d}",
-        'estado': donacion.estado,
-    })
-
-=======
->>>>>>> 47566d8 (feat(alertas): implementar modelos, vistas y plantillas de gestion e historial de donaciones)
 
 def cargarDonaciones(request):
     request.session['rol_activo'] = 'donante'
