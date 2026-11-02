@@ -8,6 +8,7 @@ urlpatterns = [
     path('Sing_up/', views.Sing_up, name='Sing_up'),
     
     # Rutas de Dashboard y Roles
+    path('perfil/', views.perfil, name='perfil'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboardDonante/', views.dashboardDonante, name='dashboardDonante'),
     path('dashboardReceptor/', views.dashboardReceptor, name='dashboardReceptor'),
