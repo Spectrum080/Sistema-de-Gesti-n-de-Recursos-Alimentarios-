@@ -1,0 +1,112 @@
+{% extends "users/dashboard.html" %}
+
+{% block title %}Configuración - Hambre Cero{% endblock %}
+
+{% block contenido %}
+<form method="POST" action="{% url 'configuracion' %}">
+    {% csrf_token %}
+
+    <!-- Config con Botón Guardar -->
+    <div class="linea-divisoria" style="padding-bottom:20px; border-bottom:1px solid #e4e7f2; display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+        <div>
+            <h1 class="txt-principal" style="font-size:1.9rem; font-weight:800; margin:0 0 6px; color:#2b3044;">Configuración del Sistema</h1>
+            <p class="txt-secundario" style="font-size:0.88rem; color:#6b7084; margin:0;">Personaliza la apariencia, contraste de color y preferencias de tu cuenta</p>
+        </div>
+        <button type="submit" style="background:#7287fe; border:none; border-radius:12px; padding:12px 24px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#ffffff; cursor:pointer; box-shadow:0 8px 20px rgba(114,135,254,0.3);">
+            Guardar Cambios
+        </button>
+    </div>
+
+    <!-- Opciones -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:24px;">
+
+        <!-- Contraste y Apariencia -->
+        <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; flex-direction:column; gap:20px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:42px; height:42px; border-radius:12px; background:#eff2fe; display:grid; place-items:center; color:#7287fe;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="txt-principal" style="margin:0; font-size:1.05rem; font-weight:800; color:#2b3044;">Contraste y Tema</h3>
+                    <span class="txt-secundario" style="font-size:0.78rem; color:#6b7084;">Cambiar fondo blanco a modo oscuro</span>
+                </div>
+            </div>
+
+            <!-- Opción Contraste -->
+            <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid #f4f6fb;">
+                <div>
+                    <span class="txt-principal" style="display:block; font-weight:700; font-size:0.88rem; color:#2b3044;">Modo Contraste (Blanco a Negro)</span>
+                    <span class="txt-secundario" style="font-size:0.76rem; color:#6b7084;">Invierte el esquema a fondo oscuro</span>
+                </div>
+                {% if request.session.tema_oscuro %}
+                <input type="checkbox" name="tema_oscuro" checked style="width:20px; height:20px; accent-color:#7287fe; cursor:pointer;">
+                {% else %}
+                <input type="checkbox" name="tema_oscuro" style="width:20px; height:20px; accent-color:#7287fe; cursor:pointer;">
+                {% endif %}
+            </div>
+
+            <!-- Opción Bordes de Alto Contraste -->
+            <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid #f4f6fb;">
+                <div>
+                    <span class="txt-principal" style="display:block; font-weight:700; font-size:0.88rem; color:#2b3044;">Bordes de Alto Contraste</span>
+                    <span class="txt-secundario" style="font-size:0.76rem; color:#6b7084;">Remarca los contenedores y tablas</span>
+                </div>
+                {% if request.session.alto_contraste %}
+                <input type="checkbox" name="alto_contraste" checked style="width:20px; height:20px; accent-color:#7287fe; cursor:pointer;">
+                {% else %}
+                <input type="checkbox" name="alto_contraste" style="width:20px; height:20px; accent-color:#7287fe; cursor:pointer;">
+                {% endif %}
+            </div>
+
+            <!-- Opción Escala de Fuente -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px;">
+                <div>
+                    <span class="txt-principal" style="display:block; font-weight:700; font-size:0.88rem; color:#2b3044;">Tamaño de Fuente</span>
+                    <span class="txt-secundario" style="font-size:0.76rem; color:#6b7084;">Escala general del sistema</span>
+                </div>
+                <select name="tamano_fuente" class="elem-gris" style="background:#f4f6fb; border:1px solid #e4e7f2; border-radius:10px; padding:8px 12px; font:600 0.82rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; cursor:pointer;">
+                    {% if request.session.tamano_fuente == '108%' %}
+                        <option value="100%">Estándar (100%)</option>
+                        <option value="108%" selected>Grande (108%)</option>
+                        <option value="115%">Extra Grande (115%)</option>
+                    {% elif request.session.tamano_fuente == '115%' %}
+                        <option value="100%">Estándar (100%)</option>
+                        <option value="108%">Grande (108%)</option>
+                        <option value="115%" selected>Extra Grande (115%)</option>
+                    {% else %}
+                        <option value="100%" selected>Estándar (100%)</option>
+                        <option value="108%">Grande (108%)</option>
+                        <option value="115%">Extra Grande (115%)</option>
+                    {% endif %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Notificaciones y Caducidad -->
+        <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; flex-direction:column; gap:20px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:42px; height:42px; border-radius:12px; background:#eff2fe; display:grid; place-items:center; color:#7287fe;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                </div>
+                <div>
+                    <h3 class="txt-principal" style="margin:0; font-size:1.05rem; font-weight:800; color:#2b3044;">Alertas de Caducidad</h3>
+                    <span class="txt-secundario" style="font-size:0.78rem; color:#6b7084;">Avisos de caducidades críticas</span>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0;">
+                <div>
+                    <span class="txt-principal" style="display:block; font-weight:700; font-size:0.88rem; color:#2b3044;">Alerta de Caducidad Inmediata</span>
+                    <span class="txt-secundario" style="font-size:0.76rem; color:#6b7084;">Avisar de alimentos que vencen hoy</span>
+                </div>
+                {% if request.session.notif_caducidad|default:True %}
+                <input type="checkbox" name="notif_caducidad" checked style="width:20px; height:20px; accent-color:#7287fe; cursor:pointer;">
+                {% else %}
+                <input type="checkbox" name="notif_caducidad" style="width:20px; height:20px; accent-color:#7287fe; cursor:pointer;">
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</form>
+{% endblock %}
