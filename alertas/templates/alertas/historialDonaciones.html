@@ -1,0 +1,260 @@
+{% extends 'users/dashboard.html' %}
+
+{% block title %}Historial de Donaciones - Hambre Cero{% endblock %}
+
+{% block contenido %}
+
+<!-- ENCABEZADO Y DESCRIPCIÓN -->
+<div style="margin-bottom: -16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+    <div>
+        <h1 class="txt-principal" style="font-size:2rem; font-weight:800; margin:0 0 4px; color:#2b3044;">Historial de Donaciones</h1>
+        <p class="txt-secundario" style="font-size:0.9rem; color:#6b7084; margin:0;">Registro histórico completo del centro de acopio (aguas embotelladas, comida enlatada, granos y alimentos preparados)</p>
+    </div>
+
+    <!-- FILTRO POR CLASIFICACIÓN SIN RECARGAR PÁGINA -->
+    <div style="display:flex; align-items:center; gap:10px;">
+        <span class="txt-secundario" style="font-size:0.8rem; font-weight:700; color:#6b7084;">Filtrar categoría:</span>
+        <select id="filtro-clasificacion" class="elem-gris txt-principal" style="background:#ffffff; border:1px solid #e4e7f2; border-radius:12px; padding:10px 16px; font:600 0.84rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; cursor:pointer; outline:none;">
+            <option id="opcion-todas-historial" value="TODAS">Todas las categorías ({{ donaciones|length }})</option>
+            <option value="AGUA_EMBOTELLADA">Agua Embotellada y Bebidas</option>
+            <option value="COMIDA_ENLATADA">Comida Enlatada y Conservas</option>
+            <option value="GRANOS_ABARROTES">Granos, Semillas y Abarrotes</option>
+            <option value="LACTEOS">Lácteos y Derivados</option>
+            <option value="FRUTAS_VERDURAS">Frutas y Verduras Frescas</option>
+            <option value="COMIDA_PREPARADA">Comida Preparada</option>
+            <option value="INFANTIL">Alimento Infantil y Fórmula</option>
+            <option value="DESPENSA">Despensa Básica Armable</option>
+            <option value="OTRO">Otro</option>
+        </select>
+    </div>
+</div>
+
+<!-- CONTENEDORA DE TABLA DE HISTORIAL -->
+<div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); box-sizing:border-box;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <h2 class="txt-principal" style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Historial de Entradas y Recepciones en Acopio</h2>
+        <span id="contador-superior" class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ donaciones|length }} donaciones registradas</span>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table id="tabla-historial" style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
+            <thead>
+                <tr class="linea-divisoria txt-secundario" style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
+                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">ID</th>
+                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Donante</th>
+                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Alimento</th>
+                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Categoría</th>
+                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Cantidad</th>
+                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Tipo</th>
+                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Caducidad</th>
+                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Estado</th>
+                </tr>
+            </thead>
+
+            <tbody id="cuerpo-historial">
+                {% for d in donaciones %}
+                <tr class="fila-donacion linea-divisoria" data-raw-id="{{ d.raw_id }}" data-clasificacion="{{ d.clasificacion_clave }}" style="border-bottom:1px solid #f4f6fb;">
+                    <td style="padding:16px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
+                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
+                    <td style="padding:16px;">
+                        <span class="elem-gris" style="background:#eff2fe; color:#7287fe; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem;">{{ d.clasificacion }}</span>
+                    </td>
+                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
+                    <td style="padding:16px;">
+                        <span class="elem-gris" style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">{{ d.tipo }}</span>
+                    </td>
+                    <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.caducidad }}</td>
+                    <td style="padding:16px;">
+                        <!-- Muestra el estado en verde (Aceptado/Recibido), naranja (Reservado) o rojo (Rechazado) -->
+                        {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
+                            <span class="badge-estado-historial" data-raw-id="{{ d.raw_id }}" style="background:#fde8e8; color:#e5484d; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block;">{{ d.estado }}</span>
+                        {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
+                            <span class="badge-estado-historial" data-raw-id="{{ d.raw_id }}" style="background:#fef4e6; color:#e67e22; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block;">{{ d.estado }}</span>
+                        {% else %}
+                            <span class="badge-estado-historial" data-raw-id="{{ d.raw_id }}" style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block;">{{ d.estado }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="txt-secundario" style="padding:24px; text-align:center; font-weight:600; color:#6b7084;">
+                        No hay donaciones registradas en el historial.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SALTO DE PÁGINA DINÁMICO EN EL MISMO APARTADO (SIN RECARGAR NI REDIRIGIR) -->
+    <div id="barra-paginacion" class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-top:22px; padding-top:18px; border-top:1px solid #edf0f7;">
+        <span id="info-paginacion" class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">
+            Mostrando registros
+        </span>
+
+        <div id="controles-paginacion" style="display:flex; align-items:center; gap:8px;"></div>
+    </div>
+
+</div>
+
+<script>
+(function () {
+    const FILAS_POR_PAGINA = 5;
+    let paginaActual = 1;
+
+    const selectFiltro = document.getElementById('filtro-clasificacion');
+    const opcionTodas = document.getElementById('opcion-todas-historial');
+    const cuerpoHistorial = document.getElementById('cuerpo-historial');
+    const infoPaginacion = document.getElementById('info-paginacion');
+    const controlesPaginacion = document.getElementById('controles-paginacion');
+    const contadorSuperior = document.getElementById('contador-superior');
+
+    const canalSync = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('hambre_cero_sync') : null;
+
+    function obtenerColoresEstado(estado) {
+        if (estado === 'Rechazado' || estado === 'Rechazada' || estado === 'Cancelada') {
+            return { bg: '#fde8e8', color: '#e5484d' };
+        }
+        if (estado === 'Reservado' || estado === 'Reservada' || estado === 'Pendiente') {
+            return { bg: '#fef4e6', color: '#e67e22' };
+        }
+        return { bg: '#eaf8f0', color: '#12a559' };
+    }
+
+    function aplicarEstiloBadge(el, estado) {
+        const col = obtenerColoresEstado(estado);
+        el.style.background = col.bg;
+        el.style.color = col.color;
+        el.textContent = estado;
+    }
+
+    function obtenerTodasLasFilas() {
+        return Array.from(cuerpoHistorial.querySelectorAll('.fila-donacion'));
+    }
+
+    function obtenerFilasFiltradas() {
+        const todasLasFilas = obtenerTodasLasFilas();
+        const valorFiltro = selectFiltro ? selectFiltro.value : 'TODAS';
+        if (valorFiltro === 'TODAS') {
+            return todasLasFilas;
+        }
+        return todasLasFilas.filter(function (fila) {
+            return fila.getAttribute('data-clasificacion') === valorFiltro;
+        });
+    }
+
+    function renderizarPagina(nuevaPagina) {
+        const todasLasFilas = obtenerTodasLasFilas();
+        const filasFiltradas = obtenerFilasFiltradas();
+        const totalFilas = filasFiltradas.length;
+        const totalPaginas = Math.max(1, Math.ceil(totalFilas / FILAS_POR_PAGINA));
+
+        if (nuevaPagina < 1) nuevaPagina = 1;
+        if (nuevaPagina > totalPaginas) nuevaPagina = totalPaginas;
+        paginaActual = nuevaPagina;
+
+        const indiceInicio = (paginaActual - 1) * FILAS_POR_PAGINA;
+        const indiceFin = indiceInicio + FILAS_POR_PAGINA;
+
+        todasLasFilas.forEach(function (fila) {
+            fila.style.display = 'none';
+        });
+
+        filasFiltradas.slice(indiceInicio, indiceFin).forEach(function (fila) {
+            fila.style.display = '';
+        });
+
+        if (opcionTodas) {
+            opcionTodas.textContent = 'Todas las categorías (' + todasLasFilas.length + ')';
+        }
+
+        if (contadorSuperior) {
+            contadorSuperior.textContent = 'Total: ' + totalFilas + ' donaciones registradas';
+        }
+
+        if (infoPaginacion) {
+            if (totalFilas === 0) {
+                infoPaginacion.textContent = 'Mostrando 0 de 0 donaciones';
+            } else {
+                const mostradoInicio = indiceInicio + 1;
+                const mostradoFin = Math.min(indiceFin, totalFilas);
+                infoPaginacion.textContent = 'Mostrando ' + mostradoInicio + ' - ' + mostradoFin + ' de ' + totalFilas + ' donaciones (Página ' + paginaActual + ' de ' + totalPaginas + ')';
+            }
+        }
+
+        if (controlesPaginacion) {
+            controlesPaginacion.innerHTML = '';
+
+            const btnAnterior = document.createElement('button');
+            btnAnterior.type = 'button';
+            btnAnterior.textContent = 'Anterior';
+            btnAnterior.className = 'elem-gris';
+            btnAnterior.disabled = paginaActual === 1;
+            btnAnterior.style.cssText = 'border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem "Plus Jakarta Sans",sans-serif; cursor:' + (paginaActual === 1 ? 'not-allowed' : 'pointer') + '; opacity:' + (paginaActual === 1 ? '0.5' : '1') + ';';
+            btnAnterior.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (paginaActual > 1) {
+                    renderizarPagina(paginaActual - 1);
+                }
+            });
+            controlesPaginacion.appendChild(btnAnterior);
+
+            for (let i = 1; i <= totalPaginas; i++) {
+                const btnNum = document.createElement('button');
+                btnNum.type = 'button';
+                btnNum.textContent = String(i);
+                const esActiva = (i === paginaActual);
+                if (!esActiva) {
+                    btnNum.className = 'elem-gris';
+                }
+                btnNum.style.cssText = esActiva
+                    ? 'border:none; background:#7287fe; color:#ffffff; width:36px; height:36px; border-radius:10px; font:800 0.82rem "Plus Jakarta Sans",sans-serif; cursor:pointer; box-shadow:0 6px 14px rgba(114,135,254,0.35);'
+                    : 'border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; width:36px; height:36px; border-radius:10px; font:700 0.82rem "Plus Jakarta Sans",sans-serif; cursor:pointer;';
+                btnNum.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    renderizarPagina(i);
+                });
+                controlesPaginacion.appendChild(btnNum);
+            }
+
+            const btnSiguiente = document.createElement('button');
+            btnSiguiente.type = 'button';
+            btnSiguiente.textContent = 'Siguiente';
+            btnSiguiente.className = 'elem-gris';
+            btnSiguiente.disabled = paginaActual === totalPaginas;
+            btnSiguiente.style.cssText = 'border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem "Plus Jakarta Sans",sans-serif; cursor:' + (paginaActual === totalPaginas ? 'not-allowed' : 'pointer') + '; opacity:' + (paginaActual === totalPaginas ? '0.5' : '1') + ';';
+            btnSiguiente.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (paginaActual < totalPaginas) {
+                    renderizarPagina(paginaActual + 1);
+                }
+            });
+            controlesPaginacion.appendChild(btnSiguiente);
+        }
+    }
+
+    // Actualiza dinámicamente la etiqueta de estado cuando el Receptor realiza un cambio
+    if (canalSync) {
+        canalSync.onmessage = function(ev) {
+            if (ev.data && ev.data.tipo === 'estado_actualizado' && ev.data.raw_id) {
+                const badge = cuerpoHistorial.querySelector('.badge-estado-historial[data-raw-id="' + ev.data.raw_id + '"]');
+                if (badge) {
+                    aplicarEstiloBadge(badge, ev.data.estado);
+                }
+            }
+        };
+    }
+
+    if (selectFiltro) {
+        selectFiltro.addEventListener('change', function () {
+            renderizarPagina(1);
+        });
+    }
+
+    renderizarPagina(1);
+})();
+</script>
+
+{% endblock %}

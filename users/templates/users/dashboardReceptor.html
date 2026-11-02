@@ -1,0 +1,14 @@
+{% extends "users/dashboard.html" %}
+
+{% block title %}Dashboard Receptor - Hambre Cero{% endblock %}
+
+<!-- =========================================================================
+     CONTENIDO DEL RECEPTOR TOTALMENTE HEREDADO
+     Nota: {{ block.super }} trae todas las tarjetas, tabla y el modal de
+     exportación de dashboard.html. 
+     Si van a cambiar o personalizar algo para este dashboard, reemplacen {{ block.super }} por su código HTML personalizado.
+     No le muevan mas o creen otra plantilla, solito se hereda de dashboard.html
+     ========================================================================= -->
+{% block contenido %}
+    {{ block.super }}
+{% endblock %}
