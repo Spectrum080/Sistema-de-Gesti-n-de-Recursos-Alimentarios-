@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'core',
     'users',
     'alertas',
+    'donaciones',
 ]
 
 AUTH_USER_MODEL = 'users.Usuario'
