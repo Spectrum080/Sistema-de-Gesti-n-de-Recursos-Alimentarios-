@@ -5,6 +5,7 @@ from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, Movimie
 from users.models import Donante, Receptor
 
 
+# Detecta y sincroniza en sesión si la vista actual corresponde al rol Receptor o Donante
 def _es_rol_receptor(request):
     rol_param = request.GET.get('rol') or request.POST.get('rol')
     if rol_param in ('receptor', 'donante'):
@@ -21,6 +22,7 @@ def _es_rol_receptor(request):
     return request.session.get('rol_activo') == 'receptor'
 
 
+# Obtiene las donaciones mostrando primero las nuevas registradas manualmente
 def _obtener_lista_donaciones():
     queryset = list(
         Donacion.objects.select_related(
@@ -64,9 +66,11 @@ def _obtener_lista_donaciones():
     return donaciones
 
 
+# Vista compartida: permite al Receptor cambiar estado (POST) y al Donante consultar sus entregas
 def consultarDonaciones(request):
     es_receptor = _es_rol_receptor(request)
 
+    # Actualiza en BD el estado de la donación y del alimento (Aceptado, Reservado o Rechazado)
     if request.method == 'POST':
         donacion_id = request.POST.get('donacion_id')
         accion = (request.POST.get('nuevo_estado') or '').strip()
@@ -103,6 +107,7 @@ def consultarDonaciones(request):
     })
 
 
+# Muestra el historial completo de donaciones con sus estados actualizados
 def historialDonaciones(request):
     es_receptor = _es_rol_receptor(request)
     donaciones = _obtener_lista_donaciones()
@@ -113,6 +118,7 @@ def historialDonaciones(request):
     })
 
 
+# Registra manualmente un nuevo alimento, su donación y el movimiento de entrada en inventario
 def cargarDonaciones(request):
     request.session['rol_activo'] = 'donante'
     if request.method == 'POST':

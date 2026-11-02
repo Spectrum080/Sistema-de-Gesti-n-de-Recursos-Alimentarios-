@@ -67,6 +67,7 @@
                     </td>
                     <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.caducidad }}</td>
                     <td style="padding:16px;">
+                        <!-- Muestra el estado en verde (Aceptado/Recibido), naranja (Reservado) o rojo (Rechazado) -->
                         {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
                             <span class="badge-estado-historial" data-raw-id="{{ d.raw_id }}" style="background:#fde8e8; color:#e5484d; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block;">{{ d.estado }}</span>
                         {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
@@ -234,6 +235,7 @@
         }
     }
 
+    // Actualiza dinámicamente la etiqueta de estado cuando el Receptor realiza un cambio
     if (canalSync) {
         canalSync.onmessage = function(ev) {
             if (ev.data && ev.data.tipo === 'estado_actualizado' && ev.data.raw_id) {

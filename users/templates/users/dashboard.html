@@ -147,7 +147,7 @@
 
     <div style="width:100%; min-height:calc(100vh - 75px); display:flex;">
 
-        <!-- SIDEBAR IZQUIERDO -->
+        <!-- SIDEBAR IZQUIERDO: Adapta los enlaces automáticamente según el rol activo (Receptor o Donante) -->
         <aside style="width:260px; box-sizing:border-box; padding:32px 20px; background:#ffffff; border-right:1px solid #e4e7f2; display:flex; flex-direction:column; justify-content:space-between; gap:20px;">
             
             {% block navegacion %}
@@ -232,6 +232,7 @@
                         Exportar Informe
                     </label>
 
+                    <!-- Oculta el botón Nueva Entrega cuando el dashboard se hereda en modo Receptor -->
                     {% if not request.user.receptor and request.session.rol_activo != 'receptor' and request.resolver_match.url_name != 'dashboardReceptor' %}
                     <a href="{% url 'cargarDonaciones' %}" style="background:#7287fe; border:none; border-radius:12px; padding:11px 20px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#ffffff; text-decoration:none; display:flex; align-items:center; gap:8px; box-shadow:0 8px 20px rgba(114,135,254,0.3);">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>

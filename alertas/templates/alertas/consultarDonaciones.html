@@ -4,6 +4,7 @@
 
 {% block contenido %}
 
+<!-- Formulario oculto para enviar por POST el cambio de estado sin usar API externa -->
 <form id="form-estado-oculto" method="POST" action="{% url 'consultarDonaciones' %}?rol=receptor" style="display:none;">
     {% csrf_token %}
     <input type="hidden" name="donacion_id" id="input-donacion-id" value="">
@@ -77,6 +78,7 @@
                         <span class="elem-gris" style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">{{ d.tipo }}</span>
                     </td>
                     <td class="celda-estado" style="padding:16px;">
+                        <!-- Si es Receptor muestra botón desplegable; si es Donante muestra etiqueta de solo lectura -->
                         {% if es_receptor %}
                             {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
                                 <button type="button" class="btn-estado-selector" data-raw-id="{{ d.raw_id }}" data-estado="{{ d.estado }}" style="border:none; background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
@@ -290,6 +292,7 @@
         }
     }
 
+    // Despliega el menú de estado (Aceptar/Reservar/Rechazar) y guarda la selección por POST
     if (ES_RECEPTOR && popoverEstado) {
         cuerpoTabla.addEventListener('click', function(e) {
             const btn = e.target.closest('.btn-estado-selector');
@@ -343,7 +346,8 @@
                     method: 'POST',
                     body: formData
                 }).then(function() {
-                    if (canalSync) {
+                    // Sincroniza en tiempo real el cambio de estado entre pestañas abiertas (Donante/Historial)
+    if (canalSync) {
                         canalSync.postMessage({
                             tipo: 'estado_actualizado',
                             raw_id: rawId,
@@ -369,6 +373,7 @@
         }, true);
     }
 
+    // Sincroniza en tiempo real el cambio de estado entre pestañas abiertas (Donante/Historial)
     if (canalSync) {
         canalSync.onmessage = function(ev) {
             if (ev.data && ev.data.tipo === 'estado_actualizado' && ev.data.raw_id) {

@@ -4,6 +4,7 @@ from django.utils import timezone
 from users.models import Usuario, Donante, Receptor
 
 
+# Manager personalizado para filtrar alimentos del centro de acopio (por tipo, categoría o caducidad)
 class AlimentoQuerySet(models.QuerySet):
     def disponibles(self):
         return self.filter(estado='DISPONIBLE', cantidad__gt=0)
@@ -45,6 +46,7 @@ class AlimentoQuerySet(models.QuerySet):
             fecha_caducidad__lt=hoy,
         )
 
+    # Filtro combinado para búsquedas dinámicas en vistas
     def filtrar(
         self,
         clasificacion=None,
@@ -81,6 +83,7 @@ class AlimentoQuerySet(models.QuerySet):
         return qs
 
 
+# Modelo que representa la sede física del centro de acopio y su capacidad de almacenamiento
 class CentroAcopio(models.Model):
     nombre = models.CharField(max_length=150)
     direccion = models.CharField(max_length=255)
@@ -106,6 +109,7 @@ class CentroAcopio(models.Model):
         return self.nombre
 
 
+# Catálogo de categorías para clasificar los insumos recibidos (agua, enlatados, granos, etc.)
 class CategoriaAlimento(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     clave = models.CharField(max_length=50, unique=True)
@@ -122,7 +126,9 @@ class CategoriaAlimento(models.Model):
         return self.nombre
 
 
+# Modelo principal de inventario de alimentos y bebidas registrados en el centro de acopio
 class Alimento(models.Model):
+    # Opciones de clasificación general para filtrado rápido
     CLASIFICACION_CHOICES = [
         ('AGUA_EMBOTELLADA', 'Agua Embotellada y Bebidas'),
         ('COMIDA_ENLATADA', 'Comida Enlatada y Conservas'),
@@ -137,6 +143,7 @@ class Alimento(models.Model):
         ('OTRO', 'Otro'),
     ]
 
+    # Opciones de conservación y naturaleza del producto
     TIPO_CHOICES = [
         ('PERECEDERO', 'Perecedero'),
         ('NO_PERECEDERO', 'No Perecedero'),
@@ -144,6 +151,7 @@ class Alimento(models.Model):
         ('BEBIDA', 'Bebida / Líquido'),
     ]
 
+    # Tipos de empaque o presentación recibida
     ENVASE_CHOICES = [
         ('BOTELLA_PLASTICO', 'Botella / Garrafón'),
         ('LATA', 'Lata / Conserva'),
@@ -156,6 +164,7 @@ class Alimento(models.Model):
         ('OTRO', 'Otro'),
     ]
 
+    # Unidades de medida para control de existencias
     UNIDAD_CHOICES = [
         ('UNIDAD', 'Unidades / Piezas'),
         ('BOTELLA', 'Botellas'),
@@ -258,6 +267,7 @@ class Alimento(models.Model):
         verbose_name = 'Alimento'
         verbose_name_plural = 'Alimentos'
         ordering = ['fecha_caducidad', 'nombre']
+        # Índices en SQLite para agilizar filtros por clasificación, estado y caducidad
         indexes = [
             models.Index(fields=['clasificacion', 'estado']),
             models.Index(fields=['tipo', 'fecha_caducidad']),
@@ -281,6 +291,7 @@ class Alimento(models.Model):
         self.save(update_fields=['cantidad', 'estado'])
 
 
+# Información nutricional asociada 1 a 1 con cada Alimento (según diagrama UML)
 class Nutrientes(models.Model):
     alimento = models.OneToOneField(
         Alimento,
@@ -303,13 +314,12 @@ class Nutrientes(models.Model):
         return f"Nutrientes de {self.alimento.nombre}"
 
 
+# Registro de cada donación recibida o canalizada entre donante, centro de acopio y receptor
 class Donacion(models.Model):
     ESTADO_DONACION_CHOICES = [
         ('Pendiente', 'Pendiente'),
         ('Recibido', 'Recibido en Centro de Acopio'),
         ('Activa', 'Activa'),
-        ('Aceptado', 'Aceptado'),
-        ('Reservado', 'Reservado'),
         ('Reservada', 'Reservada'),
         ('Rechazado', 'Rechazado'),
         ('Entregada', 'Entregada a Receptor'),
@@ -381,6 +391,7 @@ class Donacion(models.Model):
         return f"Donación #{self.id} - {self.alimento.nombre} ({origen})"
 
 
+# Bitácora de movimientos de entradas, salidas y bajas dentro del almacén del centro de acopio
 class MovimientoInventario(models.Model):
     TIPO_MOVIMIENTO_CHOICES = [
         ('ENTRADA', 'Entrada a Centro de Acopio'),
@@ -434,6 +445,7 @@ class MovimientoInventario(models.Model):
         return f"{self.get_tipo_movimiento_display()} - {self.alimento.nombre} ({self.cantidad})"
 
 
+# Sistema de avisos y alertas para caducidades próximas, stock bajo o cadena de frío
 class Alerta(models.Model):
     TIPO_ALERTA_CHOICES = [
         ('CADUCIDAD_PROXIMA', 'Caducidad Próxima'),
