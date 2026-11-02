@@ -105,6 +105,29 @@ def configuracion(request):
 
     return render(request, 'users/configuracion.html')
 
+@login_required
+def perfil(request):
+    usuario = request.user
+    campo_razon = None
+    if hasattr(usuario, 'donante'):
+        usuario = usuario.donante
+        campo_razon = 'nombre_local'
+    elif hasattr(usuario, 'receptor'):
+        usuario = usuario.receptor
+        campo_razon = 'nombre_org'
+
+    if request.method == 'POST':
+        usuario.telefono = request.POST.get('telefono', '')
+        usuario.direccion = request.POST.get('direccion', '')
+        if campo_razon:
+            setattr(usuario, campo_razon, request.POST.get('razon_social', ''))
+        usuario.save()
+        messages.success(request, 'Perfil actualizado')
+        return redirect('perfil')
+
+    razon_social = getattr(usuario, campo_razon, '') if campo_razon else ''
+    return render(request, 'users/perfil.html', {'razon_social': razon_social})
+
 
 # Exporta el inventario real de donaciones de db.sqlite3 en formato CSV o PDF
 @login_required
