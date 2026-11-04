@@ -3,16 +3,19 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
+    # Autenticación y registro de usuarios
     path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('Sing_up/', views.Sing_up, name='Sing_up'),
     
     # Rutas de Dashboard y Roles
+    path('perfil/', views.perfil, name='perfil'),
+    # Rutas de Dashboard según el rol activo (Donante o Receptor)
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboardDonante/', views.dashboardDonante, name='dashboardDonante'),
     path('dashboardReceptor/', views.dashboardReceptor, name='dashboardReceptor'),
     
-    # Configuración e Informes
+    # Preferencias de accesibilidad y descarga de reportes (CSV / PDF)
     path('configuracion/', views.configuracion, name='configuracion'),
     path('exportar-informe/', views.exportar_informe, name='exportarInforme'),
 

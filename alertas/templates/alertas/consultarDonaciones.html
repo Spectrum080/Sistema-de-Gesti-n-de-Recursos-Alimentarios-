@@ -1,16 +1,24 @@
 {% extends 'users/dashboard.html' %}
+<!-- Hereda la estructura general del dashboard sin usar JavaScript -->
 
 {% block title %}{% if es_receptor %}Aceptar Donaciones{% else %}Mis Donaciones{% endif %} - Hambre Cero{% endblock %}
 
 {% block contenido %}
 
-<form id="form-estado-oculto" method="POST" action="{% url 'consultarDonaciones' %}?rol=receptor" style="display:none;">
-    {% csrf_token %}
-    <input type="hidden" name="donacion_id" id="input-donacion-id" value="">
-    <input type="hidden" name="nuevo_estado" id="input-nuevo-estado" value="">
-</form>
+<style>
+    /* Oculta el triángulo por defecto de details/summary para el selector de estado en HTML/CSS puro */
+    details.menu-estado > summary {
+        list-style: none;
+    }
+    details.menu-estado > summary::-webkit-details-marker {
+        display: none;
+    }
+    .btn-opcion-estado:hover {
+        filter: brightness(0.95);
+    }
+</style>
 
-<!-- ENCABEZADO Y DESCRIPCIÓN -->
+<!-- ENCABEZADO Y FILTRO POR CATEGORÍA PROCESADO 100% EN PYTHON -->
 <div style="margin-bottom: -16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
     <div>
         <h1 class="txt-principal" style="font-size:2rem; font-weight:800; margin:0 0 4px; color:#2b3044;">Consultar Donaciones</h1>
@@ -23,30 +31,34 @@
         </p>
     </div>
 
-    <!-- FILTRO POR CLASIFICACIÓN -->
-    <div style="display:flex; align-items:center; gap:10px;">
+    <!-- Formulario GET para filtrar por categoría directamente desde Python -->
+    <form method="GET" action="{% url 'consultarDonaciones' %}" style="display:flex; align-items:center; gap:10px; margin:0;">
+        <input type="hidden" name="rol" value="{{ rol_actual }}">
         <span class="txt-secundario" style="font-size:0.8rem; font-weight:700; color:#6b7084;">Categoría:</span>
-        <select id="filtro-consulta" class="elem-gris txt-principal" style="background:#ffffff; border:1px solid #e4e7f2; border-radius:12px; padding:10px 16px; font:600 0.84rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; cursor:pointer; outline:none;">
-            <option id="opcion-todas-consulta" value="TODAS">Todas ({{ donaciones|length }})</option>
-            <option value="AGUA_EMBOTELLADA">Agua Embotellada y Bebidas</option>
-            <option value="COMIDA_ENLATADA">Comida Enlatada y Conservas</option>
-            <option value="GRANOS_ABARROTES">Granos, Semillas y Abarrotes</option>
-            <option value="LACTEOS">Lácteos y Derivados</option>
-            <option value="FRUTAS_VERDURAS">Frutas y Verduras Frescas</option>
-            <option value="COMIDA_PREPARADA">Comida Preparada</option>
-            <option value="INFANTIL">Alimento Infantil y Fórmula</option>
-            <option value="DESPENSA">Despensa Básica Armable</option>
-            <option value="OTRO">Otro</option>
+        <select name="categoria" class="elem-gris txt-principal" style="background:#ffffff; border:1px solid #e4e7f2; border-radius:12px; padding:10px 16px; font:600 0.84rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; cursor:pointer; outline:none;">
+            <option value="TODAS" {% if categoria_actual == 'TODAS' %}selected{% endif %}>Todas ({{ total_general }})</option>
+            <option value="AGUA_EMBOTELLADA" {% if categoria_actual == 'AGUA_EMBOTELLADA' %}selected{% endif %}>Agua Embotellada y Bebidas</option>
+            <option value="COMIDA_ENLATADA" {% if categoria_actual == 'COMIDA_ENLATADA' %}selected{% endif %}>Comida Enlatada y Conservas</option>
+            <option value="GRANOS_ABARROTES" {% if categoria_actual == 'GRANOS_ABARROTES' %}selected{% endif %}>Granos, Semillas y Abarrotes</option>
+            <option value="LACTEOS" {% if categoria_actual == 'LACTEOS' %}selected{% endif %}>Lácteos y Derivados</option>
+            <option value="FRUTAS_VERDURAS" {% if categoria_actual == 'FRUTAS_VERDURAS' %}selected{% endif %}>Frutas y Verduras Frescas</option>
+            <option value="COMIDA_PREPARADA" {% if categoria_actual == 'COMIDA_PREPARADA' %}selected{% endif %}>Comida Preparada</option>
+            <option value="INFANTIL" {% if categoria_actual == 'INFANTIL' %}selected{% endif %}>Alimento Infantil y Fórmula</option>
+            <option value="DESPENSA" {% if categoria_actual == 'DESPENSA' %}selected{% endif %}>Despensa Básica Armable</option>
+            <option value="OTRO" {% if categoria_actual == 'OTRO' %}selected{% endif %}>Otro</option>
         </select>
-    </div>
+        <button type="submit" style="border:none; background:#7287fe; color:#ffffff; padding:10px 16px; border-radius:12px; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+            Filtrar
+        </button>
+    </form>
 </div>
 
-<!-- CONTENEDORA DE TABLA -->
+<!-- CONTENEDORA DE TABLA DE CONSULTA -->
 <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); box-sizing:border-box;">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2 class="txt-principal" style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Registro de Donaciones</h2>
-        <span id="contador-consulta" class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ donaciones|length }} registros</span>
+        <span class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ total_registros }} registros</span>
     </div>
 
     <div style="overflow-x:auto;">
@@ -63,44 +75,69 @@
                 </tr>
             </thead>
 
-            <tbody id="cuerpo-consulta" data-es-receptor="{% if es_receptor %}true{% else %}false{% endif %}">
+            <!-- Filas paginadas por Python sin bordes en Categoría ni en Tipo -->
+            <tbody>
                 {% for d in donaciones %}
-                <tr class="fila-consulta linea-divisoria" data-raw-id="{{ d.raw_id }}" data-clasificacion="{{ d.clasificacion_clave }}" style="border-bottom:1px solid #f4f6fb;">
+                <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
                     <td style="padding:16px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
                     <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
                     <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
                     <td style="padding:16px;">
-                        <span class="elem-gris" style="background:#eff2fe; color:#7287fe; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem;">{{ d.clasificacion }}</span>
+                        <span style="background:#eff2fe; color:#7287fe; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem; display:inline-block; border:none;">{{ d.clasificacion }}</span>
                     </td>
                     <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
                     <td style="padding:16px;">
-                        <span class="elem-gris" style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem;">{{ d.tipo }}</span>
+                        <span style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem; display:inline-block; border:none;">{{ d.tipo }}</span>
                     </td>
-                    <td class="celda-estado" style="padding:16px;">
+                    <td style="padding:16px;">
+                        <!-- Si es Receptor muestra menú desplegable nativo HTML/POST; si es Donante muestra etiqueta -->
                         {% if es_receptor %}
-                            {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                                <button type="button" class="btn-estado-selector" data-raw-id="{{ d.raw_id }}" data-estado="{{ d.estado }}" style="border:none; background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                    <span class="texto-estado">{{ d.estado }}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                </button>
-                            {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                                <button type="button" class="btn-estado-selector" data-raw-id="{{ d.raw_id }}" data-estado="{{ d.estado }}" style="border:none; background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                    <span class="texto-estado">{{ d.estado }}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                </button>
-                            {% else %}
-                                <button type="button" class="btn-estado-selector" data-raw-id="{{ d.raw_id }}" data-estado="{{ d.estado }}" style="border:none; background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                    <span class="texto-estado">{{ d.estado }}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                </button>
-                            {% endif %}
+                            <details class="menu-estado" style="position:relative; display:inline-block;">
+                                {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
+                                    <summary style="border:none; background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                        <span>{{ d.estado }}</span>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    </summary>
+                                {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
+                                    <summary style="border:none; background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                        <span>{{ d.estado }}</span>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    </summary>
+                                {% else %}
+                                    <summary style="border:none; background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                        <span>{{ d.estado }}</span>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    </summary>
+                                {% endif %}
+
+                                <form method="POST" action="{% url 'consultarDonaciones' %}" class="caja-blanca" style="position:absolute; right:0; top:calc(100% + 6px); z-index:99; background:#ffffff; border:1px solid #e4e7f2; border-radius:14px; padding:6px; box-shadow:0 12px 28px rgba(30,40,120,0.16); min-width:140px; margin:0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
+                                    <input type="hidden" name="rol" value="receptor">
+                                    <input type="hidden" name="categoria" value="{{ categoria_actual }}">
+                                    <input type="hidden" name="page" value="{{ page_obj.number }}">
+
+                                    <button type="submit" name="nuevo_estado" value="Aceptado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#12a559; text-align:left;">
+                                        <span style="width:8px; height:8px; border-radius:50%; background:#12a559; display:inline-block;"></span>
+                                        Aceptar
+                                    </button>
+                                    <button type="submit" name="nuevo_estado" value="Reservado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e67e22; text-align:left;">
+                                        <span style="width:8px; height:8px; border-radius:50%; background:#e67e22; display:inline-block;"></span>
+                                        Reservar
+                                    </button>
+                                    <button type="submit" name="nuevo_estado" value="Rechazado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e5484d; text-align:left;">
+                                        <span style="width:8px; height:8px; border-radius:50%; background:#e5484d; display:inline-block;"></span>
+                                        Rechazar
+                                    </button>
+                                </form>
+                            </details>
                         {% else %}
                             {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                                <span class="badge-estado-lectura" data-raw-id="{{ d.raw_id }}" style="background:#fde8e8; color:#e5484d; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block;">{{ d.estado }}</span>
+                                <span style="background:#fde8e8; color:#e5484d; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
                             {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                                <span class="badge-estado-lectura" data-raw-id="{{ d.raw_id }}" style="background:#fef4e6; color:#e67e22; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block;">{{ d.estado }}</span>
+                                <span style="background:#fef4e6; color:#e67e22; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
                             {% else %}
-                                <span class="badge-estado-lectura" data-raw-id="{{ d.raw_id }}" style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block;">{{ d.estado }}</span>
+                                <span style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
                             {% endif %}
                         {% endif %}
                     </td>
@@ -116,279 +153,50 @@
         </table>
     </div>
 
-    <!-- SALTO DE PÁGINA DINÁMICO EN EL MISMO APARTADO -->
+    <!-- SALTO DE PÁGINA CONTROLADO 100% CON PYTHON (DJANGO PAGINATOR) -->
     <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-top:22px; padding-top:18px; border-top:1px solid #edf0f7;">
-        <span id="info-paginacion-consulta" class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">
-            Mostrando registros
+        <span class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">
+            {% if total_registros > 0 %}
+                Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total_registros }} donaciones (Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }})
+            {% else %}
+                Mostrando 0 de 0 donaciones
+            {% endif %}
         </span>
 
-        <div id="controles-paginacion-consulta" style="display:flex; align-items:center; gap:8px;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            {% if page_obj.has_previous %}
+                <a href="?rol={{ rol_actual }}&categoria={{ categoria_actual }}&page={{ page_obj.previous_page_number }}" class="elem-gris" style="text-decoration:none; border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem 'Plus Jakarta Sans',sans-serif;">
+                    Anterior
+                </a>
+            {% else %}
+                <span class="elem-gris" style="border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; opacity:0.5;">
+                    Anterior
+                </span>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span style="display:grid; place-items:center; background:#7287fe; color:#ffffff; width:36px; height:36px; border-radius:10px; font:800 0.82rem 'Plus Jakarta Sans',sans-serif; box-shadow:0 6px 14px rgba(114,135,254,0.35);">
+                        {{ num }}
+                    </span>
+                {% else %}
+                    <a href="?rol={{ rol_actual }}&categoria={{ categoria_actual }}&page={{ num }}" class="elem-gris" style="display:grid; place-items:center; text-decoration:none; border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; width:36px; height:36px; border-radius:10px; font:700 0.82rem 'Plus Jakarta Sans',sans-serif;">
+                        {{ num }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?rol={{ rol_actual }}&categoria={{ categoria_actual }}&page={{ page_obj.next_page_number }}" class="elem-gris" style="text-decoration:none; border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem 'Plus Jakarta Sans',sans-serif;">
+                    Siguiente
+                </a>
+            {% else %}
+                <span class="elem-gris" style="border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; opacity:0.5;">
+                    Siguiente
+                </span>
+            {% endif %}
+        </div>
     </div>
 </div>
-
-<!-- MENÚ FLOTANTE PARA CAMBIAR ESTADO (RECEPTOR) -->
-{% if es_receptor %}
-<div id="popover-estado-donacion" class="caja-blanca" style="display:none; position:fixed; z-index:9999; background:#ffffff; border:1px solid #e4e7f2; border-radius:14px; padding:6px; box-shadow:0 12px 28px rgba(30,40,120,0.16); min-width:145px;">
-    <button type="button" data-nuevo-estado="Aceptado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#12a559; text-align:left;" onmouseover="this.style.background='#eaf8f0'" onmouseout="this.style.background='transparent'">
-        <span style="width:8px; height:8px; border-radius:50%; background:#12a559; display:inline-block;"></span>
-        Aceptar
-    </button>
-    <button type="button" data-nuevo-estado="Reservado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e67e22; text-align:left;" onmouseover="this.style.background='#fef4e6'" onmouseout="this.style.background='transparent'">
-        <span style="width:8px; height:8px; border-radius:50%; background:#e67e22; display:inline-block;"></span>
-        Reservar
-    </button>
-    <button type="button" data-nuevo-estado="Rechazado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e5484d; text-align:left;" onmouseover="this.style.background='#fde8e8'" onmouseout="this.style.background='transparent'">
-        <span style="width:8px; height:8px; border-radius:50%; background:#e5484d; display:inline-block;"></span>
-        Rechazar
-    </button>
-</div>
-{% endif %}
-
-<script>
-(function() {
-    const cuerpoTabla = document.getElementById('cuerpo-consulta');
-    const ES_RECEPTOR = cuerpoTabla && cuerpoTabla.getAttribute('data-es-receptor') === 'true';
-    const FILAS_POR_PAGINA = 5;
-    let paginaActual = 1;
-    let botonActivoMenu = null;
-
-    const selectFiltro = document.getElementById('filtro-consulta');
-    const opcionTodas = document.getElementById('opcion-todas-consulta');
-    const infoPaginacion = document.getElementById('info-paginacion-consulta');
-    const controlesPaginacion = document.getElementById('controles-paginacion-consulta');
-    const contadorSuperior = document.getElementById('contador-consulta');
-    const popoverEstado = document.getElementById('popover-estado-donacion');
-    const formEstadoOculto = document.getElementById('form-estado-oculto');
-
-    const canalSync = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('hambre_cero_sync') : null;
-
-    function obtenerColoresEstado(estado) {
-        if (estado === 'Rechazado' || estado === 'Rechazada' || estado === 'Cancelada') {
-            return { bg: '#fde8e8', color: '#e5484d' };
-        }
-        if (estado === 'Reservado' || estado === 'Reservada' || estado === 'Pendiente') {
-            return { bg: '#fef4e6', color: '#e67e22' };
-        }
-        return { bg: '#eaf8f0', color: '#12a559' };
-    }
-
-    function aplicarEstiloElementoEstado(el, nuevoEstado) {
-        const col = obtenerColoresEstado(nuevoEstado);
-        el.style.background = col.bg;
-        el.style.color = col.color;
-        el.setAttribute('data-estado', nuevoEstado);
-        const spanTxt = el.querySelector('.texto-estado');
-        if (spanTxt) {
-            spanTxt.textContent = nuevoEstado;
-        } else {
-            el.textContent = nuevoEstado;
-        }
-    }
-
-    function obtenerTodasLasFilas() {
-        return Array.from(cuerpoTabla.querySelectorAll('.fila-consulta'));
-    }
-
-    function obtenerFilasFiltradas() {
-        const todasLasFilas = obtenerTodasLasFilas();
-        const valorFiltro = selectFiltro ? selectFiltro.value : 'TODAS';
-        if (valorFiltro === 'TODAS') {
-            return todasLasFilas;
-        }
-        return todasLasFilas.filter(function(fila) {
-            return fila.getAttribute('data-clasificacion') === valorFiltro;
-        });
-    }
-
-    function renderizarPagina(nuevaPagina) {
-        const todasLasFilas = obtenerTodasLasFilas();
-        const filasFiltradas = obtenerFilasFiltradas();
-        const totalFilas = filasFiltradas.length;
-        const totalPaginas = Math.max(1, Math.ceil(totalFilas / FILAS_POR_PAGINA));
-
-        if (nuevaPagina < 1) nuevaPagina = 1;
-        if (nuevaPagina > totalPaginas) nuevaPagina = totalPaginas;
-        paginaActual = nuevaPagina;
-
-        const indiceInicio = (paginaActual - 1) * FILAS_POR_PAGINA;
-        const indiceFin = indiceInicio + FILAS_POR_PAGINA;
-
-        todasLasFilas.forEach(function(fila) {
-            fila.style.display = 'none';
-        });
-
-        filasFiltradas.slice(indiceInicio, indiceFin).forEach(function(fila) {
-            fila.style.display = '';
-        });
-
-        if (opcionTodas) {
-            opcionTodas.textContent = 'Todas (' + todasLasFilas.length + ')';
-        }
-
-        if (contadorSuperior) {
-            contadorSuperior.textContent = 'Total: ' + totalFilas + ' registros';
-        }
-
-        if (infoPaginacion) {
-            if (totalFilas === 0) {
-                infoPaginacion.textContent = 'Mostrando 0 de 0 donaciones';
-            } else {
-                const mostradoInicio = indiceInicio + 1;
-                const mostradoFin = Math.min(indiceFin, totalFilas);
-                infoPaginacion.textContent = 'Mostrando ' + mostradoInicio + ' - ' + mostradoFin + ' de ' + totalFilas + ' donaciones (Página ' + paginaActual + ' de ' + totalPaginas + ')';
-            }
-        }
-
-        if (controlesPaginacion) {
-            controlesPaginacion.innerHTML = '';
-
-            const btnAnterior = document.createElement('button');
-            btnAnterior.type = 'button';
-            btnAnterior.textContent = 'Anterior';
-            btnAnterior.className = 'elem-gris';
-            btnAnterior.disabled = paginaActual === 1;
-            btnAnterior.style.cssText = 'border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem "Plus Jakarta Sans",sans-serif; cursor:' + (paginaActual === 1 ? 'not-allowed' : 'pointer') + '; opacity:' + (paginaActual === 1 ? '0.5' : '1') + ';';
-            btnAnterior.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (paginaActual > 1) {
-                    renderizarPagina(paginaActual - 1);
-                }
-            });
-            controlesPaginacion.appendChild(btnAnterior);
-
-            for (let i = 1; i <= totalPaginas; i++) {
-                const btnNum = document.createElement('button');
-                btnNum.type = 'button';
-                btnNum.textContent = String(i);
-                const esActiva = (i === paginaActual);
-                if (!esActiva) {
-                    btnNum.className = 'elem-gris';
-                }
-                btnNum.style.cssText = esActiva
-                    ? 'border:none; background:#7287fe; color:#ffffff; width:36px; height:36px; border-radius:10px; font:800 0.82rem "Plus Jakarta Sans",sans-serif; cursor:pointer; box-shadow:0 6px 14px rgba(114,135,254,0.35);'
-                    : 'border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; width:36px; height:36px; border-radius:10px; font:700 0.82rem "Plus Jakarta Sans",sans-serif; cursor:pointer;';
-                btnNum.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    renderizarPagina(i);
-                });
-                controlesPaginacion.appendChild(btnNum);
-            }
-
-            const btnSiguiente = document.createElement('button');
-            btnSiguiente.type = 'button';
-            btnSiguiente.textContent = 'Siguiente';
-            btnSiguiente.className = 'elem-gris';
-            btnSiguiente.disabled = paginaActual === totalPaginas;
-            btnSiguiente.style.cssText = 'border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem "Plus Jakarta Sans",sans-serif; cursor:' + (paginaActual === totalPaginas ? 'not-allowed' : 'pointer') + '; opacity:' + (paginaActual === totalPaginas ? '0.5' : '1') + ';';
-            btnSiguiente.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (paginaActual < totalPaginas) {
-                    renderizarPagina(paginaActual + 1);
-                }
-            });
-            controlesPaginacion.appendChild(btnSiguiente);
-        }
-    }
-
-    if (ES_RECEPTOR && popoverEstado) {
-        cuerpoTabla.addEventListener('click', function(e) {
-            const btn = e.target.closest('.btn-estado-selector');
-            if (!btn) return;
-            e.stopPropagation();
-
-            if (botonActivoMenu === btn && popoverEstado.style.display === 'block') {
-                popoverEstado.style.display = 'none';
-                botonActivoMenu = null;
-                return;
-            }
-
-            botonActivoMenu = btn;
-            const rect = btn.getBoundingClientRect();
-            popoverEstado.style.display = 'block';
-            const popHeight = popoverEstado.offsetHeight || 120;
-            const popWidth = popoverEstado.offsetWidth || 150;
-
-            let topPos = rect.bottom + 6;
-            if (topPos + popHeight > window.innerHeight - 12) {
-                topPos = rect.top - popHeight - 6;
-            }
-            let leftPos = rect.left;
-            if (leftPos + popWidth > window.innerWidth - 12) {
-                leftPos = window.innerWidth - popWidth - 12;
-            }
-
-            popoverEstado.style.top = topPos + 'px';
-            popoverEstado.style.left = leftPos + 'px';
-        });
-
-        popoverEstado.addEventListener('click', function(e) {
-            const opcionBtn = e.target.closest('button[data-nuevo-estado]');
-            if (!opcionBtn || !botonActivoMenu) return;
-            e.stopPropagation();
-
-            const nuevoEstado = opcionBtn.getAttribute('data-nuevo-estado');
-            const rawId = botonActivoMenu.getAttribute('data-raw-id');
-            const btnRef = botonActivoMenu;
-
-            aplicarEstiloElementoEstado(btnRef, nuevoEstado);
-            popoverEstado.style.display = 'none';
-            botonActivoMenu = null;
-
-            if (formEstadoOculto) {
-                document.getElementById('input-donacion-id').value = rawId;
-                document.getElementById('input-nuevo-estado').value = nuevoEstado;
-                const formData = new FormData(formEstadoOculto);
-
-                fetch(formEstadoOculto.action, {
-                    method: 'POST',
-                    body: formData
-                }).then(function() {
-                    if (canalSync) {
-                        canalSync.postMessage({
-                            tipo: 'estado_actualizado',
-                            raw_id: rawId,
-                            estado: nuevoEstado
-                        });
-                    }
-                }).catch(function() {});
-            }
-        });
-
-        document.addEventListener('click', function() {
-            if (popoverEstado.style.display === 'block') {
-                popoverEstado.style.display = 'none';
-                botonActivoMenu = null;
-            }
-        });
-
-        window.addEventListener('scroll', function() {
-            if (popoverEstado.style.display === 'block') {
-                popoverEstado.style.display = 'none';
-                botonActivoMenu = null;
-            }
-        }, true);
-    }
-
-    if (canalSync) {
-        canalSync.onmessage = function(ev) {
-            if (ev.data && ev.data.tipo === 'estado_actualizado' && ev.data.raw_id) {
-                const selector = '[data-raw-id="' + ev.data.raw_id + '"].btn-estado-selector, [data-raw-id="' + ev.data.raw_id + '"].badge-estado-lectura';
-                const elEstado = cuerpoTabla.querySelector(selector);
-                if (elEstado) {
-                    aplicarEstiloElementoEstado(elEstado, ev.data.estado);
-                }
-            }
-        };
-    }
-
-    if (selectFiltro) {
-        selectFiltro.addEventListener('change', function() {
-            renderizarPagina(1);
-        });
-    }
-
-    renderizarPagina(1);
-})();
-</script>
 
 {% endblock %}

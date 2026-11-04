@@ -1,10 +1,12 @@
 import re
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, MovimientoInventario
 from users.models import Donante, Receptor
 
 
+# Detecta y sincroniza en sesión si la vista actual corresponde al rol Receptor o Donante
 def _es_rol_receptor(request):
     rol_param = request.GET.get('rol') or request.POST.get('rol')
     if rol_param in ('receptor', 'donante'):
@@ -21,7 +23,8 @@ def _es_rol_receptor(request):
     return request.session.get('rol_activo') == 'receptor'
 
 
-def _obtener_lista_donaciones():
+# Obtiene y filtra en Python las donaciones desde db.sqlite3 mostrando primero las nuevas
+def _obtener_lista_donaciones(categoria='TODAS'):
     queryset = list(
         Donacion.objects.select_related(
             'alimento', 'donante', 'receptor', 'centro_acopio'
@@ -30,9 +33,14 @@ def _obtener_lista_donaciones():
     nuevas = sorted([d for d in queryset if d.id > 13], key=lambda x: -x.id)
     base = [d for d in queryset if d.id <= 13]
     ordenadas = nuevas + base
+    total_general = len(ordenadas)
 
     donaciones = []
     for d in ordenadas:
+        clave_cat = d.alimento.clasificacion if d.alimento else 'OTRO'
+        if categoria and categoria != 'TODAS' and clave_cat != categoria:
+            continue
+
         donante_txt = (
             d.nombre_donante
             or (d.donante.nombre_local if d.donante and d.donante.nombre_local else None)
@@ -53,7 +61,7 @@ def _obtener_lista_donaciones():
             'donante': donante_txt,
             'alimento': d.alimento.nombre if d.alimento else 'Alimento',
             'clasificacion': d.alimento.get_clasificacion_display() if d.alimento else 'General',
-            'clasificacion_clave': d.alimento.clasificacion if d.alimento else 'OTRO',
+            'clasificacion_clave': clave_cat,
             'cantidad': d.cantidad,
             'peso': f"{float(d.peso_kg):g} kg" if d.peso_kg else '1 kg',
             'tipo': d.get_tipo_display(),
@@ -61,12 +69,17 @@ def _obtener_lista_donaciones():
             'ubicacion': d.alimento.ubicacion_almacen if d.alimento and d.alimento.ubicacion_almacen else 'Recepción Acopio',
             'estado': d.estado,
         })
-    return donaciones
+    return donaciones, total_general
 
 
+# Vista en Python: gestiona cambio de estado por POST, filtro por categoría y paginación con Paginator
 def consultarDonaciones(request):
     es_receptor = _es_rol_receptor(request)
+    rol_actual = 'receptor' if es_receptor else 'donante'
+    categoria_actual = request.GET.get('categoria') or request.POST.get('categoria') or 'TODAS'
+    pagina_actual = request.GET.get('page') or request.POST.get('page') or 1
 
+    # Actualiza en BD el estado de la donación y del alimento (Aceptado, Reservado o Rechazado)
     if request.method == 'POST':
         donacion_id = request.POST.get('donacion_id')
         accion = (request.POST.get('nuevo_estado') or '').strip()
@@ -95,24 +108,48 @@ def consultarDonaciones(request):
                     donacion.alimento.estado = 'EN_REVISION'
                 donacion.alimento.save(update_fields=['estado'])
 
-    donaciones = _obtener_lista_donaciones()
+        return redirect(
+            f"/alertas/consultarDonaciones/?rol={rol_actual}&categoria={categoria_actual}&page={pagina_actual}"
+        )
+
+    donaciones_filtradas, total_general = _obtener_lista_donaciones(categoria=categoria_actual)
+    paginator = Paginator(donaciones_filtradas, 5)
+    page_obj = paginator.get_page(pagina_actual)
+
     return render(request, 'alertas/consultarDonaciones.html', {
-        'donaciones': donaciones,
-        'total_registros': len(donaciones),
+        'donaciones': page_obj,
+        'page_obj': page_obj,
+        'total_registros': len(donaciones_filtradas),
+        'total_general': total_general,
+        'categoria_actual': categoria_actual,
+        'rol_actual': rol_actual,
         'es_receptor': es_receptor,
     })
 
 
+# Muestra el historial paginado y filtrado 100% desde Python con Django Paginator
 def historialDonaciones(request):
     es_receptor = _es_rol_receptor(request)
-    donaciones = _obtener_lista_donaciones()
+    rol_actual = 'receptor' if es_receptor else 'donante'
+    categoria_actual = request.GET.get('categoria', 'TODAS')
+    pagina_actual = request.GET.get('page', 1)
+
+    donaciones_filtradas, total_general = _obtener_lista_donaciones(categoria=categoria_actual)
+    paginator = Paginator(donaciones_filtradas, 5)
+    page_obj = paginator.get_page(pagina_actual)
+
     return render(request, 'alertas/historialDonaciones.html', {
-        'donaciones': donaciones,
-        'total_registros': len(donaciones),
+        'donaciones': page_obj,
+        'page_obj': page_obj,
+        'total_registros': len(donaciones_filtradas),
+        'total_general': total_general,
+        'categoria_actual': categoria_actual,
+        'rol_actual': rol_actual,
         'es_receptor': es_receptor,
     })
 
 
+# Registra manualmente un nuevo alimento, su donación y el movimiento de entrada en inventario
 def cargarDonaciones(request):
     request.session['rol_activo'] = 'donante'
     if request.method == 'POST':

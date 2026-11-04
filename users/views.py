@@ -8,6 +8,7 @@ from alertas.models import Donacion, Alimento
 from .models import Usuario, Donante, Receptor
 
 
+# Calcula en tiempo real las métricas del dashboard (total de donaciones y peso en KG) desde db.sqlite3
 def _obtener_contexto_dashboard():
     donaciones_qs = Donacion.objects.select_related(
         'alimento', 'donante', 'receptor', 'centro_acopio'
@@ -25,6 +26,7 @@ def _obtener_contexto_dashboard():
     }
 
 
+# Redirige al panel correspondiente según el rol del usuario e inyecta las métricas reales
 @login_required
 def dashboard(request):
     if hasattr(request.user, 'donante'):
@@ -41,6 +43,7 @@ def dashboard(request):
         return render(request, 'users/dashboard.html', context)
 
 
+# Panel del Donante que hereda la estructura y métricas desde dashboard.html
 @login_required
 def dashboardDonante(request):
     request.session['rol_activo'] = 'donante'
@@ -48,6 +51,7 @@ def dashboardDonante(request):
     return render(request, 'users/dashboardDonante.html', context)
 
 
+# Panel del Receptor que hereda la estructura y métricas desde dashboard.html
 @login_required
 def dashboardReceptor(request):
     request.session['rol_activo'] = 'receptor'
@@ -55,6 +59,7 @@ def dashboardReceptor(request):
     return render(request, 'users/dashboardReceptor.html', context)
 
 
+# Registro de nuevos usuarios asignando el modelo Donante o Receptor según selección
 def Sing_up(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -81,10 +86,12 @@ def Sing_up(request):
     return render(request, 'users/Sing_up.html')
 
 
+# Vista informativa para recuperación de contraseña
 def reset_password(request):
     return render(request, 'users/reset_password.html')
 
 
+# Guarda en la sesión las preferencias visuales (modo oscuro, alto contraste, fuente y alertas)
 @login_required
 def configuracion(request):
     if request.method == 'POST':
@@ -98,11 +105,36 @@ def configuracion(request):
 
     return render(request, 'users/configuracion.html')
 
+@login_required
+def perfil(request):
+    usuario = request.user
+    campo_razon = None
+    if hasattr(usuario, 'donante'):
+        usuario = usuario.donante
+        campo_razon = 'nombre_local'
+    elif hasattr(usuario, 'receptor'):
+        usuario = usuario.receptor
+        campo_razon = 'nombre_org'
 
+    if request.method == 'POST':
+        usuario.telefono = request.POST.get('telefono', '')
+        usuario.direccion = request.POST.get('direccion', '')
+        if campo_razon:
+            setattr(usuario, campo_razon, request.POST.get('razon_social', ''))
+        usuario.save()
+        messages.success(request, 'Perfil actualizado')
+        return redirect('perfil')
+
+    razon_social = getattr(usuario, campo_razon, '') if campo_razon else ''
+    return render(request, 'users/perfil.html', {'razon_social': razon_social})
+
+
+# Exporta el inventario real de donaciones de db.sqlite3 en formato CSV o PDF
 @login_required
 def exportar_informe(request):
     formato = request.GET.get('formato', 'csv')
 
+    # Consulta real a las donaciones registradas en la base de datos
     donaciones_qs = Donacion.objects.select_related('alimento', 'donante').all()
     registros = []
     for d in donaciones_qs:

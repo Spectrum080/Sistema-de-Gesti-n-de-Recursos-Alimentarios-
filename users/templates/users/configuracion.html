@@ -2,6 +2,7 @@
 
 {% block title %}Configuración - Hambre Cero{% endblock %}
 
+<!-- Vista de preferencias que guarda en sesión el tema oscuro, alto contraste, escala de fuente y alertas -->
 {% block contenido %}
 <form method="POST" action="{% url 'configuracion' %}">
     {% csrf_token %}
