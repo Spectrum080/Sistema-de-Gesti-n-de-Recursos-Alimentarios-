@@ -1,146 +1,126 @@
-<!-- HERENCIA DE LA PLANTILLA PRINCIPAL -->
-{% extends 'users/dashboard.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Donación - Hambre Cero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+</head>
+<body style="background:#f4f6fc; margin:0; padding:20px; font-family:'Plus Jakarta Sans', sans-serif;">
 
-<!-- TÍTULO DE LA PESTAÑA -->
-{% block title %}Subir Donación - Hambre Cero{% endblock %}
-
-<!-- CONTENIDO PRINCIPAL -->
-{% block content %}
-
-<!-- CONTENEDOR PRINCIPAL DEL FORMULARIO -->
-<main style="width:100%; max-width:650px; background:#fff; padding:45px; border-radius:18px; box-shadow:0 10px 28px rgba(30,40,120,0.08); box-sizing:border-box; margin:20px auto; font-family:'Plus Jakarta Sans', sans-serif;">
-    
-    <!-- ENCABEZADO Y DESCRIPCIÓN -->
-    <div style="margin-bottom:30px;">
-        <span style="display:inline-block; background:#e0e7ff; color:#4338ca; font-size:0.7rem; font-weight:700; padding:4px 12px; border-radius:999px; margin-bottom:10px; letter-spacing:0.5px;">DONACIÓN SEGURA Y RÁPIDA</span>
-        <h1 style="font-size:2rem; font-weight:800; color:#2b3044; margin:0 0 8px;">Subir Donación</h1>
-        <p style="font-size:0.88rem; color:#6b7084; margin:0; line-height:1.4;">Registra los alimentos excedentes para canalizarlos a un receptor y evitar el desperdicio.</p>
-    </div>
-
-    <!-- FORMULARIO DE REGISTRO -->
-    <form method="post" action="" enctype="multipart/form-data">
+    <!-- CONTENEDOR PRINCIPAL DEL FORMULARIO -->
+    <main style="width:100%; max-width:650px; background:#fff; padding:45px; border-radius:18px; box-shadow:0 10px 28px rgba(30,40,120,0.08); box-sizing:border-box; margin:20px auto;">
         
-        <!-- TOKEN DE SEGURIDAD CSRF -->
-        {% csrf_token %}
-
-        <!-- ================= SECCIÓN 1: INFORMACIÓN DEL DONANTE ================= -->
+        <!-- ENCABEZADO Y DESCRIPCIÓN -->
         <div style="margin-bottom:30px;">
-            
-            <!-- TÍTULO DE LA SECCIÓN 1 -->
-            <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
-                1. Información del Donante / Establecimiento
-            </h2>
-
-            <!-- CONTENEDOR DE NOMBRE Y TELÉFONO -->
-            <div style="display:flex; gap:16px; margin-bottom:16px;">
-                
-                <!-- CAMPO: NOMBRE O RAZÓN SOCIAL -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Nombre o Razón Social *</span>
-                    <input type="text" name="nombre_donante" required placeholder="Ej. Restaurante San Marcos" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                </label>
-
-                <!-- CAMPO: TELÉFONO DE CONTACTO -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Teléfono de Contacto *</span>
-                    <input type="tel" name="telefono" required placeholder="Ej. 55 1234 5678" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                </label>
-
-            </div>
-
-            <!-- CAMPO: DIRECCIÓN DE RECOLECCIÓN -->
-            <label style="display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Dirección de Recolección *</span>
-                <input type="text" name="direccion" required placeholder="Ej. Av. Reforma 123, Col. Centro" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-            </label>
-
+            <span style="display:inline-block; background:#e0e7ff; color:#4338ca; font-size:0.7rem; font-weight:700; padding:4px 12px; border-radius:999px; margin-bottom:10px; letter-spacing:0.5px;">DONACIÓN SEGURA Y RÁPIDA</span>
+            <h1 style="font-size:2rem; font-weight:800; color:#2b3044; margin:0 0 8px;">Subir Donación</h1>
+            <p style="font-size:0.88rem; color:#6b7084; margin:0; line-height:1.4;">Registra los alimentos excedentes para canalizarlos a un receptor y evitar el desperdicio.</p>
         </div>
 
-
-        <!-- ================= SECCIÓN 2: DETALLES DE LOS ALIMENTOS ================= -->
-        <div style="margin-bottom:30px;">
+        <!-- FORMULARIO DE REGISTRO CONECTADO AL BACKEND DE CARLOS -->
+        <form method="post" action="" enctype="multipart/form-data" id="formDonacion">
             
-            <!-- TÍTULO DE LA SECCIÓN 2 -->
-            <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
-                2. Detalles de los Alimentos
-            </h2>
+            {% csrf_token %}
 
-            <!-- CONTENEDOR DE CATEGORÍA, CANTIDAD Y UNIDAD -->
-            <div style="display:flex; gap:14px; margin-bottom:16px;">
-                
-                <!-- SELECCIÓN DE CATEGORÍA -->
-                <label style="flex:1.2; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Categoría *</span>
-                    <select name="tipo" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
-                        <option value="" disabled selected>Selecciona</option>
-                        <option value="PERECEDERO">Perecedero</option>
-                        <option value="NO_PERECEDERO">No Perecedero</option>
-                    </select>
+            <!-- CAMPO OCULTO DE CLASIFICACIÓN -->
+            <input type="hidden" name="clasificacion" value="OTRO">
+
+            <!-- ================= SECCIÓN 1: INFORMACIÓN DEL DONANTE ================= -->
+            <div style="margin-bottom:30px;">
+                <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
+                    1. Información del Donante / Establecimiento
+                </h2>
+
+                <div style="display:flex; gap:16px; margin-bottom:16px;">
+                    <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Nombre o Razón Social *</span>
+                        <input type="text" name="nombre_donante" required placeholder="Ej. Restaurante San Marcos" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    </label>
+
+                    <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Teléfono de Contacto *</span>
+                        <input type="tel" name="telefono" required placeholder="Ej. 55 1234 5678" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    </label>
+                </div>
+
+                <label style="display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Dirección de Recolección *</span>
+                    <input type="text" name="direccion" required placeholder="Ej. Av. Reforma 123, Col. Centro" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                 </label>
-
-                <!-- CAMPO DE CANTIDAD -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Cantidad *</span>
-                    <input type="text" name="cantidad" required placeholder="Ej. 10" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                </label>
-
-                <!-- CAMPO DE UNIDAD DE MEDIDA -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Unidad</span>
-                    <input type="text" name="unidad" placeholder="Ej. kg, cajas" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                </label>
-
             </div>
 
-            <!-- CAMPO: DESCRIPCIÓN DEL CONTENIDO -->
-            <label style="display:block; background:#fff; border-radius:14px; padding:12px 18px; margin-bottom:16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Descripción del Contenido *</span>
-                <input type="text" name="titulo" required placeholder="Ej. Charolas de guisados frescos, pan dulce varia..." style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-            </label>
+            <!-- ================= SECCIÓN 2: DETALLES DE LOS ALIMENTOS ================= -->
+            <div style="margin-bottom:30px;">
+                <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
+                    2. Detalles de los Alimentos
+                </h2>
 
-            <!-- CONTENEDOR DE CADUCIDAD Y REQUISITO DE CONSERVACIÓN -->
-            <div style="display:flex; gap:16px;">
-                
-                <!-- FECHA DE CADUCIDAD / CONSUMO -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Fecha de Caducidad / Consumo *</span>
-                    <input type="date" name="fecha_caducidad" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+                <div style="display:flex; gap:14px; margin-bottom:16px;">
+                    <label style="flex:1.2; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Categoría *</span>
+                        <select name="tipo" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+                            <option value="" disabled selected>Selecciona</option>
+                            <option value="PERECEDERO">Perecedero</option>
+                            <option value="NO_PERECEDERO">No Perecedero</option>
+                        </select>
+                    </label>
+
+                    <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Cantidad *</span>
+                        <input type="text" id="num_cantidad" required placeholder="Ej. 10" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    </label>
+
+                    <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Unidad</span>
+                        <input type="text" id="txt_unidad" placeholder="Ej. kg, cajas" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    </label>
+                </div>
+
+                <input type="hidden" name="cantidad" id="final_cantidad">
+
+                <label style="display:block; background:#fff; border-radius:14px; padding:12px 18px; margin-bottom:16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Descripción del Contenido *</span>
+                    <input type="text" name="titulo" required placeholder="Ej. Charolas de guisados frescos, pan dulce varia..." style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                 </label>
 
-                <!-- REQUISITO DE CONSERVACIÓN -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Requisito de Conservación *</span>
-                    <input type="text" name="descripcion" placeholder="Ej. Refrigeración a 4°C" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                </label>
+                <div style="display:flex; gap:16px;">
+                    <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Fecha de Caducidad / Consumo *</span>
+                        <input type="date" name="fecha_caducidad" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+                    </label>
 
+                    <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                        <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Requisito de Conservación *</span>
+                        <input type="text" name="descripcion" placeholder="Ej. Refrigeración a 4°C" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    </label>
+                </div>
             </div>
 
-        </div>
+            <!-- ================= SECCIÓN 3: EVIDENCIA FOTOGRÁFICA ================= -->
+            <div style="margin-bottom:32px;">
+                <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
+                    3. Evidencia Fotográfica
+                </h2>
 
+                <label style="display:block; background:#fff; border-radius:14px; padding:18px 20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; cursor:pointer; text-align:center;">
+                    <span style="display:block; font-size:0.78rem; color:#6b7084; font-weight:600; margin-bottom:6px;">Adjuntar foto del alimento (Opcional)</span>
+                    <input type="file" name="imagen" accept="image/*" style="font:600 0.82rem 'Plus Jakarta Sans',sans-serif; color:#2b3044;">
+                </label>
+            </div>
 
-        <!-- ================= SECCIÓN 3: EVIDENCIA FOTOGRÁFICA ================= -->
-        <div style="margin-bottom:32px;">
-            
-            <!-- TÍTULO DE LA SECCIÓN 3 -->
-            <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
-                3. Evidencia Fotográfica
-            </h2>
+            <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">
+                Publicar Donación
+            </button>
+        </form>
+    </main>
 
-            <!-- ADJUNTAR FOTO -->
-            <label style="display:block; background:#fff; border-radius:14px; padding:18px 20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; cursor:pointer; text-align:center;">
-                <span style="display:block; font-size:0.78rem; color:#6b7084; font-weight:600; margin-bottom:6px;">Adjuntar foto del alimento (Opcional)</span>
-                <input type="file" name="imagen" accept="image/*" style="font:600 0.82rem 'Plus Jakarta Sans',sans-serif; color:#2b3044;">
-            </label>
-
-        </div>
-
-
-        <!-- BOTÓN DE ENVÍO Y PUBLICACIÓN -->
-        <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4); transition:transform 0.1s ease;">
-            Publicar Donación
-        </button>
-
-    </form>
-
-</main>
-{% endblock %}
+    <script>
+        document.getElementById('formDonacion').addEventListener('submit', function() {
+            const cant = document.getElementById('num_cantidad').value;
+            const uni = document.getElementById('txt_unidad').value;
+            document.getElementById('final_cantidad').value = uni ? `${cant} ${uni}` : cant;
+        });
+    </script>
+</body>
+</html>
