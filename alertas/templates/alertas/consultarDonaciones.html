@@ -1,41 +1,43 @@
-<!-- Hereda la estructura general del dashboard principal sin utilizar JavaScript -->
+<!-- Hereda toda la estructura visual, barra superior y estilos de la plantilla base dashboard.html sin usar JavaScript -->
 {% extends 'users/dashboard.html' %}
 
 <!-- Define el título dinámico de la pestaña según el rol activo -->
 {% block title %}{% if es_receptor %}Aceptar Donaciones{% else %}Mis Donaciones{% endif %} - Hambre Cero{% endblock %}
 
-<!-- Abre el bloque de contenido principal -->
+<!-- Abre el bloque de contenido principal que se inyecta en dashboard.html -->
 {% block contenido %}
 
-<!-- Estilos CSS puros para los menús desplegables de estado/feedback y el modal de evidencia fotográfica -->
+<!-- Estilos CSS puros para los botones de estado y ventanas modales centradas -->
 <style>
-    /* Oculta el marcador nativo de las etiquetas details/summary */
-    details.menu-interactivo > summary {
-        list-style: none;
-    }
-    /* Oculta el marcador en navegadores basados en WebKit */
-    details.menu-interactivo > summary::-webkit-details-marker {
-        display: none;
-    }
-    /* Efecto visual al pasar el cursor sobre los botones de acción */
+    /* Efecto suave al pasar el cursor sobre las opciones de estado dentro del modal */
     .btn-opcion-estado:hover {
-        filter: brightness(0.95);
+        filter: brightness(0.96);
+    }
+    /* Evita que las etiquetas y botones dentro de las celdas se partan o se vean amontonados */
+    .pildora-tabla {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        border: none;
+        line-height: 1.2;
     }
 </style>
 
 <!-- ENCABEZADO Y FILTRO POR CATEGORÍA PROCESADO 100% EN PYTHON -->
 <div style="margin-bottom: -16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
     <div>
-        <!-- Título de la sección según el rol -->
+        <!-- Título principal de la vista según el rol -->
         <h1 class="txt-principal" style="font-size:2rem; font-weight:800; margin:0 0 4px; color:#2b3044;">
             {% if es_receptor %}Consultar y Aceptar Donaciones{% else %}Mis Donaciones{% endif %}
         </h1>
-        <!-- Subtítulo explicativo adaptado a Receptor o Donante -->
+        <!-- Subtítulo descriptivo utilizando el término Comentarios -->
         <p class="txt-secundario" style="font-size:0.9rem; color:#6b7084; margin:0;">
             {% if es_receptor %}
-                Analiza las donaciones recibidas de cualquier usuario, revisa su evidencia fotográfica, agrega feedback, cambia su estado o quítalas
+                Analiza las donaciones recibidas de cualquier usuario, revisa su evidencia fotográfica, agrega comentarios, cambia su estado o quítalas
             {% else %}
-                Seguimiento encapsulado únicamente de las entregas que has registrado con su categoría, evidencia y feedback del receptor
+                Seguimiento encapsulado únicamente de las entregas que has registrado con su categoría, evidencia y comentarios del receptor
             {% endif %}
         </p>
     </div>
@@ -75,21 +77,21 @@
         <span class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ total_registros }} registros</span>
     </div>
 
-    <!-- Contenedor con desplazamiento horizontal para pantallas pequeñas -->
+    <!-- Contenedor de tabla con espacio holgado entre columnas -->
     <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
             <thead>
-                <!-- Cabeceras de la tabla incluyendo los apartados de EVIDENCIA y FEEDBACK -->
+                <!-- Cabeceras de la tabla con EVIDENCIA, COMENTARIOS y ESTADO bien distribuidos -->
                 <tr class="linea-divisoria txt-secundario" style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">ID</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Donante</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Alimento</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Categoría</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Cantidad</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Tipo</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Evidencia</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Feedback</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Estado</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">ID</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Donante</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Alimento</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Categoría</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Cantidad</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Tipo</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Evidencia</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Comentarios</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Estado</th>
                 </tr>
             </thead>
 
@@ -98,163 +100,209 @@
                 {% for d in donaciones %}
                 <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
                     <!-- Folio de la donación -->
-                    <td style="padding:16px 12px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
+                    <td style="padding:16px 14px; font-weight:800; color:#7287fe; white-space:nowrap;">#{{ d.id }}</td>
                     <!-- Nombre del donante -->
-                    <td class="txt-principal" style="padding:16px 12px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
                     <!-- Nombre del alimento donado -->
-                    <td class="txt-principal" style="padding:16px 12px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
-                    <!-- Etiqueta de Categoría sin clase elem-gris para evitar bordes no deseados -->
-                    <td style="padding:16px 12px;">
-                        <span style="background:#eff2fe; color:#7287fe; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem; display:inline-block; border:none;">{{ d.clasificacion }}</span>
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
+                    <!-- Etiqueta de Categoría sin bordes y sin partirse en varias líneas -->
+                    <td style="padding:16px 14px;">
+                        <span class="pildora-tabla" style="background:#eff2fe; color:#7287fe; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.75rem;">{{ d.clasificacion }}</span>
                     </td>
                     <!-- Cantidad y unidad registrada -->
-                    <td class="txt-principal" style="padding:16px 12px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
-                    <!-- Etiqueta de Tipo sin clase elem-gris para evitar bordes no deseados -->
-                    <td style="padding:16px 12px;">
-                        <span style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem; display:inline-block; border:none;">{{ d.tipo }}</span>
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:700; color:#2b3044; white-space:nowrap;">{{ d.cantidad }}</td>
+                    <!-- Etiqueta de Tipo sin bordes -->
+                    <td style="padding:16px 14px;">
+                        <span class="pildora-tabla" style="background:#f4f6fb; color:#6b7084; padding:6px 14px; border-radius:999px; font-weight:600; font-size:0.78rem;">{{ d.tipo }}</span>
                     </td>
 
-                    <!-- APARTADO DE EVIDENCIA FOTOGRÁFICA (Abre imagen en el centro de la pantalla solo al dar clic) -->
-                    <td style="padding:16px 12px;">
+                    <!-- APARTADO DE EVIDENCIA FOTOGRÁFICA (Abre imagen centrada en pantalla sin cortarse) -->
+                    <td style="padding:16px 14px;">
                         {% if d.evidencia_imagen %}
-                            <!-- Botón que activa el checkbox del modal CSS para mostrar la imagen centrada -->
-                            <label for="modal-evidencia-{{ d.raw_id }}" style="display:inline-flex; align-items:center; gap:6px; background:#eff2fe; color:#4338ca; padding:6px 12px; border-radius:10px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; border:none;">
+                            <!-- Botón que activa el modal CSS centrado para ver la fotografía -->
+                            <label for="modal-evidencia-{{ d.raw_id }}" class="pildora-tabla" style="background:#eff2fe; color:#4338ca; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
                                 Ver Evidencia
                             </label>
-                            <!-- Checkbox oculto que controla la apertura y cierre de la ventana emergente sin JavaScript -->
+                            <!-- Checkbox oculto que controla la visibilidad del modal de evidencia -->
                             <input type="checkbox" id="modal-evidencia-{{ d.raw_id }}" class="modal-toggle">
-                            <!-- Capa superpuesta que centra la fotografía en la pantalla únicamente cuando el botón está activo -->
+                            <!-- Ventana emergente centrada en toda la pantalla -->
                             <div class="modal-overlay">
-                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:520px; border-radius:20px; padding:24px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:center;">
-                                    <!-- Cabecera del modal con título y botón para cerrar -->
+                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:520px; border-radius:20px; padding:26px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:center;">
+                                    <!-- Cabecera del modal de evidencia -->
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                                        <h3 class="txt-principal" style="margin:0; font-size:1.05rem; font-weight:800; color:#2b3044;">Evidencia Fotográfica - #{{ d.id }} {{ d.alimento }}</h3>
+                                        <h3 class="txt-principal" style="margin:0; font-size:1.08rem; font-weight:800; color:#2b3044;">Evidencia Fotográfica - #{{ d.id }} {{ d.alimento }}</h3>
                                         <label for="modal-evidencia-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
                                     </div>
-                                    <!-- Imagen renderizada en el centro del modal -->
-                                    <div style="background:#f4f6fb; border-radius:14px; padding:12px; margin-bottom:16px;">
+                                    <!-- Contenedor de la fotografía centrada -->
+                                    <div style="background:#f4f6fb; border-radius:14px; padding:12px; margin-bottom:18px;">
                                         <img src="{{ d.evidencia_imagen }}" alt="Evidencia de {{ d.alimento }}" style="max-width:100%; max-height:360px; border-radius:10px; object-fit:contain; display:block; margin:0 auto;">
                                     </div>
-                                    <!-- Botón inferior para cerrar la vista de evidencia -->
+                                    <!-- Botón para cerrar el modal de evidencia -->
                                     <label for="modal-evidencia-{{ d.raw_id }}" style="display:inline-block; padding:10px 24px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
                                         Cerrar Evidencia
-                                    </label>
+                                    </button>
                                 </div>
                             </div>
                         {% else %}
-                            <!-- Texto informativo cuando el donante no adjuntó fotografía -->
-                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600;">Sin foto</span>
+                            <!-- Indicador cuando no se subió foto -->
+                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Sin foto</span>
                         {% endif %}
                     </td>
 
-                    <!-- APARTADO DE FEEDBACK (Botón para agregar o consultar el motivo de aceptación, reserva o rechazo) -->
-                    <td style="padding:16px 12px;">
+                    <!-- APARTADO DE COMENTARIOS (Abre ventana modal centrada en pantalla sin recortarse ni hacer scroll en tabla) -->
+                    <td style="padding:16px 14px;">
                         {% if es_receptor %}
-                            <!-- Desplegable nativo HTML para que el Receptor agregue o edite el feedback de la donación -->
-                            <details class="menu-interactivo" style="position:relative; display:inline-block;">
-                                <summary style="border:none; background:#f4f6fb; color:#2b3044; padding:6px 12px; border-radius:10px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                    <span>{% if d.feedback %}Editar Feedback{% else %}+ Feedback{% endif %}</span>
-                                </summary>
-                                <!-- Formulario POST para guardar el motivo de aceptación, reserva o rechazo -->
-                                <form method="POST" action="{% url 'consultarDonaciones' %}" class="caja-blanca" style="position:absolute; right:0; top:calc(100% + 6px); z-index:99; background:#ffffff; border:1px solid #e4e7f2; border-radius:14px; padding:14px; box-shadow:0 12px 28px rgba(30,40,120,0.18); width:250px; margin:0; box-sizing:border-box;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
-                                    <input type="hidden" name="rol" value="receptor">
-                                    <input type="hidden" name="categoria" value="{{ categoria_actual }}">
-                                    <input type="hidden" name="page" value="{{ page_obj.number }}">
-                                    <!-- Etiqueta explicativa del campo de retroalimentación -->
-                                    <span class="txt-principal" style="display:block; font-size:0.75rem; font-weight:700; color:#2b3044; margin-bottom:6px;">Motivo de aceptación / rechazo / reserva:</span>
-                                    <!-- Área de texto para escribir la retroalimentación -->
-                                    <textarea name="feedback" rows="3" placeholder="Escribe por qué se aceptó, reservó o rechazó..." class="elem-gris txt-principal" style="width:100%; border:1px solid #e4e7f2; border-radius:10px; padding:8px; font:600 0.78rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; resize:vertical; margin-bottom:8px;">{{ d.feedback }}</textarea>
-                                    <!-- Botón para guardar el feedback en la base de datos -->
-                                    <button type="submit" name="nuevo_estado" value="GuardarFeedback" style="width:100%; border:none; background:#7287fe; color:#ffffff; padding:8px 12px; border-radius:8px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                        Guardar Feedback
-                                    </button>
-                                </form>
-                            </details>
-                        {% else %}
-                            <!-- Vista del Donante para leer el feedback dejado por el Receptor -->
-                            {% if d.feedback %}
-                                <details class="menu-interactivo" style="position:relative; display:inline-block;">
-                                    <summary style="border:none; background:#eff2fe; color:#7287fe; padding:6px 12px; border-radius:10px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                        Ver Feedback
-                                    </summary>
-                                    <div class="caja-blanca txt-principal" style="position:absolute; right:0; top:calc(100% + 6px); z-index:99; background:#ffffff; border:1px solid #e4e7f2; border-radius:12px; padding:12px; box-shadow:0 12px 28px rgba(30,40,120,0.16); width:220px; font-size:0.78rem; font-weight:600; color:#2b3044;">
-                                        {{ d.feedback }}
+                            <!-- Botón que abre el modal centrado para agregar o editar comentarios -->
+                            <label for="modal-comentarios-{{ d.raw_id }}" class="pildora-tabla" style="background:#f4f6fb; color:#2b3044; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                {% if d.feedback %}Ver / Editar{% else %}+ Comentarios{% endif %}
+                            </label>
+                            <!-- Checkbox oculto que activa el modal centrado de Comentarios -->
+                            <input type="checkbox" id="modal-comentarios-{{ d.raw_id }}" class="modal-toggle">
+                            <!-- Ventana modal centrada en pantalla para escribir cómodamente el comentario -->
+                            <div class="modal-overlay">
+                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:440px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
+                                    <!-- Encabezado del modal de comentarios -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <h3 class="txt-principal" style="margin:0; font-size:1.12rem; font-weight:800; color:#2b3044;">Comentarios de la Donación #{{ d.id }}</h3>
+                                        <label for="modal-comentarios-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
                                     </div>
-                                </details>
+                                    <!-- Subtítulo orientativo dentro del modal -->
+                                    <p class="txt-secundario" style="font-size:0.82rem; color:#6b7084; margin:0 0 16px;">
+                                        Agrega información extra sobre por qué se aceptó, reservó o rechazó el alimento <strong>{{ d.alimento }}</strong>:
+                                    </p>
+                                    <!-- Formulario POST para guardar el comentario en Python -->
+                                    <form method="POST" action="{% url 'consultarDonaciones' %}" style="margin:0;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
+                                        <input type="hidden" name="rol" value="receptor">
+                                        <input type="hidden" name="categoria" value="{{ categoria_actual }}">
+                                        <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                        <!-- Área de texto amplia y sin cortes para escribir el comentario -->
+                                        <textarea name="feedback" rows="4" placeholder="Ej. Se aceptó en óptimo estado / Se rechazó por envase dañado..." class="elem-gris txt-principal" style="width:100%; border:1.5px solid #e4e7f2; border-radius:12px; padding:12px 14px; font:600 0.85rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; resize:vertical; margin-bottom:18px; outline:none;">{{ d.feedback }}</textarea>
+                                        <!-- Botones inferiores de cancelar y guardar -->
+                                        <div style="display:flex; justify-content:flex-end; gap:10px;">
+                                            <label for="modal-comentarios-{{ d.raw_id }}" class="elem-gris" style="padding:10px 18px; border-radius:10px; background:#f4f6fb; color:#6b7084; font-weight:700; font-size:0.82rem; cursor:pointer;">
+                                                Cancelar
+                                            </label>
+                                            <button type="submit" name="nuevo_estado" value="GuardarFeedback" style="padding:10px 22px; border:none; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 6px 16px rgba(114,135,254,0.35);">
+                                                Guardar Comentario
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Vista del Donante: abre modal centrado para leer los comentarios del receptor sin amontonar la tabla -->
+                            {% if d.feedback %}
+                                <label for="modal-ver-comentario-{{ d.raw_id }}" class="pildora-tabla" style="background:#eff2fe; color:#7287fe; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                    Ver Comentarios
+                                </label>
+                                <input type="checkbox" id="modal-ver-comentario-{{ d.raw_id }}" class="modal-toggle">
+                                <div class="modal-overlay">
+                                    <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:420px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                            <h3 class="txt-principal" style="margin:0; font-size:1.1rem; font-weight:800; color:#2b3044;">Comentarios del Receptor - #{{ d.id }}</h3>
+                                            <label for="modal-ver-comentario-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
+                                        </div>
+                                        <div class="elem-gris txt-principal" style="background:#f4f6fb; border-radius:12px; padding:16px; font-size:0.88rem; font-weight:600; color:#2b3044; line-height:1.5; margin-bottom:18px;">
+                                            {{ d.feedback }}
+                                        </div>
+                                        <div style="display:flex; justify-content:flex-end;">
+                                            <label for="modal-ver-comentario-{{ d.raw_id }}" style="padding:10px 22px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                                Cerrar
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                             {% else %}
-                                <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600;">Sin comentarios</span>
+                                <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Sin comentarios</span>
                             {% endif %}
                         {% endif %}
                     </td>
 
-                    <!-- COLUMNA DE ESTADO Y ACCIONES (Aceptar, Reservar, Rechazar y Quitar para el Receptor) -->
-                    <td style="padding:16px 12px;">
+                    <!-- APARTADO DE ESTADO (Para el Receptor abre un modal centrado amplio sin recortarse en la tabla) -->
+                    <td style="padding:16px 14px;">
                         {% if es_receptor %}
-                            <div style="display:inline-flex; align-items:center; gap:8px;">
-                                <!-- Menú desplegable de estado para el Receptor -->
-                                <details class="menu-interactivo" style="position:relative; display:inline-block;">
-                                    {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                                        <summary style="border:none; background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                            <span>{{ d.estado }}</span>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                        </summary>
-                                    {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                                        <summary style="border:none; background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                            <span>{{ d.estado }}</span>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                        </summary>
-                                    {% else %}
-                                        <summary style="border:none; background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                            <span>{{ d.estado }}</span>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                        </summary>
-                                    {% endif %}
+                            <!-- Botón de Estado que al darle clic abre el modal centrado de decisión -->
+                            {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
+                                <label for="modal-estado-{{ d.raw_id }}" class="pildora-tabla" style="background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                    <span>{{ d.estado }}</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </label>
+                            {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
+                                <label for="modal-estado-{{ d.raw_id }}" class="pildora-tabla" style="background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                    <span>{{ d.estado }}</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </label>
+                            {% else %}
+                                <label for="modal-estado-{{ d.raw_id }}" class="pildora-tabla" style="background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                    <span>{{ d.estado }}</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </label>
+                            {% endif %}
 
-                                    <!-- Formulario POST que actualiza el estado, registra en el historial exclusivo del receptor y permite quitar la donación -->
-                                    <form method="POST" action="{% url 'consultarDonaciones' %}" class="caja-blanca" style="position:absolute; right:0; top:calc(100% + 6px); z-index:99; background:#ffffff; border:1px solid #e4e7f2; border-radius:14px; padding:10px; box-shadow:0 12px 28px rgba(30,40,120,0.18); min-width:210px; margin:0;">
+                            <!-- Checkbox oculto que controla la apertura del modal centrado de Estado -->
+                            <input type="checkbox" id="modal-estado-{{ d.raw_id }}" class="modal-toggle">
+                            <!-- Ventana modal centrada en pantalla para cambiar el estado o quitar la donación sin cortes -->
+                            <div class="modal-overlay">
+                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:420px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
+                                    <!-- Encabezado del modal de estado -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <h3 class="txt-principal" style="margin:0; font-size:1.12rem; font-weight:800; color:#2b3044;">Cambiar Estado - #{{ d.id }} {{ d.alimento }}</h3>
+                                        <label for="modal-estado-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
+                                    </div>
+                                    <p class="txt-secundario" style="font-size:0.82rem; color:#6b7084; margin:0 0 16px;">
+                                        Selecciona la acción para esta donación y anota un comentario si lo deseas:
+                                    </p>
+
+                                    <!-- Formulario POST que procesa el cambio de estado, comentarios o eliminación en Python -->
+                                    <form method="POST" action="{% url 'consultarDonaciones' %}" style="margin:0;">
                                         {% csrf_token %}
                                         <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
                                         <input type="hidden" name="rol" value="receptor">
                                         <input type="hidden" name="categoria" value="{{ categoria_actual }}">
                                         <input type="hidden" name="page" value="{{ page_obj.number }}">
 
-                                        <!-- Campo opcional de feedback directo al momento de aceptar, reservar o rechazar -->
-                                        <input type="text" name="feedback" value="{{ d.feedback }}" placeholder="Motivo o feedback (opcional)" class="elem-gris txt-principal" style="width:100%; border:1px solid #e4e7f2; border-radius:8px; padding:7px 10px; font:600 0.75rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; margin-bottom:6px;">
+                                        <!-- Campo amplio para anotar comentarios al momento de cambiar el estado -->
+                                        <label class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; margin-bottom:6px;">Comentarios (opcional):</label>
+                                        <textarea name="feedback" rows="2" placeholder="Escribe el motivo de aceptación, reserva o rechazo..." class="elem-gris txt-principal" style="width:100%; border:1.5px solid #e4e7f2; border-radius:12px; padding:10px 12px; font:600 0.82rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; resize:vertical; margin-bottom:16px; outline:none;">{{ d.feedback }}</textarea>
 
-                                        <!-- Botón para Aceptar la donación -->
-                                        <button type="submit" name="nuevo_estado" value="Aceptado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 10px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#12a559; text-align:left;">
-                                            <span style="width:8px; height:8px; border-radius:50%; background:#12a559; display:inline-block;"></span>
-                                            Aceptar
-                                        </button>
-                                        <!-- Botón para Reservar la donación -->
-                                        <button type="submit" name="nuevo_estado" value="Reservado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 10px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e67e22; text-align:left;">
-                                            <span style="width:8px; height:8px; border-radius:50%; background:#e67e22; display:inline-block;"></span>
-                                            Reservar
-                                        </button>
-                                        <!-- Botón para Rechazar la donación -->
-                                        <button type="submit" name="nuevo_estado" value="Rechazado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 10px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e5484d; text-align:left;">
-                                            <span style="width:8px; height:8px; border-radius:50%; background:#e5484d; display:inline-block;"></span>
-                                            Rechazar
-                                        </button>
-                                        <!-- Separador visual antes del botón de quitar donación -->
-                                        <div class="linea-divisoria" style="height:1px; background:#edf0f7; margin:6px 0;"></div>
-                                        <!-- Botón para que el Receptor pueda quitar/eliminar la donación -->
-                                        <button type="submit" name="nuevo_estado" value="Eliminar" class="btn-opcion-estado" style="width:100%; border:none; background:#fde8e8; padding:8px 10px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; color:#e5484d;">
-                                            Quitar Donación
-                                        </button>
+                                        <!-- Botones grandes y claros para Aceptar, Reservar o Rechazar -->
+                                        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+                                            <button type="submit" name="nuevo_estado" value="Aceptado" class="btn-opcion-estado" style="width:100%; border:none; background:#eaf8f0; color:#12a559; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
+                                                <span style="width:9px; height:9px; border-radius:50%; background:#12a559; display:inline-block;"></span>
+                                                Aceptar Donación
+                                            </button>
+                                            <button type="submit" name="nuevo_estado" value="Reservado" class="btn-opcion-estado" style="width:100%; border:none; background:#fef4e6; color:#e67e22; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
+                                                <span style="width:9px; height:9px; border-radius:50%; background:#e67e22; display:inline-block;"></span>
+                                                Reservar Donación
+                                            </button>
+                                            <button type="submit" name="nuevo_estado" value="Rechazado" class="btn-opcion-estado" style="width:100%; border:none; background:#fde8e8; color:#e5484d; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
+                                                <span style="width:9px; height:9px; border-radius:50%; background:#e5484d; display:inline-block;"></span>
+                                                Rechazar Donación
+                                            </button>
+                                        </div>
+
+                                        <!-- Pie del modal con opción de Quitar Donación o Cancelar -->
+                                        <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid #edf0f7;">
+                                            <button type="submit" name="nuevo_estado" value="Eliminar" class="btn-opcion-estado" style="border:none; background:transparent; color:#e5484d; padding:8px 10px; border-radius:8px; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                                Quitar Donación
+                                            </button>
+                                            <label for="modal-estado-{{ d.raw_id }}" class="elem-gris" style="padding:9px 18px; border-radius:10px; background:#f4f6fb; color:#6b7084; font-weight:700; font-size:0.82rem; cursor:pointer;">
+                                                Cancelar
+                                            </label>
+                                        </div>
                                     </form>
-                                </details>
+                                </div>
                             </div>
                         {% else %}
                             <!-- Etiqueta de estado en modo lectura para el Donante -->
                             {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                                <span style="background:#fde8e8; color:#e5484d; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
+                                <span class="pildora-tabla" style="background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
                             {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                                <span style="background:#fef4e6; color:#e67e22; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
+                                <span class="pildora-tabla" style="background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
                             {% else %}
-                                <span style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
+                                <span class="pildora-tabla" style="background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
                             {% endif %}
                         {% endif %}
                     </td>

@@ -7,6 +7,20 @@
 <!-- Abre el bloque de contenido principal -->
 {% block contenido %}
 
+<!-- Estilos CSS para alinear las etiquetas sin que se amontonen ni se corten -->
+<style>
+    /* Mantiene las píldoras y botones en una sola línea limpia */
+    .pildora-historial {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        border: none;
+        line-height: 1.2;
+    }
+</style>
+
 <!-- ENCABEZADO Y FILTRO POR CATEGORÍA PROCESADO 100% EN PYTHON -->
 <div style="margin-bottom: -16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
     <div>
@@ -51,21 +65,21 @@
         <span class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ total_registros }} donaciones en tu historial</span>
     </div>
 
-    <!-- Tabla de historial con soporte para Evidencia y Feedback -->
+    <!-- Tabla de historial con modales centrados para Evidencia y Comentarios -->
     <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
             <thead>
                 <tr class="linea-divisoria txt-secundario" style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">ID</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Donante</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Alimento</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Categoría</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Cantidad</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Tipo</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Caducidad</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Evidencia</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Feedback</th>
-                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Estado</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">ID</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Donante</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Alimento</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Categoría</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Cantidad</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Tipo</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Caducidad</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Evidencia</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Comentarios</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Estado</th>
                 </tr>
             </thead>
 
@@ -74,37 +88,38 @@
                 {% for d in donaciones %}
                 <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
                     <!-- ID formateado -->
-                    <td style="padding:16px 12px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
+                    <td style="padding:16px 14px; font-weight:800; color:#7287fe; white-space:nowrap;">#{{ d.id }}</td>
                     <!-- Nombre del donante -->
-                    <td class="txt-principal" style="padding:16px 12px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
                     <!-- Nombre del alimento -->
-                    <td class="txt-principal" style="padding:16px 12px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
-                    <!-- Categoría sin clase elem-gris para evitar bordes -->
-                    <td style="padding:16px 12px;">
-                        <span style="background:#eff2fe; color:#7287fe; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem; display:inline-block; border:none;">{{ d.clasificacion }}</span>
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
+                    <!-- Categoría sin bordes y en una sola línea -->
+                    <td style="padding:16px 14px;">
+                        <span class="pildora-historial" style="background:#eff2fe; color:#7287fe; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.75rem;">{{ d.clasificacion }}</span>
                     </td>
                     <!-- Cantidad registrada -->
-                    <td class="txt-principal" style="padding:16px 12px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
-                    <!-- Tipo sin clase elem-gris para evitar bordes -->
-                    <td style="padding:16px 12px;">
-                        <span style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem; display:inline-block; border:none;">{{ d.tipo }}</span>
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:700; color:#2b3044; white-space:nowrap;">{{ d.cantidad }}</td>
+                    <!-- Tipo sin bordes -->
+                    <td style="padding:16px 14px;">
+                        <span class="pildora-historial" style="background:#f4f6fb; color:#6b7084; padding:6px 14px; border-radius:999px; font-weight:600; font-size:0.78rem;">{{ d.tipo }}</span>
                     </td>
                     <!-- Fecha de caducidad -->
-                    <td class="txt-principal" style="padding:16px 12px; font-weight:600; color:#2b3044;">{{ d.caducidad }}</td>
-                    <!-- Apartado de Evidencia Fotográfica que se muestra centrada al dar clic -->
-                    <td style="padding:16px 12px;">
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:600; color:#2b3044; white-space:nowrap;">{{ d.caducidad }}</td>
+
+                    <!-- Apartado de Evidencia Fotográfica que se abre en el centro de la pantalla al dar clic -->
+                    <td style="padding:16px 14px;">
                         {% if d.evidencia_imagen %}
-                            <label for="modal-hist-evidencia-{{ d.raw_id }}" style="display:inline-flex; align-items:center; gap:6px; background:#eff2fe; color:#4338ca; padding:6px 12px; border-radius:10px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; border:none;">
+                            <label for="modal-hist-evidencia-{{ d.raw_id }}" class="pildora-historial" style="background:#eff2fe; color:#4338ca; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
                                 Ver Evidencia
                             </label>
                             <input type="checkbox" id="modal-hist-evidencia-{{ d.raw_id }}" class="modal-toggle">
                             <div class="modal-overlay">
-                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:520px; border-radius:20px; padding:24px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:center;">
+                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:520px; border-radius:20px; padding:26px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:center;">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                                        <h3 class="txt-principal" style="margin:0; font-size:1.05rem; font-weight:800; color:#2b3044;">Evidencia Fotográfica - #{{ d.id }} {{ d.alimento }}</h3>
+                                        <h3 class="txt-principal" style="margin:0; font-size:1.08rem; font-weight:800; color:#2b3044;">Evidencia Fotográfica - #{{ d.id }} {{ d.alimento }}</h3>
                                         <label for="modal-hist-evidencia-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
                                     </div>
-                                    <div style="background:#f4f6fb; border-radius:14px; padding:12px; margin-bottom:16px;">
+                                    <div style="background:#f4f6fb; border-radius:14px; padding:12px; margin-bottom:18px;">
                                         <img src="{{ d.evidencia_imagen }}" alt="Evidencia de {{ d.alimento }}" style="max-width:100%; max-height:360px; border-radius:10px; object-fit:contain; display:block; margin:0 auto;">
                                     </div>
                                     <label for="modal-hist-evidencia-{{ d.raw_id }}" style="display:inline-block; padding:10px 24px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
@@ -113,21 +128,47 @@
                                 </div>
                             </div>
                         {% else %}
-                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600;">Sin foto</span>
+                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Sin foto</span>
                         {% endif %}
                     </td>
-                    <!-- Motivo o feedback registrado por este receptor -->
-                    <td class="txt-principal" style="padding:16px 12px; font-size:0.8rem; font-weight:600; color:#2b3044;">
-                        {{ d.feedback|default:"Sin comentarios" }}
-                    </td>
-                    <!-- Etiqueta de Estado -->
-                    <td style="padding:16px 12px;">
-                        {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                            <span style="background:#fde8e8; color:#e5484d; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
-                        {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                            <span style="background:#fef4e6; color:#e67e22; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
+
+                    <!-- Apartado de Comentarios con modal centrado para evitar texto amontonado en la fila -->
+                    <td style="padding:16px 14px;">
+                        {% if d.feedback %}
+                            <!-- Botón que abre el comentario completo en el centro de la pantalla -->
+                            <label for="modal-hist-comentario-{{ d.raw_id }}" class="pildora-historial" style="background:#f4f6fb; color:#2b3044; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                Ver Comentarios
+                            </label>
+                            <input type="checkbox" id="modal-hist-comentario-{{ d.raw_id }}" class="modal-toggle">
+                            <div class="modal-overlay">
+                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:420px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                        <h3 class="txt-principal" style="margin:0; font-size:1.1rem; font-weight:800; color:#2b3044;">Comentarios - Donación #{{ d.id }}</h3>
+                                        <label for="modal-hist-comentario-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
+                                    </div>
+                                    <div class="elem-gris txt-principal" style="background:#f4f6fb; border-radius:12px; padding:16px; font-size:0.88rem; font-weight:600; color:#2b3044; line-height:1.5; margin-bottom:18px;">
+                                        {{ d.feedback }}
+                                    </div>
+                                    <div style="display:flex; justify-content:flex-end;">
+                                        <label for="modal-hist-comentario-{{ d.raw_id }}" style="padding:10px 22px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                            Cerrar
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                         {% else %}
-                            <span style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
+                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Sin comentarios</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Etiqueta de Estado sin bordes -->
+                    <td style="padding:16px 14px;">
+                        {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
+                            <span class="pildora-historial" style="background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
+                        {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
+                            <span class="pildora-historial" style="background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
+                        {% else %}
+                            <span class="pildora-historial" style="background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
                         {% endif %}
                     </td>
                 </tr>
