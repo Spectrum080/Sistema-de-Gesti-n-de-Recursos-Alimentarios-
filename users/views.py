@@ -1,121 +1,171 @@
+# Importa el módulo csv para la generación de reportes descargables
 import csv
+# Importa la función de agregación Sum para sumar el peso de las donaciones
 from django.db.models import Sum
+# Importa HttpResponse para devolver archivos PDF y CSV al navegador
 from django.http import HttpResponse
+# Importa funciones para renderizar plantillas y redirigir rutas
 from django.shortcuts import render, redirect
+# Importa el sistema de mensajes de Django para notificaciones de usuario
 from django.contrib import messages
+# Importa el decorador que protege vistas exclusivas para usuarios autenticados
 from django.contrib.auth.decorators import login_required
-from alertas.models import Donacion, Alimento
+# Importa los modelos de usuarios y roles
 from .models import Usuario, Donante, Receptor
 
 
-# Calcula en tiempo real las métricas del dashboard (total de donaciones y peso en KG) desde db.sqlite3
-def _obtener_contexto_dashboard():
-    donaciones_qs = Donacion.objects.select_related(
-        'alimento', 'donante', 'receptor', 'centro_acopio'
-    ).all()
+# Calcula las métricas del dashboard respetando el encapsulamiento del rol activo
+def _obtener_contexto_dashboard(request, es_receptor=False):
+    # Si el usuario está en modo Receptor, contabiliza todas las donaciones visibles en acopio
+    if es_receptor:
+        donaciones_qs = request.user.obtener_donaciones_para_receptor()
+    # Si el usuario está en modo Donante, contabiliza únicamente sus propias entregas
+    else:
+        donaciones_qs = request.user.obtener_mis_donaciones()
+
+    # Cuenta el total de donaciones correspondientes al rol
     total_donaciones = donaciones_qs.count()
+    # Suma el peso en kilogramos de dichas donaciones
     suma_peso = donaciones_qs.aggregate(total=Sum('peso_kg'))['total'] or 0
+    # Da formato legible al peso acumulado en KG
     peso_formateado = f"{float(suma_peso):,.1f} KG".replace('.0 KG', ' KG')
 
+    # Retorna el diccionario de contexto para la plantilla del dashboard
     return {
         'total_donaciones': total_donaciones,
         'peso_total': peso_formateado,
         'estatus': 'ACTIVO' if total_donaciones > 0 else 'SIN REGISTROS',
         'donaciones': donaciones_qs,
-        'alimentos': Alimento.objects.select_related('categoria', 'centro_acopio').all(),
+        'es_receptor': es_receptor,
     }
 
 
-# Redirige al panel correspondiente según el rol del usuario e inyecta las métricas reales
+# Redirige al panel correspondiente según el tipo de cuenta del usuario autenticado
 @login_required
 def dashboard(request):
+    # Si el usuario tiene perfil de Donante, activa el rol donante y redirige a su panel
     if hasattr(request.user, 'donante'):
         request.session['rol_activo'] = 'donante'
         return redirect('dashboardDonante')
+    # Si el usuario tiene perfil de Receptor, activa el rol receptor y redirige a su panel
     elif hasattr(request.user, 'receptor'):
         request.session['rol_activo'] = 'receptor'
         return redirect('dashboardReceptor')
+    # Si la sesión actual estaba en modo receptor, mantiene ese panel
     elif request.session.get('rol_activo') == 'receptor':
         return redirect('dashboardReceptor')
+    # Por defecto muestra el dashboard en modo donante con sus métricas encapsuladas
     else:
         request.session['rol_activo'] = 'donante'
-        context = _obtener_contexto_dashboard()
+        context = _obtener_contexto_dashboard(request, es_receptor=False)
         return render(request, 'users/dashboard.html', context)
 
 
-# Panel del Donante que hereda la estructura y métricas desde dashboard.html
+# Renderiza el panel exclusivo del Donante con las métricas de sus propias entregas
 @login_required
 def dashboardDonante(request):
+    # Establece el rol activo en sesión como donante
     request.session['rol_activo'] = 'donante'
-    context = _obtener_contexto_dashboard()
+    # Obtiene las métricas encapsuladas únicamente para este donante
+    context = _obtener_contexto_dashboard(request, es_receptor=False)
+    # Renderiza la plantilla que hereda de dashboard.html
     return render(request, 'users/dashboardDonante.html', context)
 
 
-# Panel del Receptor que hereda la estructura y métricas desde dashboard.html
+# Renderiza el panel exclusivo del Receptor con las métricas del centro de acopio
 @login_required
 def dashboardReceptor(request):
+    # Establece el rol activo en sesión como receptor
     request.session['rol_activo'] = 'receptor'
-    context = _obtener_contexto_dashboard()
+    # Obtiene las métricas encapsuladas para el receptor
+    context = _obtener_contexto_dashboard(request, es_receptor=True)
+    # Renderiza la plantilla que hereda de dashboard.html
     return render(request, 'users/dashboardReceptor.html', context)
 
 
-# Registro de nuevos usuarios asignando el modelo Donante o Receptor según selección
+# Gestiona el registro de nuevas cuentas de usuario como Donante o Receptor
 def Sing_up(request):
+    # Si se envió el formulario de registro por POST
     if request.method == 'POST':
+        # Captura los datos ingresados por el usuario
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
         confirm = request.POST['confirm_password']
         tipo = request.POST['UserTypes']
 
+        # Verifica que ambas contraseñas coincidan
         if password != confirm:
             messages.error(request, 'Las contraseñas no coinciden')
             return render(request, 'users/Sing_up.html')
 
+        # Verifica que el nombre de usuario no esté duplicado
         if Usuario.objects.filter(username=username).exists():
             messages.error(request, 'Ese usuario ya existe')
             return render(request, 'users/Sing_up.html')
 
+        # Selecciona la clase Donante o Receptor según el rol elegido
         Modelo = Donante if tipo == 'Donante' else Receptor
+        # Instancia el nuevo usuario con su nombre y correo
         user = Modelo(username=username, email=email)
+        # Encripta la contraseña de forma segura
         user.set_password(password)
+        # Guarda el usuario en la base de datos
         user.save()
 
+        # Redirige a la pantalla de inicio de sesión
         return redirect('login')
 
+    # Si es petición GET, muestra el formulario de registro
     return render(request, 'users/Sing_up.html')
 
 
-# Vista informativa para recuperación de contraseña
+# Muestra la pantalla de recuperación de contraseña
 def reset_password(request):
+    # Renderiza la plantilla informativa
     return render(request, 'users/reset_password.html')
 
 
-# Guarda en la sesión las preferencias visuales (modo oscuro, alto contraste, fuente y alertas)
+# Guarda las preferencias de accesibilidad y apariencia en la sesión del usuario
 @login_required
 def configuracion(request):
+    # Si el usuario guardó cambios mediante POST
     if request.method == 'POST':
+        # Actualiza el estado del modo oscuro
         request.session['tema_oscuro'] = request.POST.get('tema_oscuro') == 'on'
+        # Actualiza el estado de bordes de alto contraste
         request.session['alto_contraste'] = request.POST.get('alto_contraste') == 'on'
+        # Actualiza la escala del tamaño de fuente
         request.session['tamano_fuente'] = request.POST.get('tamano_fuente', '100%')
+        # Actualiza las notificaciones de caducidad
         request.session['notif_caducidad'] = request.POST.get('notif_caducidad') == 'on'
 
+        # Marca la sesión como modificada
         request.session.modified = True
+        # Redirige de vuelta a configuración
         return redirect('configuracion')
 
+    # Muestra la plantilla de configuración
     return render(request, 'users/configuracion.html')
 
+
+# Permite visualizar y actualizar los datos del perfil del usuario autenticado
 @login_required
 def perfil(request):
+    # Obtiene la instancia del usuario en sesión
     usuario = request.user
+    # Variable para identificar el campo de razón social según el rol
     campo_razon = None
+    # Si es Donante, usa el campo nombre_local
     if hasattr(usuario, 'donante'):
         usuario = usuario.donante
         campo_razon = 'nombre_local'
+    # Si es Receptor, usa el campo nombre_org
     elif hasattr(usuario, 'receptor'):
         usuario = usuario.receptor
         campo_razon = 'nombre_org'
 
+    # Si se enviaron cambios por POST, actualiza teléfono, dirección y razón social
     if request.method == 'POST':
         usuario.telefono = request.POST.get('telefono', '')
         usuario.direccion = request.POST.get('direccion', '')
@@ -125,17 +175,27 @@ def perfil(request):
         messages.success(request, 'Perfil actualizado')
         return redirect('perfil')
 
+    # Obtiene el valor actual de la razón social para mostrarlo en el formulario
     razon_social = getattr(usuario, campo_razon, '') if campo_razon else ''
+    # Renderiza la vista de perfil
     return render(request, 'users/perfil.html', {'razon_social': razon_social})
 
 
-# Exporta el inventario real de donaciones de db.sqlite3 en formato CSV o PDF
+# Exporta el informe de donaciones respetando el encapsulamiento del usuario en sesión
 @login_required
 def exportar_informe(request):
+    # Obtiene el formato deseado (csv o pdf)
     formato = request.GET.get('formato', 'csv')
+    # Determina si el usuario actual exporta como Receptor o como Donante
+    es_receptor = hasattr(request.user, 'receptor') or request.session.get('rol_activo') == 'receptor'
 
-    # Consulta real a las donaciones registradas en la base de datos
-    donaciones_qs = Donacion.objects.select_related('alimento', 'donante').all()
+    # Obtiene las donaciones correspondientes al rol encapsulado del usuario
+    if es_receptor:
+        donaciones_qs = request.user.obtener_donaciones_para_receptor()
+    else:
+        donaciones_qs = request.user.obtener_mis_donaciones()
+
+    # Prepara las filas del reporte
     registros = []
     for d in donaciones_qs:
         caducidad_str = (
@@ -155,8 +215,8 @@ def exportar_informe(request):
             d.estado,
         ])
 
+    # Si el formato elegido es PDF, construye el documento PDF en binario
     if formato == 'pdf':
-        # Generación de PDF
         lineas = [
             "REPORTE DE INVENTARIO - HAMBRE CERO",
             "----------------------------------------------------------------",
@@ -203,10 +263,10 @@ def exportar_informe(request):
         response['Content-Disposition'] = 'attachment; filename="informe_donaciones.pdf"'
         return response
 
-    # Exportación a formato CSV
+    # Genera la respuesta en formato CSV compatible con Excel
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="informe_donaciones.csv"'
-    response.write('\ufeff')  # BOM para compatibilidad de acentos con Excel
+    response.write('\ufeff')
 
     writer = csv.writer(response)
     writer.writerow(['Alimento', 'Cantidad', 'Tipo', 'Caducidad', 'Estado'])

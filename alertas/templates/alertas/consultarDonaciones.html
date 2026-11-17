@@ -1,18 +1,23 @@
+<!-- Hereda la estructura general del dashboard principal sin utilizar JavaScript -->
 {% extends 'users/dashboard.html' %}
-<!-- Hereda la estructura general del dashboard sin usar JavaScript -->
 
+<!-- Define el título dinámico de la pestaña según el rol activo -->
 {% block title %}{% if es_receptor %}Aceptar Donaciones{% else %}Mis Donaciones{% endif %} - Hambre Cero{% endblock %}
 
+<!-- Abre el bloque de contenido principal -->
 {% block contenido %}
 
+<!-- Estilos CSS puros para los menús desplegables de estado/feedback y el modal de evidencia fotográfica -->
 <style>
-    /* Oculta el triángulo por defecto de details/summary para el selector de estado en HTML/CSS puro */
-    details.menu-estado > summary {
+    /* Oculta el marcador nativo de las etiquetas details/summary */
+    details.menu-interactivo > summary {
         list-style: none;
     }
-    details.menu-estado > summary::-webkit-details-marker {
+    /* Oculta el marcador en navegadores basados en WebKit */
+    details.menu-interactivo > summary::-webkit-details-marker {
         display: none;
     }
+    /* Efecto visual al pasar el cursor sobre los botones de acción */
     .btn-opcion-estado:hover {
         filter: brightness(0.95);
     }
@@ -21,20 +26,27 @@
 <!-- ENCABEZADO Y FILTRO POR CATEGORÍA PROCESADO 100% EN PYTHON -->
 <div style="margin-bottom: -16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
     <div>
-        <h1 class="txt-principal" style="font-size:2rem; font-weight:800; margin:0 0 4px; color:#2b3044;">Consultar Donaciones</h1>
+        <!-- Título de la sección según el rol -->
+        <h1 class="txt-principal" style="font-size:2rem; font-weight:800; margin:0 0 4px; color:#2b3044;">
+            {% if es_receptor %}Consultar y Aceptar Donaciones{% else %}Mis Donaciones{% endif %}
+        </h1>
+        <!-- Subtítulo explicativo adaptado a Receptor o Donante -->
         <p class="txt-secundario" style="font-size:0.9rem; color:#6b7084; margin:0;">
             {% if es_receptor %}
-                Consulta general de donaciones registradas en el centro de acopio (haz clic en el estado para aceptar, reservar o rechazar)
+                Analiza las donaciones recibidas de cualquier usuario, revisa su evidencia fotográfica, agrega feedback, cambia su estado o quítalas
             {% else %}
-                Seguimiento en tiempo real del estado de entrega de las donaciones registradas en el centro de acopio
+                Seguimiento encapsulado únicamente de las entregas que has registrado con su categoría, evidencia y feedback del receptor
             {% endif %}
         </p>
     </div>
 
     <!-- Formulario GET para filtrar por categoría directamente desde Python -->
     <form method="GET" action="{% url 'consultarDonaciones' %}" style="display:flex; align-items:center; gap:10px; margin:0;">
+        <!-- Conserva el rol activo al aplicar el filtro -->
         <input type="hidden" name="rol" value="{{ rol_actual }}">
+        <!-- Etiqueta descriptiva del selector -->
         <span class="txt-secundario" style="font-size:0.8rem; font-weight:700; color:#6b7084;">Categoría:</span>
+        <!-- Selector con todas las categorías válidas del centro de acopio -->
         <select name="categoria" class="elem-gris txt-principal" style="background:#ffffff; border:1px solid #e4e7f2; border-radius:12px; padding:10px 16px; font:600 0.84rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; cursor:pointer; outline:none;">
             <option value="TODAS" {% if categoria_actual == 'TODAS' %}selected{% endif %}>Todas ({{ total_general }})</option>
             <option value="AGUA_EMBOTELLADA" {% if categoria_actual == 'AGUA_EMBOTELLADA' %}selected{% endif %}>Agua Embotellada y Bebidas</option>
@@ -47,91 +59,196 @@
             <option value="DESPENSA" {% if categoria_actual == 'DESPENSA' %}selected{% endif %}>Despensa Básica Armable</option>
             <option value="OTRO" {% if categoria_actual == 'OTRO' %}selected{% endif %}>Otro</option>
         </select>
+        <!-- Botón que envía la consulta GET al servidor -->
         <button type="submit" style="border:none; background:#7287fe; color:#ffffff; padding:10px 16px; border-radius:12px; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
             Filtrar
         </button>
     </form>
 </div>
 
-<!-- CONTENEDORA DE TABLA DE CONSULTA -->
+<!-- CONTENEDORA DE LA TABLA DE DONACIONES -->
 <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); box-sizing:border-box;">
 
+    <!-- Encabezado interno con el título y el contador de registros visibles -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2 class="txt-principal" style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Registro de Donaciones</h2>
         <span class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ total_registros }} registros</span>
     </div>
 
+    <!-- Contenedor con desplazamiento horizontal para pantallas pequeñas -->
     <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
             <thead>
+                <!-- Cabeceras de la tabla incluyendo los apartados de EVIDENCIA y FEEDBACK -->
                 <tr class="linea-divisoria txt-secundario" style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">ID</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Donante</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Alimento</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Categoría</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Cantidad</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Tipo</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Estado</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">ID</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Donante</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Alimento</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Categoría</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Cantidad</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Tipo</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Evidencia</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Feedback</th>
+                    <th style="padding:14px 12px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Estado</th>
                 </tr>
             </thead>
 
-            <!-- Filas paginadas por Python sin bordes en Categoría ni en Tipo -->
+            <!-- Cuerpo de la tabla iterado con Django sobre la página actual -->
             <tbody>
                 {% for d in donaciones %}
                 <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
-                    <td style="padding:16px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
-                    <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
-                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
-                    <td style="padding:16px;">
+                    <!-- Folio de la donación -->
+                    <td style="padding:16px 12px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
+                    <!-- Nombre del donante -->
+                    <td class="txt-principal" style="padding:16px 12px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
+                    <!-- Nombre del alimento donado -->
+                    <td class="txt-principal" style="padding:16px 12px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
+                    <!-- Etiqueta de Categoría sin clase elem-gris para evitar bordes no deseados -->
+                    <td style="padding:16px 12px;">
                         <span style="background:#eff2fe; color:#7287fe; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem; display:inline-block; border:none;">{{ d.clasificacion }}</span>
                     </td>
-                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
-                    <td style="padding:16px;">
+                    <!-- Cantidad y unidad registrada -->
+                    <td class="txt-principal" style="padding:16px 12px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
+                    <!-- Etiqueta de Tipo sin clase elem-gris para evitar bordes no deseados -->
+                    <td style="padding:16px 12px;">
                         <span style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem; display:inline-block; border:none;">{{ d.tipo }}</span>
                     </td>
-                    <td style="padding:16px;">
-                        <!-- Si es Receptor muestra menú desplegable nativo HTML/POST; si es Donante muestra etiqueta -->
-                        {% if es_receptor %}
-                            <details class="menu-estado" style="position:relative; display:inline-block;">
-                                {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                                    <summary style="border:none; background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                        <span>{{ d.estado }}</span>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                    </summary>
-                                {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                                    <summary style="border:none; background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                        <span>{{ d.estado }}</span>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                    </summary>
-                                {% else %}
-                                    <summary style="border:none; background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                                        <span>{{ d.estado }}</span>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                    </summary>
-                                {% endif %}
 
-                                <form method="POST" action="{% url 'consultarDonaciones' %}" class="caja-blanca" style="position:absolute; right:0; top:calc(100% + 6px); z-index:99; background:#ffffff; border:1px solid #e4e7f2; border-radius:14px; padding:6px; box-shadow:0 12px 28px rgba(30,40,120,0.16); min-width:140px; margin:0;">
+                    <!-- APARTADO DE EVIDENCIA FOTOGRÁFICA (Abre imagen en el centro de la pantalla solo al dar clic) -->
+                    <td style="padding:16px 12px;">
+                        {% if d.evidencia_imagen %}
+                            <!-- Botón que activa el checkbox del modal CSS para mostrar la imagen centrada -->
+                            <label for="modal-evidencia-{{ d.raw_id }}" style="display:inline-flex; align-items:center; gap:6px; background:#eff2fe; color:#4338ca; padding:6px 12px; border-radius:10px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; border:none;">
+                                Ver Evidencia
+                            </label>
+                            <!-- Checkbox oculto que controla la apertura y cierre de la ventana emergente sin JavaScript -->
+                            <input type="checkbox" id="modal-evidencia-{{ d.raw_id }}" class="modal-toggle">
+                            <!-- Capa superpuesta que centra la fotografía en la pantalla únicamente cuando el botón está activo -->
+                            <div class="modal-overlay">
+                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:520px; border-radius:20px; padding:24px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:center;">
+                                    <!-- Cabecera del modal con título y botón para cerrar -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                                        <h3 class="txt-principal" style="margin:0; font-size:1.05rem; font-weight:800; color:#2b3044;">Evidencia Fotográfica - #{{ d.id }} {{ d.alimento }}</h3>
+                                        <label for="modal-evidencia-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
+                                    </div>
+                                    <!-- Imagen renderizada en el centro del modal -->
+                                    <div style="background:#f4f6fb; border-radius:14px; padding:12px; margin-bottom:16px;">
+                                        <img src="{{ d.evidencia_imagen }}" alt="Evidencia de {{ d.alimento }}" style="max-width:100%; max-height:360px; border-radius:10px; object-fit:contain; display:block; margin:0 auto;">
+                                    </div>
+                                    <!-- Botón inferior para cerrar la vista de evidencia -->
+                                    <label for="modal-evidencia-{{ d.raw_id }}" style="display:inline-block; padding:10px 24px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                        Cerrar Evidencia
+                                    </label>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Texto informativo cuando el donante no adjuntó fotografía -->
+                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600;">Sin foto</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- APARTADO DE FEEDBACK (Botón para agregar o consultar el motivo de aceptación, reserva o rechazo) -->
+                    <td style="padding:16px 12px;">
+                        {% if es_receptor %}
+                            <!-- Desplegable nativo HTML para que el Receptor agregue o edite el feedback de la donación -->
+                            <details class="menu-interactivo" style="position:relative; display:inline-block;">
+                                <summary style="border:none; background:#f4f6fb; color:#2b3044; padding:6px 12px; border-radius:10px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                    <span>{% if d.feedback %}Editar Feedback{% else %}+ Feedback{% endif %}</span>
+                                </summary>
+                                <!-- Formulario POST para guardar el motivo de aceptación, reserva o rechazo -->
+                                <form method="POST" action="{% url 'consultarDonaciones' %}" class="caja-blanca" style="position:absolute; right:0; top:calc(100% + 6px); z-index:99; background:#ffffff; border:1px solid #e4e7f2; border-radius:14px; padding:14px; box-shadow:0 12px 28px rgba(30,40,120,0.18); width:250px; margin:0; box-sizing:border-box;">
                                     {% csrf_token %}
                                     <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
                                     <input type="hidden" name="rol" value="receptor">
                                     <input type="hidden" name="categoria" value="{{ categoria_actual }}">
                                     <input type="hidden" name="page" value="{{ page_obj.number }}">
-
-                                    <button type="submit" name="nuevo_estado" value="Aceptado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#12a559; text-align:left;">
-                                        <span style="width:8px; height:8px; border-radius:50%; background:#12a559; display:inline-block;"></span>
-                                        Aceptar
-                                    </button>
-                                    <button type="submit" name="nuevo_estado" value="Reservado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e67e22; text-align:left;">
-                                        <span style="width:8px; height:8px; border-radius:50%; background:#e67e22; display:inline-block;"></span>
-                                        Reservar
-                                    </button>
-                                    <button type="submit" name="nuevo_estado" value="Rechazado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e5484d; text-align:left;">
-                                        <span style="width:8px; height:8px; border-radius:50%; background:#e5484d; display:inline-block;"></span>
-                                        Rechazar
+                                    <!-- Etiqueta explicativa del campo de retroalimentación -->
+                                    <span class="txt-principal" style="display:block; font-size:0.75rem; font-weight:700; color:#2b3044; margin-bottom:6px;">Motivo de aceptación / rechazo / reserva:</span>
+                                    <!-- Área de texto para escribir la retroalimentación -->
+                                    <textarea name="feedback" rows="3" placeholder="Escribe por qué se aceptó, reservó o rechazó..." class="elem-gris txt-principal" style="width:100%; border:1px solid #e4e7f2; border-radius:10px; padding:8px; font:600 0.78rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; resize:vertical; margin-bottom:8px;">{{ d.feedback }}</textarea>
+                                    <!-- Botón para guardar el feedback en la base de datos -->
+                                    <button type="submit" name="nuevo_estado" value="GuardarFeedback" style="width:100%; border:none; background:#7287fe; color:#ffffff; padding:8px 12px; border-radius:8px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                        Guardar Feedback
                                     </button>
                                 </form>
                             </details>
                         {% else %}
+                            <!-- Vista del Donante para leer el feedback dejado por el Receptor -->
+                            {% if d.feedback %}
+                                <details class="menu-interactivo" style="position:relative; display:inline-block;">
+                                    <summary style="border:none; background:#eff2fe; color:#7287fe; padding:6px 12px; border-radius:10px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                        Ver Feedback
+                                    </summary>
+                                    <div class="caja-blanca txt-principal" style="position:absolute; right:0; top:calc(100% + 6px); z-index:99; background:#ffffff; border:1px solid #e4e7f2; border-radius:12px; padding:12px; box-shadow:0 12px 28px rgba(30,40,120,0.16); width:220px; font-size:0.78rem; font-weight:600; color:#2b3044;">
+                                        {{ d.feedback }}
+                                    </div>
+                                </details>
+                            {% else %}
+                                <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600;">Sin comentarios</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+
+                    <!-- COLUMNA DE ESTADO Y ACCIONES (Aceptar, Reservar, Rechazar y Quitar para el Receptor) -->
+                    <td style="padding:16px 12px;">
+                        {% if es_receptor %}
+                            <div style="display:inline-flex; align-items:center; gap:8px;">
+                                <!-- Menú desplegable de estado para el Receptor -->
+                                <details class="menu-interactivo" style="position:relative; display:inline-block;">
+                                    {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
+                                        <summary style="border:none; background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                            <span>{{ d.estado }}</span>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </summary>
+                                    {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
+                                        <summary style="border:none; background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                            <span>{{ d.estado }}</span>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </summary>
+                                    {% else %}
+                                        <summary style="border:none; background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                            <span>{{ d.estado }}</span>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </summary>
+                                    {% endif %}
+
+                                    <!-- Formulario POST que actualiza el estado, registra en el historial exclusivo del receptor y permite quitar la donación -->
+                                    <form method="POST" action="{% url 'consultarDonaciones' %}" class="caja-blanca" style="position:absolute; right:0; top:calc(100% + 6px); z-index:99; background:#ffffff; border:1px solid #e4e7f2; border-radius:14px; padding:10px; box-shadow:0 12px 28px rgba(30,40,120,0.18); min-width:210px; margin:0;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
+                                        <input type="hidden" name="rol" value="receptor">
+                                        <input type="hidden" name="categoria" value="{{ categoria_actual }}">
+                                        <input type="hidden" name="page" value="{{ page_obj.number }}">
+
+                                        <!-- Campo opcional de feedback directo al momento de aceptar, reservar o rechazar -->
+                                        <input type="text" name="feedback" value="{{ d.feedback }}" placeholder="Motivo o feedback (opcional)" class="elem-gris txt-principal" style="width:100%; border:1px solid #e4e7f2; border-radius:8px; padding:7px 10px; font:600 0.75rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; margin-bottom:6px;">
+
+                                        <!-- Botón para Aceptar la donación -->
+                                        <button type="submit" name="nuevo_estado" value="Aceptado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 10px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#12a559; text-align:left;">
+                                            <span style="width:8px; height:8px; border-radius:50%; background:#12a559; display:inline-block;"></span>
+                                            Aceptar
+                                        </button>
+                                        <!-- Botón para Reservar la donación -->
+                                        <button type="submit" name="nuevo_estado" value="Reservado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 10px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e67e22; text-align:left;">
+                                            <span style="width:8px; height:8px; border-radius:50%; background:#e67e22; display:inline-block;"></span>
+                                            Reservar
+                                        </button>
+                                        <!-- Botón para Rechazar la donación -->
+                                        <button type="submit" name="nuevo_estado" value="Rechazado" class="btn-opcion-estado" style="width:100%; border:none; background:transparent; padding:8px 10px; border-radius:10px; display:flex; align-items:center; gap:8px; cursor:pointer; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; color:#e5484d; text-align:left;">
+                                            <span style="width:8px; height:8px; border-radius:50%; background:#e5484d; display:inline-block;"></span>
+                                            Rechazar
+                                        </button>
+                                        <!-- Separador visual antes del botón de quitar donación -->
+                                        <div class="linea-divisoria" style="height:1px; background:#edf0f7; margin:6px 0;"></div>
+                                        <!-- Botón para que el Receptor pueda quitar/eliminar la donación -->
+                                        <button type="submit" name="nuevo_estado" value="Eliminar" class="btn-opcion-estado" style="width:100%; border:none; background:#fde8e8; padding:8px 10px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; color:#e5484d;">
+                                            Quitar Donación
+                                        </button>
+                                    </form>
+                                </details>
+                            </div>
+                        {% else %}
+                            <!-- Etiqueta de estado en modo lectura para el Donante -->
                             {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
                                 <span style="background:#fde8e8; color:#e5484d; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
                             {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
@@ -143,8 +260,9 @@
                     </td>
                 </tr>
                 {% empty %}
+                <!-- Fila informativa cuando no existen registros para mostrar -->
                 <tr>
-                    <td colspan="7" class="txt-secundario" style="padding:24px; text-align:center; font-weight:600; color:#6b7084;">
+                    <td colspan="9" class="txt-secundario" style="padding:24px; text-align:center; font-weight:600; color:#6b7084;">
                         No hay donaciones registradas actualmente.
                     </td>
                 </tr>
@@ -155,6 +273,7 @@
 
     <!-- SALTO DE PÁGINA CONTROLADO 100% CON PYTHON (DJANGO PAGINATOR) -->
     <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-top:22px; padding-top:18px; border-top:1px solid #edf0f7;">
+        <!-- Indicador del rango de registros mostrados -->
         <span class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">
             {% if total_registros > 0 %}
                 Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total_registros }} donaciones (Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }})
@@ -163,6 +282,7 @@
             {% endif %}
         </span>
 
+        <!-- Botones de navegación entre páginas procesados por Django -->
         <div style="display:flex; align-items:center; gap:8px;">
             {% if page_obj.has_previous %}
                 <a href="?rol={{ rol_actual }}&categoria={{ categoria_actual }}&page={{ page_obj.previous_page_number }}" class="elem-gris" style="text-decoration:none; border:1px solid #e4e7f2; background:#f4f6fb; color:#2b3044; padding:8px 14px; border-radius:10px; font:700 0.8rem 'Plus Jakarta Sans',sans-serif;">
@@ -199,4 +319,5 @@
     </div>
 </div>
 
+<!-- Cierra el bloque de contenido -->
 {% endblock %}

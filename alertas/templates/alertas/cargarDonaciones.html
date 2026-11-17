@@ -4,139 +4,158 @@
 <!-- Sobrescribe el bloque 'title' del padre para cambiar el texto de la pestaña del navegador -->
 {% block title %}Subir Donación - Hambre Cero{% endblock %}
 
-<!-- Abre el bloque 'contenido' (nombre exacto definido en dashboard.html) donde Django incrustará este formulario -->
+<!-- Abre el bloque 'contenido' donde Django incrustará este formulario -->
 {% block contenido %}
 
 <!-- Contenedor principal en forma de tarjeta blanca, centrado, con ancho máximo de 650px, esquinas redondeadas y sombra -->
-<main style="width:100%; max-width:650px; background:#fff; padding:45px; border-radius:18px; box-shadow:0 10px 28px rgba(30,40,120,0.08); box-sizing:border-box; margin:10px auto; font-family:'Plus Jakarta Sans', sans-serif;">
+<main class="caja-blanca" style="width:100%; max-width:650px; background:#fff; padding:45px; border-radius:18px; box-shadow:0 10px 28px rgba(30,40,120,0.08); box-sizing:border-box; margin:10px auto; font-family:'Plus Jakarta Sans', sans-serif;">
     
     <!-- Bloque superior que agrupa la insignia, el título y el subtítulo descriptivo -->
     <div style="margin-bottom:30px;">
-        <!-- Etiqueta decorativa tipo píldora (border-radius: 999px) con fondo azul claro y texto morado -->
+        <!-- Etiqueta decorativa tipo píldora con fondo azul claro y texto morado -->
         <span style="display:inline-block; background:#e0e7ff; color:#4338ca; font-size:0.7rem; font-weight:700; padding:4px 12px; border-radius:999px; margin-bottom:10px; letter-spacing:0.5px;">DONACIÓN SEGURA Y RÁPIDA</span>
         
         <!-- Encabezado principal de la pantalla -->
-        <h1 style="font-size:2rem; font-weight:800; color:#2b3044; margin:0 0 8px;">Subir Donación</h1>
+        <h1 class="txt-principal" style="font-size:2rem; font-weight:800; color:#2b3044; margin:0 0 8px;">Subir Donación</h1>
         
         <!-- Párrafo con instrucciones breves para el usuario donante -->
-        <p style="font-size:0.88rem; color:#6b7084; margin:0; line-height:1.4;">Registra los alimentos excedentes para canalizarlos a un receptor y evitar el desperdicio.</p>
+        <p class="txt-secundario" style="font-size:0.88rem; color:#6b7084; margin:0; line-height:1.4;">Registra los alimentos excedentes para canalizarlos a un receptor y evitar el desperdicio.</p>
     </div>
 
-    <!-- Inicia el formulario: envía datos ocultos por POST a la misma URL (action="") y permite subir archivos/fotos (enctype) -->
-    <form method="post" action="" enctype="multipart/form-data" id="formDonacion">
+    <!-- Inicia el formulario: envía datos por POST a la vista en Python y permite subir fotografías (multipart/form-data) -->
+    <form method="post" action="{% url 'cargarDonaciones' %}" enctype="multipart/form-data">
         
         <!-- Genera el token de seguridad obligatorio de Django para proteger el envío contra ataques CSRF -->
         {% csrf_token %}
 
-        <!-- Campo oculto que envía 'clasificacion=OTRO' al servidor para cumplir con lo que exige la vista en Python -->
-        <input type="hidden" name="clasificacion" value="OTRO">
-
         <!-- ================= SECCIÓN 1: INFORMACIÓN DEL DONANTE ================= -->
         <div style="margin-bottom:30px;">
             <!-- Título de la primera sección del formulario -->
-            <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
+            <h2 class="txt-principal" style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
                 1. Información del Donante / Establecimiento
             </h2>
 
-            <!-- Contenedor Flexbox que coloca Nombre y Teléfono en dos columnas lado a lado con 16px de separación -->
+            <!-- Contenedor Flexbox que coloca Nombre y Teléfono en dos columnas lado a lado -->
             <div style="display:flex; gap:16px; margin-bottom:16px;">
                 
-                <!-- Tarjeta/caja visual que envuelve la etiqueta y el input de Nombre (ocupa el 50% con flex:1) -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                <!-- Tarjeta visual que envuelve la etiqueta y el input de Nombre o Razón Social -->
+                <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                     <!-- Texto pequeño superior que indica qué escribir -->
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Nombre o Razón Social *</span>
-                    <!-- Caja de texto obligatoria (required) sin bordes nativos; envía el dato como 'nombre_donante' -->
-                    <input type="text" name="nombre_donante" required placeholder="Ej. Restaurante San Marcos" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Nombre o Razón Social *</span>
+                    <!-- Caja de texto obligatoria que envía el dato como 'nombre_donante' -->
+                    <input type="text" name="nombre_donante" required placeholder="Ej. Restaurante San Marcos" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                 </label>
 
-                <!-- Tarjeta/caja visual que envuelve la etiqueta y el input de Teléfono (ocupa el otro 50% con flex:1) -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                <!-- Tarjeta visual que envuelve la etiqueta y el input de Teléfono -->
+                <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                     <!-- Texto pequeño superior para el campo de teléfono -->
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Teléfono de Contacto *</span>
-                    <!-- Caja de tipo teléfono (type="tel") obligatoria; envía el dato como 'telefono' -->
-                    <input type="tel" name="telefono" required placeholder="Ej. 55 1234 5678" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Teléfono de Contacto *</span>
+                    <!-- Caja de tipo teléfono obligatoria que envía el dato como 'telefono' -->
+                    <input type="tel" name="telefono" required placeholder="Ej. 55 1234 5678" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                 </label>
             </div>
 
-            <!-- Tarjeta/caja visual de ancho completo para la Dirección de Recolección -->
-            <label style="display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+            <!-- Tarjeta visual de ancho completo para la Dirección de Recolección -->
+            <label class="elem-gris" style="display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                 <!-- Texto pequeño superior para la dirección -->
-                <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Dirección de Recolección *</span>
+                <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Dirección de Recolección *</span>
                 <!-- Caja de texto obligatoria que envía el dato bajo el nombre 'direccion' -->
-                <input type="text" name="direccion" required placeholder="Ej. Av. Reforma 123, Col. Centro" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                <input type="text" name="direccion" required placeholder="Ej. Av. Reforma 123, Col. Centro" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
             </label>
         </div>
 
         <!-- ================= SECCIÓN 2: DETALLES DE LOS ALIMENTOS ================= -->
         <div style="margin-bottom:30px;">
             <!-- Título de la segunda sección del formulario -->
-            <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
+            <h2 class="txt-principal" style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
                 2. Detalles de los Alimentos
             </h2>
 
-            <!-- Contenedor Flexbox que alinea Categoría, Cantidad y Unidad en tres columnas horizontales -->
+            <!-- Contenedor Flexbox que alinea Categoría y Tipo de conservación -->
             <div style="display:flex; gap:14px; margin-bottom:16px;">
                 
-                <!-- Columna 1 (un poco más ancha con flex:1.2) para el selector desplegable de Categoría -->
-                <label style="flex:1.2; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <!-- Texto pequeño superior para la categoría -->
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Categoría *</span>
-                    <!-- Lista desplegable obligatoria que envía el valor seleccionado bajo el nombre 'tipo' -->
-                    <select name="tipo" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
-                        <!-- Opción inicial deshabilitada que funciona como placeholder -->
-                        <option value="" disabled selected>Selecciona</option>
-                        <!-- Primera opción válida que envía el texto 'PERECEDERO' -->
-                        <option value="PERECEDERO">Perecedero</option>
-                        <!-- Segunda opción válida que envía el texto 'NO_PERECEDERO' -->
-                        <option value="NO_PERECEDERO">No Perecedero</option>
+                <!-- Selector desplegable de Categoría con todas las opciones válidas del filtro superior -->
+                <label class="elem-gris" style="flex:1.4; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                    <!-- Etiqueta del selector de Categoría -->
+                    <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Categoría *</span>
+                    <!-- Lista desplegable obligatoria que envía la clave real en 'clasificacion' para reflejarse en Mis Donaciones y Receptor -->
+                    <select name="clasificacion" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+                        <!-- Opción inicial deshabilitada como guía -->
+                        <option value="" disabled selected style="color:#6b7084;">Selecciona categoría</option>
+                        <!-- Opciones idénticas a las del filtro superior de Consultar e Historial de Donaciones -->
+                        <option value="AGUA_EMBOTELLADA" style="color:#2b3044;">Agua Embotellada y Bebidas</option>
+                        <option value="COMIDA_ENLATADA" style="color:#2b3044;">Comida Enlatada y Conservas</option>
+                        <option value="GRANOS_ABARROTES" style="color:#2b3044;">Granos, Semillas y Abarrotes</option>
+                        <option value="LACTEOS" style="color:#2b3044;">Lácteos y Derivados</option>
+                        <option value="FRUTAS_VERDURAS" style="color:#2b3044;">Frutas y Verduras Frescas</option>
+                        <option value="COMIDA_PREPARADA" style="color:#2b3044;">Comida Preparada</option>
+                        <option value="INFANTIL" style="color:#2b3044;">Alimento Infantil y Fórmula</option>
+                        <option value="DESPENSA" style="color:#2b3044;">Despensa Básica Armable</option>
+                        <option value="OTRO" style="color:#2b3044;">Otro</option>
                     </select>
                 </label>
 
-                <!-- Columna 2 (flex:1) para capturar el número de la cantidad -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <!-- Texto pequeño superior para la cantidad -->
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Cantidad *</span>
-                    <!-- Input sin 'name' (no se envía directo); tiene id="num_cantidad" para que JavaScript lea el número -->
-                    <input type="text" id="num_cantidad" required placeholder="Ej. 10" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                </label>
-
-                <!-- Columna 3 (flex:1) para capturar la unidad de medida -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                    <!-- Texto pequeño superior para la unidad -->
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Unidad</span>
-                    <!-- Input opcional con id="txt_unidad" para que JavaScript lo lea y lo pegue junto al número -->
-                    <input type="text" id="txt_unidad" placeholder="Ej. kg, cajas" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                <!-- Selector desplegable para el Tipo de conservación del alimento -->
+                <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                    <!-- Etiqueta del selector de Tipo -->
+                    <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Tipo *</span>
+                    <!-- Lista desplegable que envía el valor seleccionado bajo el nombre 'tipo' -->
+                    <select name="tipo" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+                        <!-- Opción inicial deshabilitada -->
+                        <option value="" disabled selected style="color:#6b7084;">Selecciona</option>
+                        <!-- Opciones válidas de conservación -->
+                        <option value="PERECEDERO" style="color:#2b3044;">Perecedero</option>
+                        <option value="NO_PERECEDERO" style="color:#2b3044;">No Perecedero</option>
+                        <option value="PREPARADO" style="color:#2b3044;">Preparado</option>
+                        <option value="BEBIDA" style="color:#2b3044;">Bebida / Líquido</option>
+                    </select>
                 </label>
             </div>
 
-            <!-- Input invisible que sí tiene name="cantidad"; aquí JavaScript guardará la unión (ej. "10 kg") para Python -->
-            <input type="hidden" name="cantidad" id="final_cantidad">
+            <!-- Contenedor Flexbox que alinea Cantidad y Unidad procesadas directamente en Python -->
+            <div style="display:flex; gap:14px; margin-bottom:16px;">
+                <!-- Columna para capturar el número de la cantidad -->
+                <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                    <!-- Etiqueta de cantidad -->
+                    <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Cantidad *</span>
+                    <!-- Envía directamente 'num_cantidad' al servidor Python sin necesidad de JavaScript -->
+                    <input type="text" name="num_cantidad" required placeholder="Ej. 10" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                </label>
 
-            <!-- Tarjeta/caja visual de ancho completo para la Descripción del Contenido -->
-            <label style="display:block; background:#fff; border-radius:14px; padding:12px 18px; margin-bottom:16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                <!-- Columna para capturar la unidad de medida -->
+                <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                    <!-- Etiqueta de unidad -->
+                    <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Unidad</span>
+                    <!-- Envía directamente 'txt_unidad' al servidor Python para concatenarse limpiamente -->
+                    <input type="text" name="txt_unidad" placeholder="Ej. kg, cajas, latas" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                </label>
+            </div>
+
+            <!-- Tarjeta visual de ancho completo para la Descripción del Contenido -->
+            <label class="elem-gris" style="display:block; background:#fff; border-radius:14px; padding:12px 18px; margin-bottom:16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                 <!-- Texto pequeño superior -->
-                <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Descripción del Contenido *</span>
-                <!-- Caja obligatoria que envía el nombre del alimento bajo el campo 'titulo' que espera el backend -->
-                <input type="text" name="titulo" required placeholder="Ej. Charolas de guisados frescos, pan dulce varia..." style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Descripción del Contenido *</span>
+                <!-- Caja obligatoria que envía el nombre del alimento bajo el campo 'titulo' -->
+                <input type="text" name="titulo" required placeholder="Ej. Plátanos, Agua embotellada, Atún en lata..." class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
             </label>
 
             <!-- Contenedor Flexbox que coloca Fecha de Caducidad y Requisito de Conservación en dos columnas -->
             <div style="display:flex; gap:16px;">
                 
-                <!-- Columna izquierda (flex:1) para la Fecha de Caducidad -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                <!-- Columna izquierda para la Fecha de Caducidad -->
+                <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                     <!-- Texto pequeño superior -->
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Fecha de Caducidad / Consumo *</span>
-                    <!-- Selector de calendario nativo (type="date") obligatorio; envía el dato como 'fecha_caducidad' -->
-                    <input type="date" name="fecha_caducidad" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+                    <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Fecha de Caducidad / Consumo *</span>
+                    <!-- Selector de calendario nativo obligatorio que envía 'fecha_caducidad' -->
+                    <input type="date" name="fecha_caducidad" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
                 </label>
 
-                <!-- Columna derecha (flex:1) para el Requisito de Conservación -->
-                <label style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+                <!-- Columna derecha para el Requisito de Conservación -->
+                <label class="elem-gris" style="flex:1; display:block; background:#fff; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                     <!-- Texto pequeño superior -->
-                    <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Requisito de Conservación *</span>
+                    <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Requisito de Conservación *</span>
                     <!-- Caja obligatoria que envía las instrucciones de guardado bajo el nombre 'descripcion' -->
-                    <input type="text" name="descripcion" placeholder="Ej. Refrigeración a 4°C" required style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    <input type="text" name="descripcion" placeholder="Ej. Refrigeración a 4°C o Ambiente" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                 </label>
             </div>
         </div>
@@ -144,38 +163,25 @@
         <!-- ================= SECCIÓN 3: EVIDENCIA FOTOGRÁFICA ================= -->
         <div style="margin-bottom:32px;">
             <!-- Título de la tercera sección -->
-            <h2 style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
+            <h2 class="txt-principal" style="font-size:1.05rem; font-weight:800; color:#2b3044; margin-bottom:16px;">
                 3. Evidencia Fotográfica
             </h2>
 
-            <!-- Tarjeta centrada con cursor de mano para adjuntar la fotografía -->
-            <label style="display:block; background:#fff; border-radius:14px; padding:18px 20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; cursor:pointer; text-align:center;">
+            <!-- Tarjeta centrada para adjuntar cualquier archivo de fotografía -->
+            <label class="elem-gris" style="display:block; background:#fff; border-radius:14px; padding:18px 20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; cursor:pointer; text-align:center;">
                 <!-- Texto instructivo centrado -->
-                <span style="display:block; font-size:0.78rem; color:#6b7084; font-weight:600; margin-bottom:6px;">Adjuntar foto del alimento (Opcional)</span>
-                <!-- Selector de archivos (type="file") restringido solo a formatos de imagen (accept="image/*") -->
-                <input type="file" name="imagen" accept="image/*" style="font:600 0.82rem 'Plus Jakarta Sans',sans-serif; color:#2b3044;">
+                <span class="txt-secundario" style="display:block; font-size:0.78rem; color:#6b7084; font-weight:600; margin-bottom:6px;">Adjuntar foto del alimento (Opcional)</span>
+                <!-- Selector de archivos restringido a formatos de imagen que Python procesará para el botón EVIDENCIA -->
+                <input type="file" name="imagen" accept="image/*" class="txt-principal" style="font:600 0.82rem 'Plus Jakarta Sans',sans-serif; color:#2b3044;">
             </label>
         </div>
 
-        <!-- Botón principal que dispara el evento 'submit' del formulario y envía los datos al servidor -->
+        <!-- Botón principal que envía el formulario directamente al backend en Python -->
         <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">
             Publicar Donación
         </button>
     </form>
 </main>
 
-<!-- Bloque de JavaScript para unir cantidad y unidad antes de mandar el formulario -->
-<script>
-    // Detecta el momento exacto en que el usuario hace clic en "Publicar Donación" (evento submit)
-    document.getElementById('formDonacion').addEventListener('submit', function() {
-        // Guarda en la constante 'cant' lo que el usuario escribió en la caja de Cantidad (ej. "10")
-        const cant = document.getElementById('num_cantidad').value;
-        // Guarda en la constante 'uni' lo que el usuario escribió en la caja de Unidad (ej. "kg")
-        const uni = document.getElementById('txt_unidad').value;
-        // Si hay unidad, une ambos textos con un espacio ("10 kg"); si no, deja solo el número y lo mete al campo oculto 'final_cantidad'
-        document.getElementById('final_cantidad').value = uni ? `${cant} ${uni}` : cant;
-    });
-</script>
-
-<!-- Cierra el bloque 'contenido' para indicar a Django dónde termina la inyección dentro de dashboard.html -->
+<!-- Cierra el bloque 'contenido' -->
 {% endblock %}
