@@ -148,10 +148,34 @@ def configuracion(request):
     # Muestra la plantilla de configuración
     return render(request, 'users/configuracion.html')
 
+# Verifica que telefono, dirección y razon social del usuario esten completos
+def perfil_completo(user):
+    # Por defecto evalua al usuario base, por ejemplo un Administrador
+    usuario = user
+    # Variable para identificar el campo de razón social segun el rol
+    campo = None
+    # Si es Donante, evalua su registro propio y el campo nombre_local
+    if hasattr(user, 'donante'):
+        usuario = user.donante
+        campo = 'nombre_local'
+    # Si es Receptor, evalúa su registro propio y el campo nombre_org
+    elif hasattr(user, 'receptor'):
+        usuario = user.receptor
+        campo = 'nombre_org'
+
+    # Reúne los datos obligatorios para poder subir formularios
+    datos = [usuario.telefono, usuario.direccion]
+    # Si el rol tiene razón social, la incluye en la validación
+    if campo:
+        datos.append(getattr(usuario, campo))
+    # Retorna True únicamente si ningún dato está vacío
+    return all(dato and dato.strip() for dato in datos)
+
 
 # Permite visualizar y actualizar los datos del perfil del usuario autenticado
 @login_required
 def perfil(request):
+
     # Obtiene la instancia del usuario en sesión
     usuario = request.user
     # Variable para identificar el campo de razón social según el rol
