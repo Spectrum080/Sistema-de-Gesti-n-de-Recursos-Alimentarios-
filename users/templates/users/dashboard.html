@@ -104,13 +104,63 @@
         body.alto-contraste th {
             border: 2px solid #7287fe !important;
         }
+
+        /* Checkbox oculto que controla la apertura/cierre de la cajita de la campanita */
+        .campanita-toggle {
+            display: none;
+        }
+
+        /* Cajita desplegable con información primordial */
+        .campanita-dropdown {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 320px;
+            background: #ffffff;
+            border: 1px solid #e4e7f2;
+            border-radius: 16px;
+            box-shadow: 0 14px 34px rgba(15, 17, 26, 0.14);
+            padding: 14px;
+            z-index: 300;
+            box-sizing: border-box;
+        }
+
+        /* Muestra la cajita cuando el checkbox de la campanita está marcado */
+        .campanita-toggle:checked ~ .campanita-dropdown {
+            display: block;
+        }
+
+        /* Cada fila breve dentro de la cajita desplegable */
+        .campanita-item {
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: #f4f6fb;
+            margin-bottom: 8px;
+        }
+
+        /* Soporte para Modo Oscuro en la cajita desplegable */
+        body.modo-oscuro .campanita-dropdown {
+            background-color: #181b28 !important;
+            border-color: #2b3044 !important;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45) !important;
+        }
+        body.modo-oscuro .campanita-item {
+            background-color: #232738 !important;
+        }
+
+        /* Soporte para Alto Contraste en la cajita desplegable */
+        body.alto-contraste .campanita-dropdown,
+        body.alto-contraste .campanita-item {
+            border: 2px solid #7287fe !important;
+        }
     </style>
 </head>
 <body class="{% if request.session.tema_oscuro %}modo-oscuro {% endif %}{% if request.session.alto_contraste %}alto-contraste{% endif %}" style="margin:0; font-family:'Plus Jakarta Sans',system-ui,sans-serif; background-color:#f4f6fb; color:#2b3044;">
 
-    <!-- NAVBAR SUPERIOR -->
+    <!-- Navegacion superior -->
     <header style="width:100%; height:75px; background:#ffffff; box-sizing:border-box; padding:0 36px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 20px rgba(60,70,120,0.06); position:sticky; top:0; z-index:100;">
-        <div style="display:flex; align-items:center; gap:20px;">
+        <div style="display:flex; align-items:center; gap:8px;">
             <a href="{% url 'dashboard' %}" class="elem-gris" style="border:none; background:#f4f6fb; border-radius:12px; padding:10px 18px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#7287fe; cursor:pointer; display:flex; align-items:center; gap:8px; text-decoration:none;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 Menú Principal
@@ -126,22 +176,66 @@
             <span>Buscar donaciones o recursos...</span>
         </div>
 
-        <div style="display:flex; align-items:center; gap:16px;">
-            <div class="elem-gris" style="position:relative; cursor:pointer; width:40px; height:40px; border-radius:12px; background:#f4f6fb; display:grid; place-items:center;">
-                <svg class="txt-principal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                {% if request.session.notif_caducidad|default:True %}
-                <div style="position:absolute; top:8px; right:8px; width:8px; height:8px; background:#e5484d; border-radius:50%; border:2px solid #fff;"></div>
-                {% endif %}
+        <!-- CONTENEDOR PRINCIPAL: agrupa la campanita y su cajita desplegable -->
+            <div style="position:relative;">
+                <!-- Checkbox oculto: al marcar/desmarcar con el label, CSS muestra u oculta la cajita -->
+                <input type="checkbox" id="toggle-campanita" class="campanita-toggle">
+
+                <!-- Botón de la campanita: 'for="toggle-campanita"' vincula el clic con el checkbox -->
+                <label for="toggle-campanita" class="elem-gris" title="Notificaciones" style="position:relative; cursor:pointer; width:40px; height:40px; border-radius:12px; background:#f4f6fb; display:grid; place-items:center;">
+                    <!-- Ícono SVG de campana -->
+                    <svg class="txt-principal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+
+                    <!-- Puntito rojo indicador si hay notificaciones pendientes -->
+                    {% if cantidad_notis_pendientes|default:0 > 0 or request.session.notif_caducidad|default:True %}
+                    <div style="position:absolute; top:8px; right:8px; width:8px; height:8px; background:#e5484d; border-radius:50%; border:2px solid #fff;"></div>
+                    {% endif %}
+                </label>
+
+                <!-- CAJITA DESPLEGABLE: solo muestra información primordial y el acceso a la tabla -->
+                <div class="campanita-dropdown">
+                    <!-- Encabezado de la cajita con título y botón '✕' para cerrarla -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #e4e7f2;">
+                        <span class="txt-principal" style="font-size:0.85rem; font-weight:800;">Notificaciones</span>
+                        <label for="toggle-campanita" class="txt-secundario" title="Cerrar" style="cursor:pointer; font-size:0.8rem; font-weight:700;">✕</label>
+                    </div>
+
+                    <!-- Lista breve de notificaciones (máximo 4, solo título primordial, rol y hora) -->
+                    {% if notificaciones_pendientes %}
+                        {% for noti in notificaciones_pendientes|slice:":4" %}
+                        <div class="campanita-item">
+                            <div class="txt-principal" style="font-size:0.8rem; font-weight:700; margin-bottom:2px;">
+                                {{ noti.titulo }}
+                            </div>
+                            <div class="txt-secundario" style="font-size:0.72rem; font-weight:600;">
+                                {{ noti.get_rol_destino_display }} · {{ noti.created_at|date:"H:i" }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Mensaje cuando no hay notificaciones pendientes -->
+                        <div class="campanita-item">
+                            <div class="txt-secundario" style="font-size:0.78rem; font-weight:600;">
+                                Sin notificaciones nuevas por ahora.
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Botón/enlace para abrir la tabla completa con toda la información -->
+                    <a href="{% url 'mis_notificaciones' %}" style="display:block; text-align:center; margin-top:10px; padding:9px 12px; border-radius:10px; background:#7287fe; color:#ffffff; text-decoration:none; font-size:0.78rem; font-weight:700;">
+                        Ver tabla completa
+                    </a>
+                </div>
             </div>
 
-            <div class="caja-blanca" style="display:flex; align-items:center; gap:12px; background:#ffffff; border:1px solid #e4e7f2; border-radius:999px; padding:6px 16px 6px 6px;">
+                       <a href="{% url 'perfil' %}" class="caja-blanca" title="Mi perfil" style="display:flex; align-items:center; gap:12px; background:#ffffff; border:1px solid #e4e7f2; border-radius:999px; padding:6px 16px 6px 6px; text-decoration:none; cursor:pointer;">
                 <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(160deg,#8aa0ff 0%,#7287fe 100%); display:grid; place-items:center; color:#fff; font-weight:800; font-size:0.85rem;">
                     {{ request.user.username|default:"C"|slice:":1"|upper }}
                 </div>
                 <span class="txt-principal" style="font-size:0.85rem; font-weight:700; color:#2b3044;">
-                    {{ request.user.username|default:"Carlos" }}
+                    {{ request.user.username|default:"derpi" }}
                 </span>
-            </div>
+            </a>
         </div>
     </header>
 
@@ -190,7 +284,7 @@
                         Nueva Donación
                     </a>
                 {% endif %}
-<a href="{% url 'perfil' %}" style="display:flex; align-items:center; gap:12px; text-decoration:none; padding:14px 18px; border-radius:14px; color:#6b7084; font-weight:600; font-size:0.88rem;">      Mi Perfil  </a>
+
                 <!-- BOTÓN DE CONFIGURACIÓN -->
                 <a href="{% url 'configuracion' %}" class="nav-link {% if request.resolver_match.url_name == 'configuracion' %}activo{% endif %}">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>

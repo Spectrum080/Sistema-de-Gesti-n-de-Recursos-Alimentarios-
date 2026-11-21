@@ -1,21 +1,42 @@
+<!-- Hereda la estructura y menú lateral del dashboard principal sin usar JavaScript -->
 {% extends 'users/dashboard.html' %}
-<!-- Hereda la estructura y menú lateral del dashboard principal -->
 
+<!-- Define el título de la pestaña para el historial del receptor -->
 {% block title %}Historial de Donaciones - Hambre Cero{% endblock %}
 
+<!-- Abre el bloque de contenido principal -->
 {% block contenido %}
+
+<!-- Estilos CSS para alinear las etiquetas sin que se amontonen ni se corten -->
+<style>
+    /* Mantiene las píldoras y botones en una sola línea limpia */
+    .pildora-historial {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        border: none;
+        line-height: 1.2;
+    }
+</style>
 
 <!-- ENCABEZADO Y FILTRO POR CATEGORÍA PROCESADO 100% EN PYTHON -->
 <div style="margin-bottom: -16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
     <div>
+        <!-- Título principal del historial -->
         <h1 class="txt-principal" style="font-size:2rem; font-weight:800; margin:0 0 4px; color:#2b3044;">Historial de Donaciones</h1>
-        <p class="txt-secundario" style="font-size:0.9rem; color:#6b7084; margin:0;">Registro histórico completo del centro de acopio (aguas embotelladas, comida enlatada, granos y alimentos preparados)</p>
+        <!-- Descripción del encapsulamiento por cuenta de receptor -->
+        <p class="txt-secundario" style="font-size:0.9rem; color:#6b7084; margin:0;">Registro histórico privado de las donaciones que tu cuenta de receptor ha aceptado, rechazado o reservado</p>
     </div>
 
     <!-- Formulario GET para filtrar por categoría directamente desde la vista de Python -->
     <form method="GET" action="{% url 'historialDonaciones' %}" style="display:flex; align-items:center; gap:10px; margin:0;">
+        <!-- Mantiene el rol activo en la URL -->
         <input type="hidden" name="rol" value="{{ rol_actual }}">
+        <!-- Etiqueta descriptiva del filtro -->
         <span class="txt-secundario" style="font-size:0.8rem; font-weight:700; color:#6b7084;">Filtrar categoría:</span>
+        <!-- Selector con las categorías válidas del centro de acopio -->
         <select name="categoria" class="elem-gris txt-principal" style="background:#ffffff; border:1px solid #e4e7f2; border-radius:12px; padding:10px 16px; font:600 0.84rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; cursor:pointer; outline:none;">
             <option value="TODAS" {% if categoria_actual == 'TODAS' %}selected{% endif %}>Todas las categorías ({{ total_general }})</option>
             <option value="AGUA_EMBOTELLADA" {% if categoria_actual == 'AGUA_EMBOTELLADA' %}selected{% endif %}>Agua Embotellada y Bebidas</option>
@@ -28,32 +49,37 @@
             <option value="DESPENSA" {% if categoria_actual == 'DESPENSA' %}selected{% endif %}>Despensa Básica Armable</option>
             <option value="OTRO" {% if categoria_actual == 'OTRO' %}selected{% endif %}>Otro</option>
         </select>
+        <!-- Botón de envío del filtro -->
         <button type="submit" style="border:none; background:#7287fe; color:#ffffff; padding:10px 16px; border-radius:12px; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
             Filtrar
         </button>
     </form>
 </div>
 
-<!-- CONTENEDORA DE TABLA DE HISTORIAL -->
+<!-- CONTENEDORA DE TABLA DE HISTORIAL ENCAPSULADO -->
 <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); box-sizing:border-box;">
 
+    <!-- Encabezado interno con contador de registros del receptor -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <h2 class="txt-principal" style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Historial de Entradas y Recepciones en Acopio</h2>
-        <span class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ total_registros }} donaciones registradas</span>
+        <h2 class="txt-principal" style="font-size:1.15rem; font-weight:800; margin:0; color:#2b3044;">Mi Historial de Recepciones Gestionadas</h2>
+        <span class="txt-secundario" style="font-size:0.82rem; font-weight:600; color:#6b7084;">Total: {{ total_registros }} donaciones en tu historial</span>
     </div>
 
+    <!-- Tabla de historial con modales centrados para Evidencia y Comentarios -->
     <div style="overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.88rem;">
             <thead>
                 <tr class="linea-divisoria txt-secundario" style="border-bottom:1.5px solid #edf0f7; color:#6b7084;">
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">ID</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Donante</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Alimento</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Categoría</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Cantidad</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Tipo</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Caducidad</th>
-                    <th style="padding:14px 16px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">Estado</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">ID</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Donante</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Alimento</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Categoría</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Cantidad</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Tipo</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Caducidad</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Evidencia</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Comentarios</th>
+                    <th style="padding:14px 14px; font-weight:700; font-size:0.75rem; text-transform:uppercase; white-space:nowrap;">Estado</th>
                 </tr>
             </thead>
 
@@ -61,31 +87,96 @@
             <tbody>
                 {% for d in donaciones %}
                 <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
-                    <td style="padding:16px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
-                    <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
-                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
-                    <td style="padding:16px;">
-                        <span style="background:#eff2fe; color:#7287fe; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem; display:inline-block; border:none;">{{ d.clasificacion }}</span>
+                    <!-- ID formateado -->
+                    <td style="padding:16px 14px; font-weight:800; color:#7287fe; white-space:nowrap;">#{{ d.id }}</td>
+                    <!-- Nombre del donante -->
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
+                    <!-- Nombre del alimento -->
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
+                    <!-- Categoría sin bordes y en una sola línea -->
+                    <td style="padding:16px 14px;">
+                        <span class="pildora-historial" style="background:#eff2fe; color:#7287fe; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.75rem;">{{ d.clasificacion }}</span>
                     </td>
-                    <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.cantidad }}</td>
-                    <td style="padding:16px;">
-                        <span style="background:#f4f6fb; color:#6b7084; padding:5px 12px; border-radius:999px; font-weight:600; font-size:0.78rem; display:inline-block; border:none;">{{ d.tipo }}</span>
+                    <!-- Cantidad registrada -->
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:700; color:#2b3044; white-space:nowrap;">{{ d.cantidad }}</td>
+                    <!-- Tipo sin bordes -->
+                    <td style="padding:16px 14px;">
+                        <span class="pildora-historial" style="background:#f4f6fb; color:#6b7084; padding:6px 14px; border-radius:999px; font-weight:600; font-size:0.78rem;">{{ d.tipo }}</span>
                     </td>
-                    <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.caducidad }}</td>
-                    <td style="padding:16px;">
-                        {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                            <span style="background:#fde8e8; color:#e5484d; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
-                        {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                            <span style="background:#fef4e6; color:#e67e22; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
+                    <!-- Fecha de caducidad -->
+                    <td class="txt-principal" style="padding:16px 14px; font-weight:600; color:#2b3044; white-space:nowrap;">{{ d.caducidad }}</td>
+
+                    <!-- Apartado de Evidencia Fotográfica que se abre en el centro de la pantalla al dar clic -->
+                    <td style="padding:16px 14px;">
+                        {% if d.evidencia_imagen %}
+                            <label for="modal-hist-evidencia-{{ d.raw_id }}" class="pildora-historial" style="background:#eff2fe; color:#4338ca; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                Ver Evidencia
+                            </label>
+                            <input type="checkbox" id="modal-hist-evidencia-{{ d.raw_id }}" class="modal-toggle">
+                            <div class="modal-overlay">
+                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:520px; border-radius:20px; padding:26px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:center;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                                        <h3 class="txt-principal" style="margin:0; font-size:1.08rem; font-weight:800; color:#2b3044;">Evidencia Fotográfica - #{{ d.id }} {{ d.alimento }}</h3>
+                                        <label for="modal-hist-evidencia-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
+                                    </div>
+                                    <div style="background:#f4f6fb; border-radius:14px; padding:12px; margin-bottom:18px;">
+                                        <img src="{{ d.evidencia_imagen }}" alt="Evidencia de {{ d.alimento }}" style="max-width:100%; max-height:360px; border-radius:10px; object-fit:contain; display:block; margin:0 auto;">
+                                    </div>
+                                    <label for="modal-hist-evidencia-{{ d.raw_id }}" style="display:inline-block; padding:10px 24px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                        Cerrar Evidencia
+                                    </label>
+                                </div>
+                            </div>
                         {% else %}
-                            <span style="background:#eaf8f0; color:#12a559; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.78rem; display:inline-block; border:none;">{{ d.estado }}</span>
+                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Sin foto</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Apartado de Comentarios con modal centrado para evitar texto amontonado en la fila -->
+                    <td style="padding:16px 14px;">
+                        {% if d.feedback %}
+                            <!-- Botón que abre el comentario completo en el centro de la pantalla -->
+                            <label for="modal-hist-comentario-{{ d.raw_id }}" class="pildora-historial" style="background:#f4f6fb; color:#2b3044; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                Ver Comentarios
+                            </label>
+                            <input type="checkbox" id="modal-hist-comentario-{{ d.raw_id }}" class="modal-toggle">
+                            <div class="modal-overlay">
+                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:420px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                        <h3 class="txt-principal" style="margin:0; font-size:1.1rem; font-weight:800; color:#2b3044;">Comentarios - Donación #{{ d.id }}</h3>
+                                        <label for="modal-hist-comentario-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
+                                    </div>
+                                    <div class="elem-gris txt-principal" style="background:#f4f6fb; border-radius:12px; padding:16px; font-size:0.88rem; font-weight:600; color:#2b3044; line-height:1.5; margin-bottom:18px;">
+                                        {{ d.feedback }}
+                                    </div>
+                                    <div style="display:flex; justify-content:flex-end;">
+                                        <label for="modal-hist-comentario-{{ d.raw_id }}" style="padding:10px 22px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                                            Cerrar
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Sin comentarios</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Etiqueta de Estado sin bordes -->
+                    <td style="padding:16px 14px;">
+                        {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
+                            <span class="pildora-historial" style="background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
+                        {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
+                            <span class="pildora-historial" style="background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
+                        {% else %}
+                            <span class="pildora-historial" style="background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
                         {% endif %}
                     </td>
                 </tr>
                 {% empty %}
+                <!-- Mensaje cuando esta cuenta de receptor aún no ha aceptado, rechazado ni reservado donaciones -->
                 <tr>
-                    <td colspan="8" class="txt-secundario" style="padding:24px; text-align:center; font-weight:600; color:#6b7084;">
-                        No hay donaciones registradas en el historial.
+                    <td colspan="10" class="txt-secundario" style="padding:24px; text-align:center; font-weight:600; color:#6b7084;">
+                        Aún no has aceptado, rechazado ni reservado donaciones con esta cuenta de receptor.
                     </td>
                 </tr>
                 {% endfor %}
@@ -140,4 +231,5 @@
 
 </div>
 
+<!-- Cierra el bloque de contenido -->
 {% endblock %}
