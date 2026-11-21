@@ -79,7 +79,11 @@
             <tbody>
                 {% for d in donaciones %}
                 <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
-                    <td style="padding:16px; font-weight:800; color:#7287fe;">#{{ d.id }}</td>
+                    <td style="padding:16px; font-weight:800;">
+                        <a href="{% url 'detalle_donacion' d.raw_id %}" style="color: #7287fe; text-decoration: none;">
+                            #{{ d.id }}
+                        </a>
+                    </td>
                     <td class="txt-principal" style="padding:16px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
                     <td class="txt-principal" style="padding:16px; font-weight:700; color:#2b3044;">{{ d.alimento }}</td>
                     <td style="padding:16px;">

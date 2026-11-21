@@ -378,6 +378,14 @@ class Donacion(models.Model):
     fecha_recepcion = models.DateTimeField(null=True, blank=True)
     fecha_caducidad = models.DateField(null=True, blank=True)
     descripcion = models.TextField(blank=True)
+    telefono_contacto = models.CharField(max_length=25, blank=True)
+    tipo_conservacion = models.CharField(max_length=50, blank=True)
+    fecha_entrega = models.DateField(null=True, blank=True)
+    hora_desde = models.TimeField(null=True, blank=True)
+    hora_hasta = models.TimeField(null=True, blank=True)
+    notas_entrega = models.TextField(blank=True)
+    imagen_evidencia = models.ImageField(upload_to='donaciones/', null=True, blank=True)
+    declaracion_aceptada = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Donación'
