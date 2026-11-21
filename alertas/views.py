@@ -1,12 +1,11 @@
-import re # Permite trabajar con expresiones regulares para buscar y validar patrones de texto.
-from django.core.paginator import Paginator # Divide los registros en páginas.
-from django.shortcuts import render, redirect, get_object_or_404 # get_object_or_404: Busca un registro o devuelve un error 404.
+import re  # Permite trabajar con expresiones regulares para buscar y validar patrones de texto.
+from django.core.paginator import Paginator  # Divide los registros en páginas.
+from django.shortcuts import render, redirect, get_object_or_404  # get_object_or_404: Busca un registro o devuelve un error 404.
 from django.utils import timezone
-from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, MovimientoInventario # Importa los modelos para gestionar donaciones, alimentos, categorías,
-from users.models import Donante, Receptor # Importa los modelos de donantes y receptores.
 from django.contrib import messages
-from django.shortcuts import render, get_object_or_404
-from .models import Donacion # Asegúrate de importar el modelo
+from django.contrib.auth.decorators import login_required
+from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, MovimientoInventario, Notificacion
+from users.models import Donante, Receptor  # Importa los modelos de donantes y receptores.
 
 
 # Detecta y sincroniza en sesión si la vista actual corresponde al rol Receptor o Donante
@@ -265,3 +264,20 @@ def cargarDonaciones(request):
         datos_donante['direccion'] = getattr(perfil, 'direccion', '')
 
     return render(request, 'alertas/cargarDonaciones.html', {'datos': datos_donante})
+
+@login_required
+def mis_notificaciones(request):
+    """
+    Muestra la vista de la tabla completa de notificaciones del usuario actual.
+
+    Filtra las notificaciones asignadas al usuario autenticado ordenadas
+    de la más reciente a la más antigua (según Meta.ordering del modelo).
+    """
+    # Obtiene únicamente las notificaciones dirigidas al usuario en sesión
+    notificaciones = Notificacion.objects.filter(destiny=request.user)
+
+    # Contexto enviado al template de la tabla completa
+    contexto = {
+        'notificaciones': notificaciones,
+    }
+    return render(request, 'alertas/mis_notificaciones.html', contexto)
