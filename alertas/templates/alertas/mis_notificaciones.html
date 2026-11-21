@@ -1,0 +1,24 @@
+{% extends "users/dashboard.html" %}
+
+{% block title %}Mis Notificaciones - Hambre Cero{% endblock %}
+
+{% block contenido %}
+<!-- Encabezado de la vista de tabla completa de notificaciones -->
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+    <div>
+        <h1 class="txt-principal" style="font-size:1.7rem; font-weight:800; margin:0;">
+            Centro de Notificaciones
+        </h1>
+        <p class="txt-secundario" style="font-size:0.88rem; margin:4px 0 0;">
+            Detalle completo de las alertas y acciones registradas en el sistema.
+        </p>
+    </div>
+</div>
+
+<!-- Contenedor temporal para la tabla completa (se detallará en la fase correspondiente) -->
+<div class="caja-blanca" style="background:#ffffff; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(60,70,120,0.06);">
+    <p class="txt-secundario" style="margin:0; font-size:0.88rem;">
+        Total de notificaciones registradas: <strong>{{ notificaciones|length }}</strong>
+    </p>
+</div>
+{% endblock %}

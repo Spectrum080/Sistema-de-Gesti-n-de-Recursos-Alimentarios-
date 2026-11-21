@@ -6,7 +6,12 @@ from django.db import models
 from django.utils import timezone
 # Importa los modelos de usuarios y roles del sistema
 from users.models import Usuario, Donante, Receptor
-
+# Importa la configuración del proyecto (incluye AUTH_USER_MODEL)
+from django.conf import settings
+# Importación local para notificar a donante y receptor sin ciclos de importación
+from alertas.utils.notificaciones import notificar_decision_receptor
+# Importación local para alertar al donante antes de borrar la donación
+from alertas.utils.notificaciones import notificar_donacion_eliminada
 
 # Define el QuerySet personalizado para encapsular los filtros de alimentos en acopio
 class AlimentoQuerySet(models.QuerySet):
@@ -578,6 +583,14 @@ class Donacion(models.Model):
                 self.alimento.estado = 'EN_REVISION'
             self.alimento.save(update_fields=['estado'])
 
+        # Almacena la informacion de la decision del receptor
+        notificar_decision_receptor(
+            donacion=self,
+            usuario_receptor=usuario,
+            accion=nuevo_estado or 'GuardarFeedback',
+            comentario_feedback=comentario_feedback,
+        )
+
     # Método encapsulado para que el rol Receptor pueda quitar/eliminar una donación del sistema
     def eliminar_por_receptor(self):
         # Guarda referencia al alimento vinculado antes de borrar la donación
@@ -728,3 +741,43 @@ class Alerta(models.Model):
         self.estado_atendida = True
         # Guarda el cambio en la base de datos
         self.save(update_fields=['estado_atendida'])
+
+
+class Notificacion(models.Model):
+    # Usuario que recibe la alerta
+    destiny = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='notificaciones',
+        verbose_name="Destinatario"
+    )
+    
+    # Información primordial (para la cajita desplegable de la campanita)
+    titulo = models.CharField(max_length=150, verbose_name="Título Corto")
+    
+    # Información detallada (para la tabla completa)
+    mensaje = models.TextField(verbose_name="Descripción Detallada")
+    
+    # Diferenciación de roles clave solicitada ('donante', 'receptor', 'general')
+    rol_destino = models.CharField(
+        max_length=50, 
+        default='general', 
+        verbose_name="Rol de Destino (Donante/Receptor)"
+    )
+    
+    # Estilos o prioridad ('info', 'success', 'warning', 'danger')
+    level = models.CharField(max_length=30, default='info', verbose_name="Nivel")
+    
+    # Estado de lectura
+    read = models.BooleanField(default=False, verbose_name="Leída")
+    
+    # Marca de tiempo
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
+
+    class Meta:
+        verbose_name = "Notificación"
+        verbose_name_plural = "Notificaciones"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.rol_destino.upper()}] {self.titulo} - {self.destiny.username}"

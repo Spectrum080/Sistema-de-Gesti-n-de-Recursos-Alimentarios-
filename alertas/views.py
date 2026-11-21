@@ -7,7 +7,13 @@ from django.core.paginator import Paginator
 # Importa funciones de atajo para renderizar vistas, redirigir y buscar objetos
 from django.shortcuts import render, redirect, get_object_or_404
 # Importa los modelos del centro de acopio y donaciones
-from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, MovimientoInventario
+from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, MovimientoInventario, Notificacion
+# Importación local para notificar únicamente al donante sobre su nueva entrega
+from alertas.utils.notificaciones import notificar_donacion_registrada
+
+from django.contrib.auth.decorators import login_required
+
+
 
 
 # Función que determina y guarda en sesión si el usuario opera bajo el rol de Receptor o Donante
@@ -308,7 +314,8 @@ def cargarDonaciones(request):
         )
 
         # Crea la donación vinculada únicamente al usuario Donante que la subió (receptor queda vacío hasta ser gestionada)
-        Donacion.objects.create(
+        # Guarda la informacion de la donacion y envia una notificacion al Donante
+        nueva_donacion = Donacion.objects.create(
             donante=donante_obj,
             usuario_donante=request.user if request.user.is_authenticated else None,
             nombre_donante=nombre_donante,
@@ -336,8 +343,29 @@ def cargarDonaciones(request):
             motivo='Registro desde formulario de Nueva Donación',
         )
 
+        # Notifica al donante de la donacion registrada
+        notificar_donacion_registrada(nueva_donacion)
+
         # Redirige a Mis Donaciones para que el donante vea reflejada su entrega con su categoría
         return redirect('/alertas/consultarDonaciones/?rol=donante')
 
     # Si la petición es GET, muestra el formulario para subir donación
     return render(request, 'alertas/cargarDonaciones.html')
+
+
+@login_required
+def mis_notificaciones(request):
+    """
+    Muestra la vista de la tabla completa de notificaciones del usuario actual.
+
+    Filtra las notificaciones asignadas al usuario autenticado ordenadas
+    de la más reciente a la más antigua (según Meta.ordering del modelo).
+    """
+    # Obtiene únicamente las notificaciones dirigidas al usuario en sesión
+    notificaciones = Notificacion.objects.filter(destiny=request.user)
+
+    # Contexto enviado al template de la tabla completa
+    contexto = {
+        'notificaciones': notificaciones,
+    }
+    return render(request, 'alertas/mis_notificaciones.html', contexto)
