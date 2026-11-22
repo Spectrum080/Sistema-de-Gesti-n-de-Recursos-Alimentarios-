@@ -10,10 +10,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, MovimientoInventario, Notificacion
 # Importación local para notificar únicamente al donante sobre su nueva entrega
 from alertas.utils.notificaciones import notificar_donacion_registrada
-
+# Decorador que exige que el usuario haya iniciado sesión antes de acceder a la vista
 from django.contrib.auth.decorators import login_required
-
-
+# Funciones auxiliares de Django para buscar objetos o devolver 404, redirigir y renderizar plantillas
+from django.shortcuts import get_object_or_404, redirect, render
+# Modelo Notificacion definido en la app 'alertas' para consultar y actualizar alertas
+from alertas.models import Notificacion
 
 
 # Función que determina y guarda en sesión si el usuario opera bajo el rol de Receptor o Donante
@@ -356,16 +358,49 @@ def cargarDonaciones(request):
 @login_required
 def mis_notificaciones(request):
     """
-    Muestra la vista de la tabla completa de notificaciones del usuario actual.
-
-    Filtra las notificaciones asignadas al usuario autenticado ordenadas
-    de la más reciente a la más antigua (según Meta.ordering del modelo).
+    Renderiza el historial completo de notificaciones del usuario autenticado
+    y procesa las acciones POST para marcar una o todas como leídas.
     """
-    # Obtiene únicamente las notificaciones dirigidas al usuario en sesión
-    notificaciones = Notificacion.objects.filter(destiny=request.user)
+    # Verifica si el usuario envió un formulario (por ejemplo, al pulsar 'Marcar leída' o 'Marcar todas')
+    if request.method == 'POST':
+        # Obtiene el tipo de acción solicitada desde el input oculto 'accion'
+        accion = request.POST.get('accion')
+        # Obtiene el ID de la notificación específica (solo aplica para 'marcar_leida')
+        notif_id = request.POST.get('notif_id')
 
-    # Contexto enviado al template de la tabla completa
+        # Caso 1: el usuario pidió marcar como leídas todas sus notificaciones pendientes
+        if accion == 'marcar_todas':
+            # Filtra solo las notificaciones no leídas del usuario actual y actualiza 'read' en lote
+            Notificacion.objects.filter(
+                destiny=request.user,
+                read=False,
+            ).update(read=True)
+            # Redirige (patrón PRG: Post/Redirect/Get) para evitar reenvíos accidentales al recargar
+            return redirect('mis_notificaciones')
+
+        # Caso 2: el usuario pidió marcar una sola notificación como leída
+        if accion == 'marcar_leida' and notif_id:
+            # Busca la notificación por ID asegurando que pertenezca al usuario en sesión (evita manipular ajenas)
+            notificacion = get_object_or_404(
+                Notificacion,
+                id=notif_id,
+                destiny=request.user,
+            )
+            # Marca el registro como leído y guarda únicamente el campo 'read' en la base de datos
+            notificacion.read = True
+            notificacion.save(update_fields=['read'])
+            # Redirige de vuelta al Centro de Notificaciones para reflejar el nuevo estado
+            return redirect('mis_notificaciones')
+
+    # Consulta todas las notificaciones del usuario autenticado
+    # (el orden descendente por fecha viene dado por 'ordering = ["-created_at"]' en el Meta del modelo)
+    notificaciones_qs = Notificacion.objects.filter(destiny=request.user)
+
+    # Prepara el contexto que se enviará a la plantilla HTML
     contexto = {
-        'notificaciones': notificaciones,
+        'notificaciones': notificaciones_qs,
+        'total_notificaciones': notificaciones_qs.count(),
     }
+
+    # Renderiza la plantilla de la tabla completa con los datos del usuario
     return render(request, 'alertas/mis_notificaciones.html', contexto)

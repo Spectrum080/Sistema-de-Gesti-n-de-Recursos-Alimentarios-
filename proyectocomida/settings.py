@@ -66,6 +66,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Inyecta las notificaciones no leídas en todas las vistas
+                'alertas.context_processors.notificaciones_globales'
             ],
         },
     },

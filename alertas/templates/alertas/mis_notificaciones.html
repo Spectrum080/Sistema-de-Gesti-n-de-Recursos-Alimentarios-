@@ -3,22 +3,336 @@
 {% block title %}Mis Notificaciones - Hambre Cero{% endblock %}
 
 {% block contenido %}
-<!-- Encabezado de la vista de tabla completa de notificaciones -->
-<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
-    <div>
-        <h1 class="txt-principal" style="font-size:1.7rem; font-weight:800; margin:0;">
-            Centro de Notificaciones
-        </h1>
-        <p class="txt-secundario" style="font-size:0.88rem; margin:4px 0 0;">
-            Detalle completo de las alertas y acciones registradas en el sistema.
-        </p>
-    </div>
-</div>
+<!-- Estilos locales con variables CSS para adaptar la tabla a vista clara y vista oscura -->
+<style>
+    /* Variables por defecto: Vista Clara */
+    .notis-wrapper {
+        --notis-card-bg: #ffffff;
+        --notis-card-border: #e2e8f0;
+        --notis-head-bg: #f8fafc;
+        --notis-row-hover: #f8fafc;
+        --notis-unread-bg: #eef2ff;
+        --notis-unread-border: #6366f1;
+        --notis-read-opacity: 0.72;
+        --notis-text-main: #0f172a;
+        --notis-text-muted: #475569;
+        --notis-btn-bg: #ffffff;
+        --notis-btn-border: #cbd5e1;
+        --notis-btn-text: #0f172a;
+        --notis-badge-bg: #e2e8f0;
+        --notis-badge-text: #1e293b;
+    }
 
-<!-- Contenedor temporal para la tabla completa (se detallará en la fase correspondiente) -->
-<div class="caja-blanca" style="background:#ffffff; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(60,70,120,0.06);">
-    <p class="txt-secundario" style="margin:0; font-size:0.88rem;">
-        Total de notificaciones registradas: <strong>{{ notificaciones|length }}</strong>
-    </p>
+    /* Ajustes automáticos de alto contraste para Modo Oscuro (sin tocar el modo claro) */
+    body.dark-mode .notis-wrapper,
+    body.dark .notis-wrapper,
+    body.modo-oscuro .notis-wrapper,
+    [data-theme="dark"] .notis-wrapper,
+    .dark-mode .notis-wrapper {
+        --notis-card-bg: #151c2c;
+        --notis-card-border: #263147;
+        --notis-head-bg: #1c2538;
+        --notis-row-hover: #1b2436;
+        --notis-unread-bg: rgba(99, 102, 241, 0.22);
+        --notis-unread-border: #818cf8;
+        --notis-read-opacity: 1; /* Sin opacidad baja para no apagar el texto */
+        --notis-text-main: #f8fafc;
+        --notis-text-muted: #cbd5e1; /* Gris claro de alta legibilidad */
+        --notis-btn-bg: #232e45;
+        --notis-btn-border: #3b4a6b;
+        --notis-btn-text: #f8fafc;
+        --notis-badge-bg: #232e45;
+        --notis-badge-text: #e2e8f0;
+    }
+
+    /* Estilo estético para el cuerpo del mensaje debajo del título */
+    .notis-titulo {
+        font-size: 0.93rem;
+        font-weight: 700;
+        color: var(--notis-text-main);
+        margin-bottom: 5px;
+        line-height: 1.3;
+    }
+
+    .notis-mensaje {
+        font-size: 0.83rem;
+        color: var(--notis-text-muted);
+        line-height: 1.45;
+    }
+
+    .notis-feedback-pill {
+        margin-top: 6px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border-left: 3px solid #6366f1;
+        background: rgba(99, 102, 241, 0.1);
+        font-size: 0.8rem;
+        color: var(--notis-text-main);
+    }
+
+    .notis-card {
+        background: var(--notis-card-bg);
+        border: 1px solid var(--notis-card-border);
+        border-radius: 16px;
+        padding: 22px;
+        margin-top: 16px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        color: var(--notis-text-main);
+    }
+
+    .notis-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .notis-btn-primary {
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: none;
+        background: #6366f1;
+        color: #ffffff;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+    }
+
+    .notis-btn-primary:hover {
+        opacity: 0.92;
+    }
+
+    .notis-btn-secondary {
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--notis-btn-border);
+        background: var(--notis-btn-bg);
+        color: var(--notis-btn-text);
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .notis-table-wrap {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid var(--notis-card-border);
+    }
+
+    .notis-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.88rem;
+        color: var(--notis-text-main);
+    }
+
+    .notis-table thead tr {
+        background: var(--notis-head-bg);
+        border-bottom: 1px solid var(--notis-card-border);
+    }
+
+    /* Encabezados alineados a la izquierda por defecto; la primera columna se mantiene así */
+    .notis-table th {
+        padding: 12px 14px;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--notis-text-muted);
+        font-weight: 700;
+        text-align: left;
+    }
+
+    /* Celdas centradas verticalmente por defecto para mayor equilibrio visual */
+    .notis-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--notis-card-border);
+        vertical-align: middle;
+        text-align: left;
+    }
+
+    /* Clase utilitaria para centrar horizontal y verticalmente Rol, Nivel, Fecha y Estado */
+    .notis-table th.notis-col-center,
+    .notis-table td.notis-col-center {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    /* Resalta el nombre de la donación/recurso para lectura rápida */
+    .notis-recurso {
+        font-weight: 700;
+        color: var(--notis-text-main);
+    }
+
+    .notis-row-unread {
+        background: var(--notis-unread-bg);
+        box-shadow: inset 3px 0 0 var(--notis-unread-border);
+    }
+
+    .notis-row-read {
+        opacity: var(--notis-read-opacity);
+    }
+
+    .notis-table tbody tr:hover {
+        background: var(--notis-row-hover);
+    }
+
+    .notis-badge {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: var(--notis-badge-bg);
+        color: var(--notis-badge-text);
+    }
+
+    /* Colores semánticos suaves para cada nivel de notificación */
+    .badge-success { background: rgba(34, 197, 94, 0.16); color: #16a34a; }
+    .badge-warning { background: rgba(245, 158, 11, 0.18); color: #d97706; }
+    .badge-danger  { background: rgba(239, 68, 68, 0.16); color: #dc2626; }
+    .badge-info    { background: rgba(59, 130, 246, 0.16); color: #2563eb; }
+
+    body.dark-mode .badge-success, [data-theme="dark"] .badge-success { color: #4ade80; }
+    body.dark-mode .badge-warning, [data-theme="dark"] .badge-warning { color: #fbbf24; }
+    body.dark-mode .badge-danger,  [data-theme="dark"] .badge-danger  { color: #f87171; }
+    body.dark-mode .badge-info,    [data-theme="dark"] .badge-info    { color: #60a5fa; }
+</style>
+
+<div class="notis-wrapper">
+    <!-- Encabezado principal del Centro de Notificaciones -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+        <div>
+            <h1 class="txt-principal" style="font-size:1.7rem; font-weight:800; margin:0;">
+                Centro de Notificaciones
+            </h1>
+            <p class="txt-secundario" style="font-size:0.88rem; margin:4px 0 0;">
+                Detalle completo de las alertas y acciones registradas en el sistema.
+            </p>
+        </div>
+    </div>
+
+    <!-- Tarjeta contenedora adaptable al tema del usuario -->
+    <div class="notis-card">
+        <!-- Barra superior: contador total y acción masiva para marcar pendientes como leídas -->
+        <div class="notis-toolbar">
+            <div style="font-size:0.9rem; color:var(--notis-text-muted);">
+                Total de notificaciones registradas:
+                <strong style="color:var(--notis-text-main);">{{ notificaciones|length }}</strong>
+            </div>
+
+            {% if total_no_leidas > 0 %}
+                <form method="post" style="margin:0;">
+                    <!-- Protección CSRF requerida en formularios POST de Django -->
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="marcar_todas">
+                    <button type="submit" class="notis-btn-primary">
+                        Marcar todas como leídas ({{ total_no_leidas }})
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        {% if notificaciones %}
+            <div class="notis-table-wrap">
+                <table class="notis-table">
+                    <thead>
+                        <tr>
+                            <th>Notificación</th>
+                            <th class="notis-col-center">Rol</th>
+                            <th class="notis-col-center">Nivel</th>
+                            <th class="notis-col-center">Fecha</th>
+                            <th class="notis-col-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Recorre todas las notificaciones del usuario autenticado -->
+                        {% for n in notificaciones %}
+                            <tr class="{% if not n.read %}notis-row-unread{% else %}notis-row-read{% endif %}">
+                                <!-- Título principal y mensaje limpio (sin '#número' y con comillas destacadas) -->
+                                <td style="max-width:460px;">
+                                    <div class="notis-titulo">{{ n.titulo }}</div>
+                                    <div class="notis-mensaje" data-raw-mensaje="{{ n.mensaje }}">{{ n.mensaje }}</div>
+                                </td>
+
+                                <!-- Rol destino centrado -->
+                                <td class="notis-col-center" style="white-space:nowrap;">
+                                    <span class="notis-badge">{{ n.rol_destino|capfirst }}</span>
+                                </td>
+
+                                <!-- Nivel centrado -->
+                                <td class="notis-col-center" style="white-space:nowrap;">
+                                    {% if n.level == 'success' %}
+                                        <span class="notis-badge badge-success">Éxito</span>
+                                    {% elif n.level == 'warning' %}
+                                        <span class="notis-badge badge-warning">Advertencia</span>
+                                    {% elif n.level == 'danger' %}
+                                        <span class="notis-badge badge-danger">Alerta</span>
+                                    {% else %}
+                                        <span class="notis-badge badge-info">Info</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Fecha centrada -->
+                                <td class="notis-col-center" style="white-space:nowrap; color:var(--notis-text-muted);">
+                                    {{ n.created_at|date:"d/m/Y H:i" }}
+                                </td>
+
+                                <!-- Estado y botón 'Marcar leída' centrados -->
+                                <td class="notis-col-center" style="white-space:nowrap;">
+                                    {% if n.read %}
+                                        <span class="notis-badge" style="opacity:0.85;">Leída</span>
+                                    {% else %}
+                                        <div style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+                                            <span class="notis-badge" style="color:var(--notis-unread-border);">No leída</span>
+                                            <form method="post" style="display:inline; margin:0;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="accion" value="marcar_leida">
+                                                <input type="hidden" name="notif_id" value="{{ n.id }}">
+                                                <button type="submit" class="notis-btn-secondary">
+                                                    Marcar leída
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div style="padding:16px; border-radius:12px; background:var(--notis-head-bg); color:var(--notis-text-muted); font-size:0.9rem;">
+                Aún no tienes notificaciones registradas.
+            </div>
+        {% endif %}
+    </div>
+    <script>
+    // Formatea cada mensaje: elimina '#ID ' y resalta lo que está entre comillas simples
+    document.querySelectorAll('.notis-mensaje[data-raw-mensaje]').forEach(function (el) {
+        const raw = el.getAttribute('data-raw-mensaje') || '';
+        // Quita fragmentos tipo '#5 ' o '#12 ' conservando espacios limpios
+        const sinId = raw.replace(/#\d+\s*/g, '');
+
+        // Limpia el contenedor y reconstruye con nodos de texto y <span> resaltado
+        el.textContent = '';
+        const partes = sinId.split(/('[^']+')/g);
+
+        partes.forEach(function (parte) {
+            if (!parte) return;
+            if (parte.startsWith("'") && parte.endsWith("'")) {
+                const span = document.createElement('span');
+                span.className = 'notis-recurso';
+                span.textContent = parte;
+                el.appendChild(span);
+            } else {
+                el.appendChild(document.createTextNode(parte));
+            }
+        });
+    });
+</script>
 </div>
 {% endblock %}

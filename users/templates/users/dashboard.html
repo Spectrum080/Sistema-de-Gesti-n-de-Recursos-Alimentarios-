@@ -203,14 +203,15 @@
                     <!-- Lista breve de notificaciones (máximo 4, solo título primordial, rol y hora) -->
                     {% if notificaciones_pendientes %}
                         {% for noti in notificaciones_pendientes|slice:":4" %}
-                        <div class="campanita-item">
-                            <div class="txt-principal" style="font-size:0.8rem; font-weight:700; margin-bottom:2px;">
-                                {{ noti.titulo }}
+                            <div class="campanita-item">
+                                <div class="txt-principal" style="font-size:0.8rem; font-weight:700; margin-bottom:2px;">
+                                    {{ noti.titulo }}
+                                </div>
+                                <!-- Muestra el rol capitalizado (Donante/Receptor/General) y la hora de creación -->
+                                <div class="txt-secundario" style="font-size:0.72rem; font-weight:600;">
+                                    {{ noti.rol_destino|capfirst }} · {{ noti.created_at|date:"H:i" }}
+                                </div>
                             </div>
-                            <div class="txt-secundario" style="font-size:0.72rem; font-weight:600;">
-                                {{ noti.get_rol_destino_display }} · {{ noti.created_at|date:"H:i" }}
-                            </div>
-                        </div>
                         {% endfor %}
                     {% else %}
                         <!-- Mensaje cuando no hay notificaciones pendientes -->

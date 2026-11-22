@@ -595,6 +595,8 @@ class Donacion(models.Model):
     def eliminar_por_receptor(self):
         # Guarda referencia al alimento vinculado antes de borrar la donación
         alimento_ref = self.alimento
+        # Informa al donante antes de borrar el registro de la donacion en el sistema
+        notificar_donacion_eliminada(self)
         # Elimina el registro de donación
         self.delete()
         # Si el alimento no tiene otras donaciones asociadas, lo elimina también del inventario
