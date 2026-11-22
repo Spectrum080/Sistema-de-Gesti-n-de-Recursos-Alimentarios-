@@ -1,0 +1,121 @@
+{% extends "users/dashboard.html" %}
+
+{% block title %}Detalle de Donación #{{ donacion.id|stringformat:"03d" }}{% endblock %}
+
+{% block contenido %}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<div style="background:#f4f6fc; padding:20px; font-family:'Plus Jakarta Sans',system-ui,sans-serif; min-height:80vh;">
+
+    <!-- CABECERA -->
+    <div style="max-width:800px; margin:0 auto 24px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h1 style="margin:0; font-family:'Outfit',sans-serif; font-size:28px; font-weight:700; color:#2b3044;">
+                Donación #{{ donacion.id|stringformat:"03d" }}
+            </h1>
+            <p style="margin:4px 0 0; color:#6b7084; font-size:14px;">Registrada el {{ donacion.fecha_registro|date:"d M Y" }}</p>
+        </div>
+        <a href="javascript:history.back()" style="display:inline-block; padding:10px 20px; background:#fff; color:#5563e8; text-decoration:none; font-weight:600; font-size:14px; border-radius:8px; box-shadow:0 4px 12px rgba(85,99,232,0.1);">
+            ← Volver a la lista
+        </a>
+    </div>
+
+    <!-- TARJETA PRINCIPAL -->
+    <main style="max-width:800px; margin:0 auto; background:#fff; border-radius:20px; box-shadow:0 10px 28px rgba(30,40,120,0.06); overflow:hidden;">
+        
+        <!-- ESTADO BANNER -->
+        <div style="background:linear-gradient(135deg, #606dfb 0%, #4b55dc 100%); padding:20px 30px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; color:#ffffff; font-size:16px;">Estado actual:</span>
+            
+            {% if donacion.estado == 'Rechazado' or donacion.estado == 'Cancelada' %}
+                <span style="background:#ffffff; color:#e5484d; padding:6px 14px; border-radius:999px; font-size:13px; font-weight:800; text-transform:uppercase; box-shadow:0 2px 8px rgba(0,0,0,0.15);">{{ donacion.estado }}</span>
+            {% elif donacion.estado == 'Reservada' or donacion.estado == 'Pendiente' %}
+                <span style="background:#ffffff; color:#e67e22; padding:6px 14px; border-radius:999px; font-size:13px; font-weight:800; text-transform:uppercase; box-shadow:0 2px 8px rgba(0,0,0,0.15);">{{ donacion.estado }}</span>
+            {% else %}
+                <span style="background:#ffffff; color:#188e40; padding:6px 14px; border-radius:999px; font-size:13px; font-weight:800; text-transform:uppercase; box-shadow:0 2px 8px rgba(0,0,0,0.15);">{{ donacion.estado }}</span>
+            {% endif %}
+        </div>
+
+        <div style="padding:30px;">
+            
+            <!-- GRID DE DATOS -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:30px;">
+                
+                <!-- COLUMNA 1: Donante e Inventario -->
+                <div>
+                    <h3 style="font-size:15px; font-weight:700; color:#5563e8; margin:0 0 16px; border-bottom:2px solid #f0f2fa; padding-bottom:8px;">Datos del Donante</h3>
+                    <ul style="list-style:none; padding:0; margin:0; font-size:14px; color:#4a5068; line-height:1.8;">
+                        <li><strong style="color:#2b3044;">Nombre:</strong> 
+                            {% if donacion.donante.nombre_local %}{{ donacion.donante.nombre_local }}{% elif donacion.donante %}{{ donacion.donante.username }}{% else %}{{ donacion.nombre_donante|default:"No especificado" }}{% endif %}
+                        </li>
+                        <li><strong style="color:#2b3044;">Teléfono:</strong> {{ donacion.telefono_contacto }}</li>
+                        <li><strong style="color:#2b3044;">Dirección:</strong> {{ donacion.direccion_entrega }}</li>
+                    </ul>
+
+                    <h3 style="font-size:15px; font-weight:700; color:#5563e8; margin:30px 0 16px; border-bottom:2px solid #f0f2fa; padding-bottom:8px;">Detalles del Alimento</h3>
+                    <ul style="list-style:none; padding:0; margin:0; font-size:14px; color:#4a5068; line-height:1.8;">
+                        <li><strong style="color:#2b3044;">Contenido:</strong> {{ donacion.alimento.nombre }}</li>
+                        <li><strong style="color:#2b3044;">Categoría:</strong> {{ donacion.alimento.get_clasificacion_display }}</li>
+                        <li><strong style="color:#2b3044;">Cantidad:</strong> {{ donacion.cantidad }}</li>
+                        <li><strong style="color:#2b3044;">Caducidad / Consumo:</strong> 
+                            {% if donacion.fecha_caducidad %}
+                                {{ donacion.fecha_caducidad|date:"d M Y" }}
+                            {% elif donacion.alimento.fecha_caducidad %}
+                                {{ donacion.alimento.fecha_caducidad|date:"d M Y" }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </li>
+                        <li>
+                            <strong style="color:#2b3044;">Requisito de Conservación:</strong> 
+                            {{ donacion.tipo_conservacion }}
+                            {% if donacion.requiere_refrigeracion or donacion.alimento.requiere_refrigeracion %}
+                                <span style="color:#3a46c4; font-weight:600; font-size:12px;">(Requiere Frío)</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+
+                    <!-- DECLARACIÓN -->
+                    {% if donacion.declaracion_aceptada %}
+                    <div style="background:#eaf8f0; border:1px solid #c6ead6; padding:15px; border-radius:12px; margin-top:25px;">
+                        <span style="color:#12a559; font-weight:700; font-size:13px; display:flex; align-items:center; gap:6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Declaración Aceptada
+                        </span>
+                        <p style="margin:6px 0 0; font-size:12px; color:#188e40; line-height:1.6;">Certifico que estos alimentos se encuentran en condiciones aptas para el consumo humano, manipulados bajo estándares estrictos de higiene y conservación, dentro de su fecha de consumo seguro.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- COLUMNA 2: Logística y Foto -->
+                <div>
+                    <h3 style="font-size:15px; font-weight:700; color:#5563e8; margin:0 0 16px; border-bottom:2px solid #f0f2fa; padding-bottom:8px;">Información de la Entrega</h3>
+                    <ul style="list-style:none; padding:0; margin:0; font-size:14px; color:#4a5068; line-height:1.8;">
+                        <li><strong style="color:#2b3044;">Método:</strong> {{ donacion.metodo_envio }}</li>
+                        <li><strong style="color:#2b3044;">Fecha preferida:</strong> {{ donacion.fecha_entrega|date:"d M Y" }}</li>
+                        {% if donacion.hora_desde and donacion.hora_hasta %}
+                            <li><strong style="color:#2b3044;">Horario (Desde - Hasta):</strong> {{ donacion.hora_desde|time:"H:i" }} a {{ donacion.hora_hasta|time:"H:i" }}</li>
+                        {% endif %}
+                        {% if donacion.notas_entrega %}
+                            <li><strong style="color:#2b3044;">Indicaciones:</strong> {{ donacion.notas_entrega }}</li>
+                        {% endif %}
+                    </ul>
+
+                    <h3 style="font-size:15px; font-weight:700; color:#5563e8; margin:30px 0 16px; border-bottom:2px solid #f0f2fa; padding-bottom:8px;">Evidencia Fotográfica</h3>
+                    {% if donacion.imagen_evidencia %}
+                        <a href="{{ donacion.imagen_evidencia.url }}" target="_blank" style="display:block; border-radius:12px; overflow:hidden; border:2px solid #f0f2fa;">
+                            <img src="{{ donacion.imagen_evidencia.url }}" alt="Evidencia de donación" style="width:100%; height:200px; object-fit:cover; display:block;">
+                        </a>
+                        <p style="font-size:12px; color:#8a93c9; margin-top:8px; text-align:center;">Clic en la imagen para ver en grande</p>
+                    {% else %}
+                        <div style="background:#f8f9fe; border:2px dashed #c7cdfa; border-radius:12px; padding:30px; text-align:center; color:#8a93c9; font-size:13px; font-weight:500;">
+                            No se adjuntó imagen
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

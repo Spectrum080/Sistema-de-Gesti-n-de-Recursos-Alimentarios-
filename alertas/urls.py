@@ -6,5 +6,6 @@ urlpatterns = [
     path('consultarDonaciones/', views.consultarDonaciones, name='consultarDonaciones'),  # Consulta (Donante) y aceptación/rechazo (Receptor)
     path('historialDonaciones/', views.historialDonaciones, name='historialDonaciones'),  # Bitácora histórica de donaciones
     path('cargarDonaciones/', views.cargarDonaciones, name='cargarDonaciones'),           # Formulario para registrar una nueva donación
-    path('mis-notificaciones/', views.mis_notificaciones, name='mis_notificaciones'),     # Vista de la tabla completa de notificaciones
+    path('mis-notificaciones/', views.mis_notificaciones, name='mis_notificaciones'), # Listado de notificaciones para el usuario actual
+    path('donacion/<int:donacion_id>/', views.detalle_donacion, name='detalle_donacion'), # Detalle de una donación específica
 ]

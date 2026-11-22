@@ -2,11 +2,61 @@
 
 {% block title %}Panel Donante - Hambre Cero{% endblock %}
 
-<!-- =========================================================================
-   CONTENIDO DEL DONANTE HEREDADO DE DASHBOARD.HTML
-    Si deseas hacer cambios exclusivos al contenido del Donante,
-    reemplazen {{ block.super }} por tu código HTML personalizado.
-     ========================================================================= -->
 {% block contenido %}
+    <!-- Tarjetas de resumen heredadas -->
     {{ block.super }}
+
+    <!-- SECCIÓN: CÓMO DONAR (Todo con estilos en línea y simetría perfecta) -->
+    <div style="margin-top: 40px; background: #ffffff; padding: 48px 32px 40px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; border: 1px solid #f0f2fa;">
+        
+        <!-- Título centrado -->
+        <div style="text-align: center; margin-bottom: 48px;">
+            <h2 style="font-size: 24px; font-weight: 800; color: #1e293b; margin: 0 0 8px;">
+                ¿Cómo donar en 4 simples pasos? 🚀
+            </h2>
+            <p style="color: #64748b; font-size: 15px; margin: 0;">Es súper rápido, intuitivo y todo se hace desde tu panel.</p>
+        </div>
+        
+        <!-- Contenedor Grid Simétrico (4 columnas idénticas) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; align-items: stretch;">
+            
+            <!-- Paso 1 -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 32px 20px 24px; position: relative; text-align: center; display: flex; flex-direction: column; justify-content: flex-start; align-items: center;">
+                <!-- Número flotante centrado -->
+                <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: #606dfb; color: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; border: 4px solid #ffffff; box-shadow: 0 4px 8px rgba(96, 109, 251, 0.25);">1</div>
+                
+                <div style="font-size: 32px; margin-bottom: 12px;">👤</div>
+                <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 8px;">Tu Perfil</h3>
+                <p style="font-size: 14px; color: #64748b; margin: 0; line-height: 1.5;">Haz clic en <strong>tu nombre (arriba a la derecha)</strong> para completar tu perfil con tu nombre, dirección y teléfono.</p>
+            </div>
+
+            <!-- Paso 2 -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 32px 20px 24px; position: relative; text-align: center; display: flex; flex-direction: column; justify-content: flex-start; align-items: center;">
+                <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: #606dfb; color: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; border: 4px solid #ffffff; box-shadow: 0 4px 8px rgba(96, 109, 251, 0.25);">2</div>
+                
+                <div style="font-size: 32px; margin-bottom: 12px;">✨</div>
+                <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 8px;">Nuevo registro</h3>
+                <p style="font-size: 14px; color: #64748b; margin: 0; line-height: 1.5;">Toca el botón azul de <strong>+ Nueva Donación</strong> en tu menú izquierdo.</p>
+            </div>
+
+            <!-- Paso 3 -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 32px 20px 24px; position: relative; text-align: center; display: flex; flex-direction: column; justify-content: flex-start; align-items: center;">
+                <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: #606dfb; color: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; border: 4px solid #ffffff; box-shadow: 0 4px 8px rgba(96, 109, 251, 0.25);">3</div>
+                
+                <div style="font-size: 32px; margin-bottom: 12px;">📸</div>
+                <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 8px;">Los detalles</h3>
+                <p style="font-size: 14px; color: #64748b; margin: 0; line-height: 1.5;">Llena los datos del alimento y sube una buena foto para validarlo.</p>
+            </div>
+
+            <!-- Paso 4 -->
+            <div style="background: #f0fdf4; border: 2px solid #bbf7d0; border-radius: 16px; padding: 32px 20px 24px; position: relative; text-align: center; display: flex; flex-direction: column; justify-content: flex-start; align-items: center;">
+                <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: #16a34a; color: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; border: 4px solid #ffffff; box-shadow: 0 4px 8px rgba(22, 163, 74, 0.25);">4</div>
+                
+                <div style="font-size: 32px; margin-bottom: 12px;">✅</div>
+                <h3 style="font-size: 16px; font-weight: 700; color: #15803d; margin: 0 0 8px;">¡Todo listo!</h3>
+                <p style="font-size: 14px; color: #166534; margin: 0; line-height: 1.5;">Revisa el estatus en <strong>Mis Donaciones</strong> hasta que sea aceptada.</p>
+            </div>
+
+        </div>
+    </div>
 {% endblock %}

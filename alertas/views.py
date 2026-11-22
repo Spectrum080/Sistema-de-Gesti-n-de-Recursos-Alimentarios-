@@ -19,70 +19,57 @@ from alertas.models import Notificacion
 
 
 # Función que determina y guarda en sesión si el usuario opera bajo el rol de Receptor o Donante
+import re  # Permite trabajar con expresiones regulares para buscar y validar patrones de texto.
+from django.core.paginator import Paginator  # Divide los registros en páginas.
+from django.shortcuts import render, redirect, get_object_or_404  # get_object_or_404: Busca un registro o devuelve un error 404.
+from django.utils import timezone
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, MovimientoInventario, Notificacion
+from users.models import Donante, Receptor  # Importa los modelos de donantes y receptores.
+
+
+# Detecta y sincroniza en sesión si la vista actual corresponde al rol Receptor o Donante
 def _es_rol_receptor(request):
-    # Obtiene el parámetro 'rol' enviado por GET o POST si existe
-    rol_param = request.GET.get('rol') or request.POST.get('rol')
-    # Si el parámetro es válido, actualiza la sesión activa del usuario
-    if rol_param in ('receptor', 'donante'):
-        # Guarda el rol activo en la sesión
+    rol_param = request.GET.get('rol') or request.POST.get('rol') # Obtiene el rol enviado mediante GET o POST.
+    if rol_param in ('receptor', 'donante'): # Si el rol es válido, lo guarda en la sesión.
         request.session['rol_activo'] = rol_param
-        # Marca la sesión como modificada para que Django persista el cambio
-        request.session.modified = True
-    # Si el usuario pidió explícitamente vista de receptor, retorna verdadero
-    if rol_param == 'receptor':
+        request.session.modified = True 
+    if rol_param == 'receptor': # Si el rol es receptor, devuelve True.
         return True
-    # Si el usuario pidió explícitamente vista de donante, retorna falso
-    if rol_param == 'donante':
+    if rol_param == 'donante': # Si el rol es donante, devuelve False.
         return False
-    # Si el usuario autenticado pertenece a la clase Receptor, retorna verdadero
-    if request.user.is_authenticated and hasattr(request.user, 'receptor'):
+    if request.user.is_authenticated and hasattr(request.user, 'receptor'): # Comprueba si el usuario autenticado tiene un perfil de receptor.
         return True
-    # Si el usuario autenticado pertenece a la clase Donante, retorna falso
-    if request.user.is_authenticated and hasattr(request.user, 'donante'):
+    if request.user.is_authenticated and hasattr(request.user, 'donante'): # Comprueba si el usuario autenticado tiene un perfil de donante.
         return False
-    # En caso contrario, consulta el último rol guardado en la sesión
-    return request.session.get('rol_activo') == 'receptor'
+    return request.session.get('rol_activo') == 'receptor' # Si no se encontró un rol, consulta el rol guardado en la sesión.
 
 
-# Función que obtiene y filtra las donaciones respetando el encapsulamiento de cada rol
-def _obtener_lista_donaciones(request, modo='consulta', categoria='TODAS', es_receptor=False):
-    # Si el usuario está autenticado, aplica los métodos encapsulados del modelo Usuario
-    if request.user.is_authenticated:
-        # Si se consulta el historial del receptor, obtiene solo las gestionadas por esa cuenta
-        if modo == 'historial':
-            queryset = list(request.user.obtener_mi_historial_receptor())
-        # Si es el rol Receptor en consulta general, obtiene todas las donaciones disponibles para analizar
-        elif es_receptor:
-            queryset = list(request.user.obtener_donaciones_para_receptor())
-        # Si es el rol Donante en Mis Donaciones, obtiene únicamente sus propias entregas
-        else:
-            queryset = list(request.user.obtener_mis_donaciones())
-    # Si no hay sesión iniciada, retorna lista vacía por seguridad de encapsulamiento
-    else:
-        queryset = []
+# Obtiene y filtra en Python las donaciones desde db.sqlite3 mostrando primero las nuevas
+def _obtener_lista_donaciones(categoria='TODAS'):
+    queryset = list( # Obtiene todas las donaciones junto con sus relaciones para evitar consultas adicionales.
+        Donacion.objects.select_related(
+            'alimento', 'donante', 'receptor', 'centro_acopio'
+        ).order_by('id')
+    )
+    nuevas = sorted([d for d in queryset if d.id > 13], key=lambda x: -x.id)  # Obtiene las donaciones nuevas (ID mayor a 13) y las ordena de más reciente a más antigua.
+    base = [d for d in queryset if d.id <= 13] # Obtiene las donaciones antiguas (ID menor o igual a 13).
+    ordenadas = nuevas + base # Coloca primero las donaciones nuevas y después las antiguas.
+    total_general = len(ordenadas) # Cuenta el total de donaciones antes de aplicar filtros.
 
-    # Cuenta el total de registros antes de aplicar el filtro de categoría
-    total_general = len(queryset)
-    # Inicializa la lista de diccionarios formateados para la plantilla HTML
-    donaciones = []
-
-    # Recorre cada objeto Donacion obtenido de la base de datos
-    for d in queryset:
-        # Obtiene la clave de categoría del alimento o asigna 'OTRO' por defecto
-        clave_cat = d.alimento.clasificacion if d.alimento else 'OTRO'
-        # Si se seleccionó una categoría específica y no coincide, omite este registro
-        if categoria and categoria != 'TODAS' and clave_cat != categoria:
+    donaciones = [] # Lista donde se almacenarán las donaciones filtradas y organizadas.
+    for d in ordenadas: # Recorre cada donación.
+        clave_cat = d.alimento.clasificacion if d.alimento else 'OTRO' # Obtiene la categoría del alimento; si no existe, asigna 'OTRO'.
+        if categoria and categoria != 'TODAS' and clave_cat != categoria: # Si se seleccionó una categoría específica, descarta las demás.
             continue
 
-        # Determina el nombre del donante a mostrar en la tabla
-        donante_txt = (
+        donante_txt = ( # Obtiene el nombre del donante según la información disponible.
             d.nombre_donante
             or (d.donante.nombre_local if d.donante and d.donante.nombre_local else None)
-            or (d.usuario_donante.username if d.usuario_donante else None)
             or (d.donante.username if d.donante else 'Donante General')
         )
-        # Formatea la fecha de caducidad en día/mes/año
-        caducidad_txt = (
+        caducidad_txt = ( # Obtiene la fecha de caducidad de la donación o del alimento.
             d.fecha_caducidad.strftime('%d/%m/%Y')
             if d.fecha_caducidad
             else (
@@ -91,252 +78,189 @@ def _obtener_lista_donaciones(request, modo='consulta', categoria='TODAS', es_re
                 else 'No aplica'
             )
         )
-        # Agrega el diccionario con todos los atributos encapsulados para la vista HTML
         donaciones.append({
-            'id': f"{d.id:03d}",
-            'raw_id': d.id,
-            'donante': donante_txt,
-            'alimento': d.alimento.nombre if d.alimento else 'Alimento',
-            'clasificacion': d.alimento.get_clasificacion_display() if d.alimento else 'Otro',
-            'clasificacion_clave': clave_cat,
-            'cantidad': d.cantidad,
-            'peso': f"{float(d.peso_kg):g} kg" if d.peso_kg else '1 kg',
-            'tipo': d.get_tipo_display(),
-            'caducidad': caducidad_txt,
-            'ubicacion': d.alimento.ubicacion_almacen if d.alimento and d.alimento.ubicacion_almacen else 'Recepción Acopio',
-            'estado': d.estado,
-            'feedback': d.feedback,
-            'evidencia_imagen': d.evidencia_imagen,
+            'id': f"{d.id:03d}", # ID con tres dígitos.
+            'raw_id': d.id, # ID original de la base de datos.
+            'donante': donante_txt, # Nombre del donante.
+            'alimento': d.alimento.nombre if d.alimento else 'Alimento', # Nombre del alimento.
+            'clasificacion': d.alimento.get_clasificacion_display() if d.alimento else 'General', # Categoría visible.
+            'clasificacion_clave': clave_cat, # Categoría original.
+            'cantidad': d.cantidad, # Cantidad de alimentos.
+            'peso': f"{float(d.peso_kg):g} kg" if d.peso_kg else '1 kg', # Peso en kilogramos.
+            'tipo': d.get_tipo_display(), # Tipo de donación.
+            'caducidad': caducidad_txt, # Fecha de caducidad.
+            'ubicacion': d.alimento.ubicacion_almacen if d.alimento and d.alimento.ubicacion_almacen else 'Recepción Acopio', # Ubicación del alimento.
+            'estado': d.estado, # Estado actual de la donación.
         })
-    # Retorna la lista filtrada y el conteo general
-    return donaciones, total_general
+    return donaciones, total_general # Devuelve la lista de donaciones y el total general.
 
+def detalle_donacion(request, donacion_id):
+    donacion = get_object_or_404(Donacion, id=donacion_id)
+    context = {
+        'donacion': donacion
+    }
+    return render(request, 'alertas/responderDonacion.html', context)
 
-# Vista para consultar donaciones (Donante ve las suyas; Receptor ve todas, cambia estado, da feedback y elimina)
+# Vista en Python: gestiona cambio de estado por POST, filtro por categoría y paginación con Paginator
 def consultarDonaciones(request):
-    # Verifica si la vista se abre como Receptor o como Donante
-    es_receptor = _es_rol_receptor(request)
-    # Define la cadena del rol activo para mantenerla en los enlaces de paginación
-    rol_actual = 'receptor' if es_receptor else 'donante'
-    # Lee la categoría seleccionada en el filtro superior
-    categoria_actual = request.GET.get('categoria') or request.POST.get('categoria') or 'TODAS'
-    # Lee el número de página actual
-    pagina_actual = request.GET.get('page') or request.POST.get('page') or 1
+    es_receptor = _es_rol_receptor(request) # Detecta si el usuario es receptor o donante.
+    rol_actual = 'receptor' if es_receptor else 'donante' # Guarda el rol actual como texto.
+    categoria_actual = request.GET.get('categoria') or request.POST.get('categoria') or 'TODAS' # Obtiene la categoría seleccionada o utiliza 'TODAS' por defecto.
+    pagina_actual = request.GET.get('page') or request.POST.get('page') or 1 # Obtiene el número de página actual.
 
-    # Procesa las acciones enviadas por método POST desde los formularios de la tabla
-    if request.method == 'POST' and es_receptor:
-        # Obtiene el identificador de la donación a modificar o eliminar
-        donacion_id = request.POST.get('donacion_id')
-        # Obtiene la acción solicitada (Aceptado, Reservado, Rechazado, GuardarFeedback o Eliminar)
-        accion = (request.POST.get('nuevo_estado') or '').strip()
-        # Obtiene el comentario de retroalimentación (feedback) escrito por el receptor
-        comentario_feedback = request.POST.get('feedback')
+    # Actualiza en BD el estado de la donación y del alimento (Aceptado, Reservado o Rechazado)
+    if request.method == 'POST':
+        donacion_id = request.POST.get('donacion_id') # Obtiene el ID de la donación que se quiere modificar.
+        accion = (request.POST.get('nuevo_estado') or '').strip() # Obtiene la acción seleccionada y elimina espacios innecesarios.
+        mapa_estados = { # Define los estados permitidos para las donaciones.
+            'Aceptado': 'Aceptado',
+            'Reservado': 'Reservado',
+            'Rechazado': 'Rechazado',
+            'Recibido': 'Recibido',
+        }
+        nuevo_estado = mapa_estados.get(accion) # Busca el nuevo estado correspondiente a la acción.
+        if donacion_id and nuevo_estado: # Comprueba que exista un ID y un estado válido.
+            donacion = get_object_or_404(Donacion.objects.select_related('alimento'), pk=donacion_id) # Busca la donación junto con su alimento o devuelve error 404.
+            donacion.estado = nuevo_estado # Actualiza el estado de la donación.
+            if nuevo_estado == 'Aceptado': # Si la donación fue aceptada, registra la fecha de recepción.
+                donacion.fecha_recepcion = timezone.now()
+                donacion.save(update_fields=['estado', 'fecha_recepcion']) # Guarda únicamente el estado y la fecha de recepción.
+            else:
+                donacion.save(update_fields=['estado']) # Guarda únicamente el nuevo estado.
 
-        # Si se proporcionó un ID de donación válido, busca el registro en la base de datos
-        if donacion_id:
-            # Recupera la donación junto con su alimento asociado
-            donacion = get_object_or_404(Donacion.objects.select_related('alimento'), pk=donacion_id)
-            # Si el receptor presionó el botón para quitar/eliminar la donación
-            if accion == 'Eliminar':
-                # Ejecuta el método encapsulado que borra la donación de la base de datos
-                donacion.eliminar_por_receptor()
-            # Si el receptor guardó únicamente el motivo/feedback sin cambiar el estado
-            elif accion == 'GuardarFeedback':
-                # Guarda el feedback y vincula la gestión al receptor actual
-                donacion.aplicar_decision_receptor(
-                    request.user,
-                    nuevo_estado=None,
-                    comentario_feedback=comentario_feedback,
-                )
-            # Si el receptor seleccionó Aceptar, Reservar o Rechazar la donación
-            elif accion in ('Aceptado', 'Reservado', 'Rechazado', 'Recibido'):
-                # Ejecuta el método encapsulado que actualiza el estado, guarda el feedback y asigna el receptor
-                donacion.aplicar_decision_receptor(
-                    request.user,
-                    nuevo_estado=accion,
-                    comentario_feedback=comentario_feedback,
-                )
+            if donacion.alimento: # Comprueba si la donación tiene un alimento relacionado.
+                if nuevo_estado == 'Aceptado':  # Si fue aceptada, marca el alimento como entregado.
+                    donacion.alimento.estado = 'ENTREGADO'
+                elif nuevo_estado == 'Reservado': # Si fue reservado, marca el alimento como reservado.
+                    donacion.alimento.estado = 'RESERVADA'
+                elif nuevo_estado == 'Rechazado': # Si fue rechazado, lo devuelve a revisión.
+                    donacion.alimento.estado = 'EN_REVISION'
+                donacion.alimento.save(update_fields=['estado']) # Guarda el nuevo estado del alimento.
 
-        # Redirige a la misma página y categoría tras procesar la acción en Python
-        return redirect(
+        return redirect( # Redirige a la misma vista conservando el rol, categoría y página.
             f"/alertas/consultarDonaciones/?rol={rol_actual}&categoria={categoria_actual}&page={pagina_actual}"
         )
 
-    # Obtiene la lista de donaciones respetando el encapsulamiento del rol activo
-    donaciones_filtradas, total_general = _obtener_lista_donaciones(
-        request,
-        modo='consulta',
-        categoria=categoria_actual,
-        es_receptor=es_receptor,
-    )
-    # Pagina los resultados de 5 en 5 usando Paginator de Django
-    paginator = Paginator(donaciones_filtradas, 5)
-    # Obtiene los registros correspondientes a la página solicitada
-    page_obj = paginator.get_page(pagina_actual)
+    donaciones_filtradas, total_general = _obtener_lista_donaciones(categoria=categoria_actual) # Obtiene las donaciones filtradas por la categoría seleccionada.
+    paginator = Paginator(donaciones_filtradas, 5) # Divide las donaciones en páginas de 5 registros.
+    page_obj = paginator.get_page(pagina_actual) # Obtiene la página solicitada.
 
-    # Renderiza la plantilla enviando el contexto procesado en Python
-    return render(request, 'alertas/consultarDonaciones.html', {
-        'donaciones': page_obj,
-        'page_obj': page_obj,
-        'total_registros': len(donaciones_filtradas),
-        'total_general': total_general,
-        'categoria_actual': categoria_actual,
-        'rol_actual': rol_actual,
-        'es_receptor': es_receptor,
+    return render(request, 'alertas/consultarDonaciones.html', { # Renderiza la plantilla HTML y envía los datos necesarios.
+        'donaciones': page_obj, # Donaciones correspondientes a la página actual.
+        'page_obj': page_obj, # Información de paginación.
+        'total_registros': len(donaciones_filtradas), # Total de donaciones filtradas.
+        'total_general': total_general, # Total de donaciones sin filtrar.
+        'categoria_actual': categoria_actual, # Categoría seleccionada.
+        'rol_actual': rol_actual, # Rol del usuario.
+        'es_receptor': es_receptor, # Indica si el usuario es receptor.
     })
 
 
-# Vista de Historial exclusivo y encapsulado para la cuenta del Receptor autenticada
+# Muestra el historial paginado y filtrado 100% desde Python con Django Paginator
 def historialDonaciones(request):
-    # Sincroniza el rol activo como receptor
-    es_receptor = _es_rol_receptor(request)
-    # Define la etiqueta de rol para conservarla en la navegación
-    rol_actual = 'receptor' if es_receptor else 'donante'
-    # Obtiene la categoría filtrada por GET
-    categoria_actual = request.GET.get('categoria', 'TODAS')
-    # Obtiene el número de página actual por GET
-    pagina_actual = request.GET.get('page', 1)
+    es_receptor = _es_rol_receptor(request) # Detecta si el usuario es receptor o donante.
+    rol_actual = 'receptor' if es_receptor else 'donante' # Guarda el rol actual del usuario.
+    categoria_actual = request.GET.get('categoria', 'TODAS') # Obtiene la categoría seleccionada; por defecto muestra todas.
+    pagina_actual = request.GET.get('page', 1) # Obtiene el número de página actual.
 
-    # Consulta únicamente el historial de donaciones aceptadas, rechazadas o reservadas por este receptor
-    donaciones_filtradas, total_general = _obtener_lista_donaciones(
-        request,
-        modo='historial',
-        categoria=categoria_actual,
-        es_receptor=True,
-    )
-    # Divide el historial en páginas de 5 registros con Django Paginator
-    paginator = Paginator(donaciones_filtradas, 5)
-    # Obtiene la página solicitada
-    page_obj = paginator.get_page(pagina_actual)
+    donaciones_filtradas, total_general = _obtener_lista_donaciones(categoria=categoria_actual) # Obtiene las donaciones filtradas por la categoría seleccionada.
+    paginator = Paginator(donaciones_filtradas, 5) # Divide las donaciones en páginas de 5 registros.
+    page_obj = paginator.get_page(pagina_actual) # Obtiene los registros correspondientes a la página solicitada.
 
-    # Renderiza la plantilla de historial con sus datos encapsulados
-    return render(request, 'alertas/historialDonaciones.html', {
-        'donaciones': page_obj,
-        'page_obj': page_obj,
-        'total_registros': len(donaciones_filtradas),
-        'total_general': total_general,
-        'categoria_actual': categoria_actual,
-        'rol_actual': rol_actual,
-        'es_receptor': es_receptor,
+    return render(request, 'alertas/historialDonaciones.html', { # Renderiza la plantilla HTML y envía los datos necesarios.
+        'donaciones': page_obj, # Lista de donaciones de la página actual.
+        'page_obj': page_obj, # Información para controlar la paginación.
+        'total_registros': len(donaciones_filtradas), # Total de donaciones filtradas.
+        'total_general': total_general, # Total de donaciones sin filtros.
+        'categoria_actual': categoria_actual, # Categoría seleccionada.
+        'rol_actual': rol_actual, # Rol actual del usuario.
+        'es_receptor': es_receptor, # Indica si el usuario es receptor.
     })
 
 
-# Vista que procesa en Python el registro de nuevas donaciones, su categoría y su evidencia fotográfica
+# Registra manualmente un nuevo alimento, su donación y el movimiento de entrada en inventario
 def cargarDonaciones(request):
-    # Fija el rol en sesión como donante al abrir el formulario de carga
-    request.session['rol_activo'] = 'donante'
-    # Si el formulario fue enviado mediante POST
-    if request.method == 'POST':
-        # Obtiene la descripción o nombre del alimento
-        titulo = request.POST.get('titulo', '').strip()
-        # Obtiene la categoría seleccionada (Agua Embotellada, Comida Enlatada, Frutas, etc.)
-        clasificacion = request.POST.get('clasificacion', 'OTRO').strip() or 'OTRO'
-        # Obtiene el tipo de conservación (Perecedero, No Perecedero, Preparado, Bebida)
-        tipo = request.POST.get('tipo', '').strip()
-        # Si no se especificó tipo manualmente, lo deduce en Python según la categoría escogida
-        if not tipo:
-            if clasificacion == 'AGUA_EMBOTELLADA':
-                tipo = 'BEBIDA'
-            elif clasificacion == 'COMIDA_PREPARADA':
-                tipo = 'PREPARADO'
-            elif clasificacion in ('FRUTAS_VERDURAS', 'LACTEOS', 'PROTEINAS_CARNES', 'PANADERIA'):
-                tipo = 'PERECEDERO'
-            else:
-                tipo = 'NO_PERECEDERO'
+    request.session['rol_activo'] = 'donante' # Guarda el rol de donante en la sesión.
+    if request.user.is_authenticated and hasattr(request.user, 'donante'): # Bloqueo si faltan datos en el perfil
+        perfil = request.user.donante
+        # Comprobamos si alguno de los 3 campos está vacío
+        if not perfil.nombre_local or not perfil.telefono or not perfil.direccion:
+            messages.warning(request, "Para subir una donación, primero debes completar tu Nombre/Razón Social, Teléfono y Dirección.")
+            return redirect('perfil')
 
-        # Obtiene el valor escrito en el campo de cantidad
-        num_cantidad = request.POST.get('num_cantidad', '').strip()
-        # Obtiene el valor escrito en el campo de unidad
-        txt_unidad = request.POST.get('txt_unidad', '').strip()
-        # Obtiene el campo cantidad directo en caso de envío alternativo
-        cantidad_directa = request.POST.get('cantidad', '').strip()
-
-        # Une en Python la cantidad y la unidad evitando duplicar palabras si ya se incluyó la unidad
-        if num_cantidad:
-            if txt_unidad and txt_unidad.lower() not in num_cantidad.lower():
-                cantidad_txt = f"{num_cantidad} {txt_unidad}"
-            else:
-                cantidad_txt = num_cantidad
-        else:
-            cantidad_txt = cantidad_directa or '1 unidad'
-
-        # Obtiene la fecha de caducidad seleccionada
-        fecha_caducidad = request.POST.get('fecha_caducidad') or None
-        # Obtiene el requisito de conservación o detalles adicionales
-        descripcion = request.POST.get('descripcion', '').strip()
-        # Obtiene la dirección de recolección capturada
+    if request.method == 'POST': 
+        nombre_donante = request.POST.get('nombre_donante', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
         direccion = request.POST.get('direccion', '').strip()
-        # Obtiene el nombre o razón social capturada en el formulario
-        nombre_donante_form = request.POST.get('nombre_donante', '').strip()
+        categoria_form = request.POST.get('tipo_de_categoria_comida', 'OTRO') 
+        numero_cantidad = request.POST.get('numero_cantidad', '').strip() 
+        unidad = request.POST.get('tipo_de_unidad_medida', 'OTRO') 
+        cantidad_txt = f"{numero_cantidad} {unidad}" 
+        descripccion_contenido = request.POST.get('descripcion_contenido', '').strip() 
+        fecha_caducidad = request.POST.get('fecha_caducidad') or None 
+        tipo_de_conservacion = request.POST.get('tipo_de_conservacion', 'OTRO') 
+        metodo_entrega = request.POST.get('metodo_entrega', 'A_CONVENIR') 
+        fecha_entrega = request.POST.get('fecha_entrega') or None 
+        hora_desde = request.POST.get('hora_desde') or None 
+        hora_hasta = request.POST.get('hora_hasta') or None 
+        notas_entrega = request.POST.get('notas_entrega', '').strip() 
+        imagen_evidencia = request.FILES.get('imagen_evidencia_donacion') 
+        declaracion = request.POST.get('declaracion') == 'on' or request.POST.get('declaracion') == 'si' 
 
-        # Extrae la parte numérica de la cantidad para cálculos de inventario y peso
-        match_num = re.search(r'(\d+(?:\.\d+)?)', cantidad_txt)
-        # Convierte el valor encontrado a flotante o asigna 1.0 por defecto
-        cantidad_num = float(match_num.group(1)) if match_num else 1.0
+        match_num = re.search(r'(\d+(?:\.\d+)?)', numero_cantidad) 
+        cantidad_num = float(match_num.group(1)) if match_num else 1.0 
 
-        # Procesa en Python el archivo de imagen subido en el apartado de Evidencia Fotográfica
-        evidencia_data_uri = ''
-        # Recupera el archivo enviado desde el input file 'imagen'
-        archivo_imagen = request.FILES.get('imagen')
-        # Si el usuario adjuntó una imagen válida, la convierte a Data URI base64
-        if archivo_imagen:
-            # Determina el tipo MIME de la imagen (ej. image/jpeg, image/png)
-            mime_type = archivo_imagen.content_type or 'image/jpeg'
-            # Codifica los bytes de la imagen en texto base64
-            b64_contenido = base64.b64encode(archivo_imagen.read()).decode('ascii')
-            # Construye la cadena Data URI lista para mostrarse en la etiqueta img del modal
-            evidencia_data_uri = f"data:{mime_type};base64,{b64_contenido}"
+        centro = CentroAcopio.objects.first() 
+        categoria_obj = CategoriaAlimento.objects.filter(clave=categoria_form).first()
 
-        # Obtiene el centro de acopio principal registrado
-        centro = CentroAcopio.objects.first()
-        # Busca en la base de datos la categoría correspondiente a la clave seleccionada
-        categoria = CategoriaAlimento.objects.filter(clave=clasificacion).first()
-
-        # Crea el registro del alimento en la base de datos con la categoría elegida
-        alimento = Alimento.objects.create(
-            nombre=titulo,
-            categoria=categoria,
-            clasificacion=clasificacion,
-            tipo=tipo,
+        alimento = Alimento.objects.create( 
+            nombre=descripccion_contenido,
+            categoria=categoria_obj,
+            clasificacion=categoria_form,
+            tipo=categoria_form,
             cantidad=cantidad_num,
             peso_unitario_kg=1.0,
             fecha_caducidad=fecha_caducidad,
             estado='DISPONIBLE',
-            descripcion=descripcion,
+            descripcion=descripccion_contenido,
             centro_acopio=centro,
         )
 
-        # Obtiene el perfil Donante si el usuario autenticado cuenta con uno
-        donante_obj = getattr(request.user, 'donante', None) if request.user.is_authenticated else None
-        # Determina el nombre del donante priorizando lo escrito en el formulario o su usuario
-        nombre_donante = (
-            nombre_donante_form
-            or (donante_obj.nombre_local if donante_obj and donante_obj.nombre_local else None)
-            or (request.user.username if request.user.is_authenticated else 'Donante Directo')
+        donante_obj = getattr(request.user, 'donante', None) if request.user.is_authenticated else Donante.objects.first() 
+        nombre_donante_final = ( 
+            (donante_obj.nombre_local or donante_obj.username)
+            if donante_obj
+            else (request.user.username if request.user.is_authenticated else nombre_donante)
         )
 
-        # Crea la donación vinculada únicamente al usuario Donante que la subió (receptor queda vacío hasta ser gestionada)
-        # Guarda la informacion de la donacion y envia una notificacion al Donante
-        nueva_donacion = Donacion.objects.create(
+        # ¡AQUÍ ESTABA EL PROBLEMA! Faltaba agregar todos los campos extra que recibíamos del formulario
+        Donacion.objects.create( 
             donante=donante_obj,
-            usuario_donante=request.user if request.user.is_authenticated else None,
-            nombre_donante=nombre_donante,
-            receptor=None,
-            usuario_receptor=None,
+            nombre_donante=nombre_donante_final,
+            receptor=Receptor.objects.first(),
             centro_acopio=centro,
             alimento=alimento,
             cantidad=cantidad_txt,
             peso_kg=cantidad_num,
-            tipo=tipo,
+            tipo=categoria_form,
             estado='Recibido',
-            direccion_entrega=direccion,
-            evidencia_imagen=evidencia_data_uri,
             fecha_caducidad=fecha_caducidad,
-            descripcion=descripcion,
+            descripcion=descripccion_contenido,
+            
+            # --- NUEVOS CAMPOS AGREGADOS ---
+            telefono_contacto=telefono,
+            direccion_entrega=direccion,
+            tipo_conservacion=tipo_de_conservacion,
+            metodo_envio=metodo_entrega,
+            fecha_entrega=fecha_entrega,
+            hora_desde=hora_desde,
+            hora_hasta=hora_hasta,
+            notas_entrega=notas_entrega,
+            imagen_evidencia=imagen_evidencia,
+            declaracion_aceptada=declaracion
         )
 
-        # Registra el movimiento de entrada en la bitácora del inventario
-        MovimientoInventario.objects.create(
+        MovimientoInventario.objects.create( 
             alimento=alimento,
             centro_acopio=centro,
             tipo_movimiento='ENTRADA',
@@ -345,15 +269,22 @@ def cargarDonaciones(request):
             motivo='Registro desde formulario de Nueva Donación',
         )
 
-        # Notifica al donante de la donacion registrada
-        notificar_donacion_registrada(nueva_donacion)
+        return redirect('/alertas/consultarDonaciones/?rol=donante') 
 
-        # Redirige a Mis Donaciones para que el donante vea reflejada su entrega con su categoría
-        return redirect('/alertas/consultarDonaciones/?rol=donante')
+    # CÓDIGO PARA PRELLENAR EL FORMULARIO 
+    datos_donante = {
+        'nombre': '',
+        'telefono': '',
+        'direccion': ''
+    }
 
-    # Si la petición es GET, muestra el formulario para subir donación
-    return render(request, 'alertas/cargarDonaciones.html')
+    if request.user.is_authenticated and hasattr(request.user, 'donante'):
+        perfil = request.user.donante
+        datos_donante['nombre'] = perfil.nombre_local or request.user.username
+        datos_donante['telefono'] = getattr(perfil, 'telefono', '') 
+        datos_donante['direccion'] = getattr(perfil, 'direccion', '')
 
+    return render(request, 'alertas/cargarDonaciones.html', {'datos': datos_donante})
 
 @login_required
 def mis_notificaciones(request):
