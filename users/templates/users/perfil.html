@@ -214,108 +214,61 @@
         <!-- PANEL DE CONTENIDO DINÁMICO -->
         <main style="flex:1; box-sizing:border-box; padding:44px 50px; display:flex; flex-direction:column; gap:36px;">
             {% block contenido %}
+            <form method="POST" action="{% url 'perfil' %}">
+                {% csrf_token %}
 
-            <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; padding-bottom:20px; border-bottom:1px solid #e4e7f2;">
-                <div>
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
-                        <h1 class="txt-principal" style="font-size:1.9rem; font-weight:800; margin:0; color:#2b3044;">Panel General de Donaciones</h1>
-                        <span style="background:#eff2fe; color:#7287fe; font-size:0.75rem; font-weight:700; padding:4px 12px; border-radius:999px;">En Curso</span>
+                <div class="linea-divisoria" style="padding-bottom:20px; border-bottom:1px solid #e4e7f2; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+                    <div>
+                        <h1 class="txt-principal" style="font-size:1.9rem; font-weight:800; margin:0 0 6px; color:#2b3044;">Mi Perfil</h1>
+                        <p class="txt-secundario" style="font-size:0.88rem; color:#6b7084; margin:0;">Consulta y actualiza los datos de tu cuenta</p>
                     </div>
-                    <p class="txt-secundario" style="font-size:0.88rem; color:#6b7084; margin:0;">Supervisión de entregas de alimentos, inventario y caducidades en tiempo real.</p>
+                    <button type="submit" style="background:#7287fe; border:none; border-radius:12px; padding:12px 24px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#ffffff; cursor:pointer; box-shadow:0 8px 20px rgba(114,135,254,0.3);">
+                        Guardar Cambios
+                    </button>
                 </div>
 
-                <!-- Botones Superiores -->
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <!-- Botón que abre la mini ventana CSS -->
-                    <label for="modal-exportar" class="btn-exportar" style="background:#ffffff; border:1px solid #e4e7f2; border-radius:12px; padding:11px 20px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 2px 8px rgba(60,70,120,0.04);">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Exportar Informe
+                {% if messages %}
+                    {% for message in messages %}
+                        <div style="background:#eaf8f0; color:#12a559; padding:12px 18px; border-radius:12px; font-weight:700; font-size:0.85rem; margin-bottom:20px;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; flex-direction:column; gap:20px; max-width:720px;">
+                    <div style="display:flex; align-items:center; gap:16px; padding-bottom:16px; border-bottom:1px solid #f4f6fb;" class="linea-divisoria">
+                        <div style="width:52px; height:52px; border-radius:50%; background:linear-gradient(160deg,#8aa0ff 0%,#7287fe 100%); display:grid; place-items:center; color:#fff; font-weight:800; font-size:1.2rem;">
+                            {{ request.user.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h2 class="txt-principal" style="margin:0; font-size:1.15rem; font-weight:800; color:#2b3044;">{{ request.user.username }}</h2>
+                            <span class="txt-secundario" style="font-size:0.82rem; color:#6b7084;">
+                                {% if request.user.donante %}Donante{% elif request.user.receptor %}Receptor{% else %}Administrador{% endif %}
+                                {% if request.user.email %} · {{ request.user.email }}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if request.user.donante or request.user.receptor %}
+                    <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
+                        <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">
+                            {% if request.user.donante %}Nombre del Local / Razón Social{% else %}Nombre de la Organización{% endif %}
+                        </span>
+                        <input type="text" name="razon_social" value="{{ razon_social }}" placeholder="Ingresa el nombre o razón social" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    </label>
+                    {% endif %}
+
+                    <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
+                        <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Teléfono</span>
+                        <input type="text" name="telefono" value="{{ request.user.telefono }}" placeholder="Ej. 55 1234 5678" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                     </label>
 
-                    <!-- Oculta el botón Nueva Entrega cuando el dashboard se hereda en modo Receptor -->
-                    {% if not request.user.receptor and request.session.rol_activo != 'receptor' and request.resolver_match.url_name != 'dashboardReceptor' %}
-                    <a href="{% url 'cargarDonaciones' %}" style="background:#7287fe; border:none; border-radius:12px; padding:11px 20px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#ffffff; text-decoration:none; display:flex; align-items:center; gap:8px; box-shadow:0 8px 20px rgba(114,135,254,0.3);">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Nueva Entrega
-                    </a>
-                    {% endif %}
+                    <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
+                        <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Dirección</span>
+                        <input type="text" name="direccion" value="{{ request.user.direccion }}" placeholder="Ej. Av. Reforma 123, Col. Centro" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    </label>
                 </div>
-            </div>
-
-            <!-- MINI VENTANA PARA EXPORTAR INFORME -->
-            <input type="checkbox" id="modal-exportar" class="modal-toggle">
-            <div class="modal-overlay">
-                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:380px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.25); box-sizing:border-box;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h3 class="txt-principal" style="margin:0; font-size:1.15rem; font-weight:800; color:#2b3044;">Exportar Informe</h3>
-                        <label for="modal-exportar" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084;">✕</label>
-                    </div>
-                    <p class="txt-secundario" style="font-size:0.82rem; color:#6b7084; margin:0 0 20px;">Selecciona el formato en el que deseas descargar el registro de donaciones:</p>
-
-                    <form method="GET" action="{% url 'exportarInforme' %}">
-                        <label class="opcion-formato">
-                            <div>
-                                <span class="txt-principal" style="display:block; font-weight:700; font-size:0.88rem; color:#2b3044;">Archivo CSV (.csv)</span>
-                                <span class="txt-secundario" style="font-size:0.75rem; color:#6b7084;">Compatible con Excel y Hojas de Cálculo</span>
-                            </div>
-                            <input type="radio" name="formato" value="csv" checked style="width:18px; height:18px; accent-color:#3345af; cursor:pointer;">
-                        </label>
-
-                        <label class="opcion-formato">
-                            <div>
-                                <span class="txt-principal" style="display:block; font-weight:700; font-size:0.88rem; color:#2b3044;">Documento PDF (.pdf)</span>
-                                <span class="txt-secundario" style="font-size:0.75rem; color:#6b7084;">Formato de lectura e impresión directa</span>
-                            </div>
-                            <input type="radio" name="formato" value="pdf" style="width:18px; height:18px; accent-color:#7287fe; cursor:pointer;">
-                        </label>
-
-                        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:22px;">
-                            <label for="modal-exportar" class="elem-gris" style="padding:10px 18px; border-radius:10px; background:#f4f6fb; color:#6b7084; font-weight:700; font-size:0.82rem; cursor:pointer;">
-                                Cancelar
-                            </label>
-                            <button type="submit" style="padding:10px 22px; border:none; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 6px 16px rgba(114,135,254,0.35);">
-                                Confirmar
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- TARJETAS DE MÉTRICAS -->
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:24px;">
-                <div class="caja-blanca" style="background:#ffffff; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; align-items:center; justify-content:space-between; box-sizing:border-box;">
-                    <div>
-                        <span class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Donaciones</span>
-                        <span id="metrica-total-donaciones" class="txt-principal" style="font-size:2rem; font-weight:800; color:#2b3044;">{{ total_donaciones|default:"0" }}</span>
-                    </div>
-                    <div style="width:48px; height:48px; border-radius:14px; background:#eff2fe; display:grid; place-items:center; color:#7287fe;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-                    </div>
-                </div>
-
-                <div class="caja-blanca" style="background:#ffffff; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; align-items:center; justify-content:space-between; box-sizing:border-box;">
-                    <div>
-                        <span class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Peso Acumulado</span>
-                        <span id="metrica-peso-total" class="txt-principal" style="font-size:2rem; font-weight:800; color:#2b3044;">{{ peso_total|default:"0 KG" }}</span>
-                    </div>
-                    <div style="width:48px; height:48px; border-radius:14px; background:#eff2fe; display:grid; place-items:center; color:#7287fe;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    </div>
-                </div>
-
-                <div class="caja-blanca" style="background:#ffffff; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; align-items:center; justify-content:space-between; box-sizing:border-box;">
-                    <div>
-                        <span class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Estatus</span>
-                        <span id="metrica-estatus" style="display:inline-block; font-size:0.95rem; font-weight:800; color:#12a559; background:#eaf8f0; padding:6px 14px; border-radius:999px;">
-                            {{ estatus|default:"ACTIVO" }}
-                        </span>
-                    </div>
-                    <div style="width:48px; height:48px; border-radius:14px; background:#eff2fe; display:grid; place-items:center; color:#7287fe;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                    </div>
-                </div>
-            </div>
-
+            </form>
             {% endblock %}
         </main>
     </div>
