@@ -64,6 +64,10 @@ def dashboard(request):
 # Renderiza el panel exclusivo del Donante con las métricas de sus propias entregas
 @login_required
 def dashboardDonante(request):
+    # Verifica si la cuenta es de tipo Receptor para impedir que entre al panel de Donante
+    if hasattr(request.user, 'receptor'):
+        # Redirige automáticamente al panel correspondiente de Receptor
+        return redirect('dashboardReceptor')
     # Establece el rol activo en sesión como donante
     request.session['rol_activo'] = 'donante'
     # Obtiene las métricas encapsuladas únicamente para este donante
@@ -75,6 +79,10 @@ def dashboardDonante(request):
 # Renderiza el panel exclusivo del Receptor con las métricas del centro de acopio
 @login_required
 def dashboardReceptor(request):
+    # Verifica si la cuenta es de tipo Donante para impedir que entre al panel de Receptor
+    if hasattr(request.user, 'donante'):
+        # Redirige automáticamente al panel correspondiente de Donante
+        return redirect('dashboardDonante')
     # Establece el rol activo en sesión como receptor
     request.session['rol_activo'] = 'receptor'
     # Obtiene las métricas encapsuladas para el receptor
@@ -201,8 +209,11 @@ def perfil(request):
 
     # Obtiene el valor actual de la razón social para mostrarlo en el formulario
     razon_social = getattr(usuario, campo_razon, '') if campo_razon else ''
-    # Renderiza la vista de perfil
-    return render(request, 'users/perfil.html', {'razon_social': razon_social})
+    # Renderiza la vista de perfil indicando si aún falta completar datos obligatorios
+    return render(request, 'users/perfil.html', {
+        'razon_social': razon_social,
+        'perfil_incompleto': not perfil_completo(request.user),
+    })
 
 
 # Exporta el informe de donaciones respetando el encapsulamiento del usuario en sesión
@@ -210,8 +221,10 @@ def perfil(request):
 def exportar_informe(request):
     # Obtiene el formato deseado (csv o pdf)
     formato = request.GET.get('formato', 'csv')
-    # Determina si el usuario actual exporta como Receptor o como Donante
-    es_receptor = hasattr(request.user, 'receptor') or request.session.get('rol_activo') == 'receptor'
+    # Determina si el usuario actual exporta como Receptor o como Donante respetando su rol real
+    es_receptor = hasattr(request.user, 'receptor') or (
+        not hasattr(request.user, 'donante') and request.session.get('rol_activo') == 'receptor'
+    )
 
     # Obtiene las donaciones correspondientes al rol encapsulado del usuario
     if es_receptor:

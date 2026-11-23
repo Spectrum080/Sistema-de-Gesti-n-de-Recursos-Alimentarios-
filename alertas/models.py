@@ -536,6 +536,22 @@ class Donacion(models.Model):
     fecha_caducidad = models.DateField(null=True, blank=True)
     # Notas o requisitos de conservación
     descripcion = models.TextField(blank=True)
+    # Teléfono de contacto capturado en el formulario de donación (commit 67de301)
+    telefono_contacto = models.CharField(max_length=25, blank=True)
+    # Requisito específico de conservación (ambiente, refrigerado, congelado, etc.)
+    tipo_conservacion = models.CharField(max_length=50, blank=True)
+    # Fecha preferida para la entrega o recolección
+    fecha_entrega = models.DateField(null=True, blank=True)
+    # Hora de inicio de disponibilidad para entrega
+    hora_desde = models.TimeField(null=True, blank=True)
+    # Hora de fin de disponibilidad para entrega
+    hora_hasta = models.TimeField(null=True, blank=True)
+    # Indicaciones adicionales para coordinar la entrega
+    notas_entrega = models.TextField(blank=True)
+    # Archivo de imagen de evidencia almacenado en MEDIA_ROOT/donaciones/
+    imagen_evidencia = models.ImageField(upload_to='donaciones/', null=True, blank=True)
+    # Confirmación de la declaración de responsabilidad e higiene
+    declaracion_aceptada = models.BooleanField(default=False)
 
     # Metadatos del modelo Donacion
     class Meta:
@@ -593,6 +609,8 @@ class Donacion(models.Model):
 
     # Método encapsulado para que el rol Receptor pueda quitar/eliminar una donación del sistema
     def eliminar_por_receptor(self):
+        # Notifica al donante antes de borrar el registro de la base de datos
+        notificar_donacion_eliminada(self)
         # Guarda referencia al alimento vinculado antes de borrar la donación
         alimento_ref = self.alimento
         # Elimina el registro de donación

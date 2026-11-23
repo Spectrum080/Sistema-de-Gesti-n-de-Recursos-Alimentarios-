@@ -15,38 +15,53 @@ class Usuario(AbstractUser):
     def obtener_mis_donaciones(self):
         # Importación local del modelo Donacion para evitar dependencias circulares
         from alertas.models import Donacion
-        # Filtra las donaciones donde el usuario sea el autor directo o coincida su perfil de donante
+        # Consulta las donaciones precargando sus relaciones para mayor rendimiento
         return Donacion.objects.select_related(
             'alimento', 'donante', 'receptor', 'centro_acopio'
         ).filter(
+            # Coincide si el usuario autenticado es el autor directo de la donación
             models.Q(usuario_donante=self)
+            # O si coincide con el perfil Donante vinculado a esta misma cuenta
             | models.Q(donante__pk=self.pk)
-            | models.Q(usuario_donante__isnull=True, nombre_donante__iexact=self.username)
+            # O para registros antiguos sin usuario/donante asignado cuyo nombre coincida con su username
+            | models.Q(usuario_donante__isnull=True, donante__isnull=True, nombre_donante__iexact=self.username)
+        # Ordena de la donación más reciente a la más antigua
         ).order_by('-id')
 
-    # Método encapsulado que obtiene todas las donaciones visibles para análisis del receptor
+    # Método encapsulado que obtiene SOLAMENTE las donaciones por atender visibles para el receptor
+    # Incluye donaciones registradas antes o después del alta del receptor mientras sigan pendientes
     def obtener_donaciones_para_receptor(self):
         # Importación local del modelo Donacion
         from alertas.models import Donacion
-        # Retorna donaciones sin asignar o las que han sido gestionadas por este mismo receptor
+        # Consulta donaciones precargando sus relaciones clave
         return Donacion.objects.select_related(
             'alimento', 'donante', 'receptor', 'centro_acopio'
         ).filter(
+            # Restringe únicamente a estados que aún están pendientes por atender
+            estado__in=['Pendiente', 'Recibido', 'Activa'],
+        ).filter(
+            # Permite ver donaciones que todavía no han sido tomadas por ningún receptor
             models.Q(usuario_receptor__isnull=True, receptor__isnull=True)
+            # O las que este mismo receptor comentó temporalmente sin cambiar aún su estado
             | models.Q(usuario_receptor=self)
+            # O las asociadas a su instancia de Receptor mientras sigan pendientes
             | models.Q(receptor__pk=self.pk)
+        # Ordena de la donación más reciente a la más antigua
         ).order_by('-id')
 
-    # Método encapsulado que obtiene exclusivamente el historial de este usuario receptor
+    # Método encapsulado que obtiene exclusivamente el historial privado de este usuario receptor
     def obtener_mi_historial_receptor(self):
         # Importación local del modelo Donacion
         from alertas.models import Donacion
-        # Filtra solo las donaciones aceptadas, rechazadas o reservadas por esta cuenta de receptor
+        # Filtra únicamente las donaciones que fueron atendidas por esta cuenta de receptor
         return Donacion.objects.select_related(
             'alimento', 'donante', 'receptor', 'centro_acopio'
         ).filter(
+            # Garantiza privacidad: solo registros donde este usuario es el receptor asignado
             models.Q(usuario_receptor=self) | models.Q(receptor__pk=self.pk),
-            estado__in=['Aceptado', 'Rechazado', 'Reservado'],
+            # Incluye únicamente estados ya gestionados (aceptados, reservados, rechazados, etc.)
+            estado__in=['Aceptado', 'Rechazado', 'Reservado', 'Reservada', 'Entregada', 'Cancelada'],
+        # Ordena de la más reciente a la más antigua
         ).order_by('-id')
 
 

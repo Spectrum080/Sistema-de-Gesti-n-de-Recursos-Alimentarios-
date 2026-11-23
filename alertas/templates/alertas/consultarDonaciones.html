@@ -99,8 +99,12 @@
             <tbody>
                 {% for d in donaciones %}
                 <tr class="linea-divisoria" style="border-bottom:1px solid #f4f6fb;">
-                    <!-- Folio de la donación -->
-                    <td style="padding:16px 14px; font-weight:800; color:#7287fe; white-space:nowrap;">#{{ d.id }}</td>
+                    <!-- Folio clicable de la donación que abre la vista de detalle completo (commit 67de301) -->
+                    <td style="padding:16px 14px; font-weight:800; white-space:nowrap;">
+                        <a href="{% url 'detalle_donacion' d.raw_id %}" style="color:#7287fe; text-decoration:none;">
+                            #{{ d.id }}
+                        </a>
+                    </td>
                     <!-- Nombre del donante -->
                     <td class="txt-principal" style="padding:16px 14px; font-weight:600; color:#2b3044;">{{ d.donante }}</td>
                     <!-- Nombre del alimento donado -->

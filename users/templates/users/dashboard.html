@@ -151,8 +151,90 @@
 
         /* Soporte para Alto Contraste en la cajita desplegable */
         body.alto-contraste .campanita-dropdown,
-        body.alto-contraste .campanita-item {
+        body.alto-contraste .campanita-item,
+        body.alto-contraste .perfil-dropdown {
             border: 2px solid #7287fe !important;
+        }
+
+        /* Menú desplegable del usuario (arriba a la derecha, CSS puro sin JavaScript) */
+        /* Checkbox oculto que guarda si el menú del usuario está abierto o cerrado */
+        .perfil-toggle {
+            display: none;
+        }
+        /* Caja flotante posicionada justo debajo del botón de usuario */
+        .perfil-dropdown {
+            display: none;
+            position: absolute;
+            top: 56px;
+            right: 0;
+            width: 245px;
+            background: #ffffff;
+            border: 1px solid #e4e7f2;
+            border-radius: 16px;
+            box-shadow: 0 14px 34px rgba(15, 17, 26, 0.14);
+            padding: 12px;
+            z-index: 310;
+            box-sizing: border-box;
+        }
+        /* Muestra el menú desplegable cuando el checkbox está marcado */
+        .perfil-toggle:checked ~ .perfil-dropdown {
+            display: block;
+        }
+        /* Estilo común para cada opción dentro de la mini ventanita del usuario */
+        .perfil-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border-radius: 11px;
+            text-decoration: none;
+            color: #2b3044;
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            font-size: 0.84rem;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+        }
+        /* Efecto visual al pasar el cursor sobre cualquier opción del menú */
+        .perfil-menu-item:hover {
+            background: #f4f6fb;
+            color: #7287fe;
+        }
+        /* Tono rojo distintivo para la opción de Cerrar Sesión */
+        .perfil-menu-item.logout-item {
+            color: #e5484d;
+        }
+        /* Resalte rojo suave al pasar el cursor sobre Cerrar Sesión */
+        .perfil-menu-item.logout-item:hover {
+            background: #fde8e8;
+            color: #c81e1e;
+        }
+        /* Adaptación de la caja del menú desplegable para Modo Oscuro */
+        body.modo-oscuro .perfil-dropdown {
+            background-color: #181b28 !important;
+            border-color: #2b3044 !important;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45) !important;
+        }
+        /* Color de texto claro para las opciones del menú en Modo Oscuro */
+        body.modo-oscuro .perfil-menu-item {
+            color: #f4f6fb !important;
+        }
+        /* Color de fondo y texto al pasar el cursor en Modo Oscuro */
+        body.modo-oscuro .perfil-menu-item:hover {
+            background-color: #232738 !important;
+            color: #8aa0ff !important;
+        }
+        /* Color rojo legible para Cerrar Sesión en Modo Oscuro */
+        body.modo-oscuro .perfil-menu-item.logout-item {
+            color: #f87171 !important;
+        }
+        /* Fondo translúcido rojo al pasar el cursor sobre Cerrar Sesión en Modo Oscuro */
+        body.modo-oscuro .perfil-menu-item.logout-item:hover {
+            background-color: rgba(239, 68, 68, 0.16) !important;
         }
     </style>
 </head>
@@ -176,7 +258,9 @@
             <span>Buscar donaciones o recursos...</span>
         </div>
 
-        <!-- CONTENEDOR PRINCIPAL: agrupa la campanita y su cajita desplegable -->
+        <!-- ACCIONES SUPERIORES DERECHA: Campanita + Menú desplegable del usuario -->
+        <div style="display:flex; align-items:center; gap:14px;">
+            <!-- CONTENEDOR PRINCIPAL: agrupa la campanita y su cajita desplegable -->
             <div style="position:relative;">
                 <!-- Checkbox oculto: al marcar/desmarcar con el label, CSS muestra u oculta la cajita -->
                 <input type="checkbox" id="toggle-campanita" class="campanita-toggle">
@@ -186,8 +270,8 @@
                     <!-- Ícono SVG de campana -->
                     <svg class="txt-principal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
 
-                    <!-- Puntito rojo indicador si hay notificaciones pendientes -->
-                    {% if cantidad_notis_pendientes|default:0 > 0 or request.session.notif_caducidad|default:True %}
+                    <!-- Puntito rojo indicador SOLO cuando realmente existen notificaciones sin leer -->
+                    {% if cantidad_notis_pendientes|default:0 > 0 %}
                     <div style="position:absolute; top:8px; right:8px; width:8px; height:8px; background:#e5484d; border-radius:50%; border:2px solid #fff;"></div>
                     {% endif %}
                 </label>
@@ -200,15 +284,17 @@
                         <label for="toggle-campanita" class="txt-secundario" title="Cerrar" style="cursor:pointer; font-size:0.8rem; font-weight:700;">✕</label>
                     </div>
 
-                    <!-- Lista breve de notificaciones (máximo 4, solo título primordial, rol y hora) -->
+                    <!-- Lista breve de notificaciones (máximo 4, mostrando alerta de alto riesgo si aplica) -->
                     {% if notificaciones_pendientes %}
                         {% for noti in notificaciones_pendientes|slice:":4" %}
-                        <div class="campanita-item">
+                        <div class="campanita-item" style="{% if noti.level == 'danger' %}border-left:3px solid #e5484d;{% elif noti.level == 'warning' %}border-left:3px solid #e67e22;{% elif noti.level == 'success' %}border-left:3px solid #12a559;{% else %}border-left:3px solid #7287fe;{% endif %}">
+                            <!-- Título corto de la notificación -->
                             <div class="txt-principal" style="font-size:0.8rem; font-weight:700; margin-bottom:2px;">
                                 {{ noti.titulo }}
                             </div>
+                            <!-- Rol destino capitalizado y hora en que se generó la notificación -->
                             <div class="txt-secundario" style="font-size:0.72rem; font-weight:600;">
-                                {{ noti.get_rol_destino_display }} · {{ noti.created_at|date:"H:i" }}
+                                {{ noti.rol_destino|capfirst }} · {{ noti.created_at|date:"H:i" }}
                             </div>
                         </div>
                         {% endfor %}
@@ -228,16 +314,119 @@
                 </div>
             </div>
 
-                       <a href="{% url 'perfil' %}" class="caja-blanca" title="Mi perfil" style="display:flex; align-items:center; gap:12px; background:#ffffff; border:1px solid #e4e7f2; border-radius:999px; padding:6px 16px 6px 6px; text-decoration:none; cursor:pointer;">
-                <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(160deg,#8aa0ff 0%,#7287fe 100%); display:grid; place-items:center; color:#fff; font-weight:800; font-size:0.85rem;">
-                    {{ request.user.username|default:"C"|slice:":1"|upper }}
+            <!-- MENÚ DESPLEGABLE DE PERFIL (Mi Perfil, Configuración, Soporte Técnico, Cerrar Sesión) -->
+            <div style="position:relative;">
+                <!-- Checkbox invisible que abre o cierra la mini ventanita al dar clic en el usuario -->
+                <input type="checkbox" id="toggle-perfil-menu" class="perfil-toggle">
+
+                <!-- Botón con la inicial y el nombre del usuario autenticado -->
+                <label for="toggle-perfil-menu" class="caja-blanca" title="Menú de cuenta" style="display:flex; align-items:center; gap:10px; background:#ffffff; border:1px solid #e4e7f2; border-radius:999px; padding:6px 14px 6px 6px; cursor:pointer; user-select:none;">
+                    <!-- Círculo con la primera letra del nombre de usuario en mayúscula -->
+                    <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(160deg,#8aa0ff 0%,#7287fe 100%); display:grid; place-items:center; color:#fff; font-weight:800; font-size:0.85rem;">
+                        {{ request.user.username|default:"C"|slice:":1"|upper }}
+                    </div>
+                    <!-- Nombre de usuario visible junto al avatar -->
+                    <span class="txt-principal" style="font-size:0.85rem; font-weight:700; color:#2b3044;">
+                        {{ request.user.username|default:"derpi" }}
+                    </span>
+                    <!-- Flechita que indica que el botón despliega un menú -->
+                    <svg class="txt-secundario" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </label>
+
+                <!-- Mini ventanita desplegable justo debajo del nombre y avatar del usuario -->
+                <div class="perfil-dropdown">
+                    <!-- Cabecera interna con nombre, tipo de rol y botón '✕' para cerrar -->
+                    <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px 10px; margin-bottom:6px; border-bottom:1px solid #e4e7f2;">
+                        <div>
+                            <!-- Nombre de la cuenta en sesión -->
+                            <div class="txt-principal" style="font-size:0.84rem; font-weight:800;">{{ request.user.username|default:"Usuario" }}</div>
+                            <!-- Etiqueta del rol real de la cuenta -->
+                            <div class="txt-secundario" style="font-size:0.72rem; font-weight:600;">
+                                {% if request.user.donante %}Donante{% elif request.user.receptor %}Receptor{% else %}Administrador{% endif %}
+                            </div>
+                        </div>
+                        <!-- Botón para cerrar el menú desmarcando el checkbox -->
+                        <label for="toggle-perfil-menu" class="txt-secundario" title="Cerrar menú" style="cursor:pointer; font-size:0.82rem; font-weight:700; padding:2px 6px;">✕</label>
+                    </div>
+
+                    <!-- Opción 1: Redirige a la vista de Mi Perfil para ver y editar datos -->
+                    <a href="{% url 'perfil' %}" class="perfil-menu-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Mi Perfil
+                    </a>
+
+                    <!-- Opción 2: Redirige a la vista de Configuración del sistema -->
+                    <a href="{% url 'configuracion' %}" class="perfil-menu-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Configuración
+                    </a>
+
+                    <!-- Opción 3: Abre el modal de Soporte Técnico activando el checkbox #modal-soporte -->
+                    <label for="modal-soporte" class="perfil-menu-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        Soporte Técnico
+                    </label>
+
+                    <!-- Separador visual antes del botón de salida -->
+                    <div class="linea-divisoria" style="border-top:1px solid #e4e7f2; margin:6px 0;"></div>
+
+                    <!-- Opción 4: Formulario POST seguro para cerrar sesión en Django y redirigir al login -->
+                    <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                        <!-- Token CSRF obligatorio para peticiones POST en Django -->
+                        {% csrf_token %}
+                        <!-- Botón que cierra la sesión del usuario actual -->
+                        <button type="submit" class="perfil-menu-item logout-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            Cerrar Sesión
+                        </button>
+                    </form>
                 </div>
-                <span class="txt-principal" style="font-size:0.85rem; font-weight:700; color:#2b3044;">
-                    {{ request.user.username|default:"derpi" }}
-                </span>
-            </a>
+            </div>
         </div>
     </header>
+
+    <!-- MODAL FUNCIONAL DE SOPORTE TÉCNICO (Heredado automáticamente en todas las vistas hijas) -->
+    <!-- Checkbox oculto que controla si la ventana modal de soporte se muestra o se oculta -->
+    <input type="checkbox" id="modal-soporte" class="modal-toggle">
+    <!-- Fondo semitransparente que centra la ventana modal en la pantalla -->
+    <div class="modal-overlay">
+        <!-- Tarjeta principal del modal con soporte para modo oscuro y alto contraste -->
+        <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:400px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.25); box-sizing:border-box;">
+            <!-- Encabezado del modal con título y botón '✕' para cerrarlo -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 class="txt-principal" style="margin:0; font-size:1.15rem; font-weight:800; color:#2b3044;">Soporte Técnico</h3>
+                <label for="modal-soporte" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084;">✕</label>
+            </div>
+            <!-- Texto breve de orientación para el usuario -->
+            <p class="txt-secundario" style="font-size:0.83rem; color:#6b7084; margin:0 0 18px; line-height:1.5;">
+                ¿Necesitas ayuda con tu cuenta o con el registro de donaciones? Comunícate con nuestro equipo de atención:
+            </p>
+
+            <!-- Tarjeta con correo ficticio de soporte técnico -->
+            <div class="elem-gris" style="background:#f4f6fb; border:1px solid #e4e7f2; border-radius:14px; padding:14px 16px; margin-bottom:12px;">
+                <span class="txt-secundario" style="display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase; margin-bottom:4px;">Correo de Atención</span>
+                <a href="mailto:soporte@hambrecero.org" style="color:#7287fe; font-weight:700; font-size:0.9rem; text-decoration:none;">soporte@hambrecero.org</a>
+            </div>
+
+            <!-- Tarjeta con teléfono ficticio de soporte técnico -->
+            <div class="elem-gris" style="background:#f4f6fb; border:1px solid #e4e7f2; border-radius:14px; padding:14px 16px; margin-bottom:12px;">
+                <span class="txt-secundario" style="display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase; margin-bottom:4px;">Teléfono de Atención</span>
+                <a href="tel:+525548201930" class="txt-principal" style="font-weight:700; font-size:0.9rem; text-decoration:none;">+52 55 4820 1930</a>
+            </div>
+
+            <!-- Horario de atención al usuario -->
+            <p class="txt-secundario" style="font-size:0.76rem; color:#6b7084; margin:0 0 20px;">
+                Horario de atención: Lunes a Viernes de 9:00 a 18:00 hrs.
+            </p>
+
+            <!-- Botón de cierre del modal -->
+            <div style="display:flex; justify-content:flex-end;">
+                <label for="modal-soporte" style="padding:10px 22px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 6px 16px rgba(114,135,254,0.35);">
+                    Entendido
+                </label>
+            </div>
+        </div>
+    </div>
 
     <div style="width:100%; min-height:calc(100vh - 75px); display:flex;">
 
@@ -284,12 +473,6 @@
                         Nueva Donación
                     </a>
                 {% endif %}
-
-                <!-- BOTÓN DE CONFIGURACIÓN -->
-                <a href="{% url 'configuracion' %}" class="nav-link {% if request.resolver_match.url_name == 'configuracion' %}activo{% endif %}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    Configuración
-                </a>
             </div>
             {% endblock %}
 
@@ -297,10 +480,6 @@
                 <a href="#" class="txt-secundario" style="display:flex; align-items:center; gap:12px; text-decoration:none; padding:10px 14px; border-radius:12px; color:#6b7084; font-weight:600; font-size:0.82rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                     Documentación
-                </a>
-                <a href="#" class="txt-secundario" style="display:flex; align-items:center; gap:12px; text-decoration:none; padding:10px 14px; border-radius:12px; color:#6b7084; font-weight:600; font-size:0.82rem;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    Soporte Técnico
                 </a>
             </div>
         </aside>

@@ -1,277 +1,90 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es" class="{% if request.session.tamano_fuente == '108%' %}fuente-108{% elif request.session.tamano_fuente == '115%' %}fuente-115{% else %}fuente-100{% endif %}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Panel Principal - Hambre Cero{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* Escala global de fuente */
-        html.fuente-100 { font-size: 100% !important; }
-        html.fuente-108 { font-size: 108% !important; }
-        html.fuente-115 { font-size: 115% !important; }
+<!-- Hereda toda la barra superior, menú de usuario, campanita, modal de soporte y sidebar desde dashboard.html -->
+{% extends "users/dashboard.html" %}
 
-        /* Navegación del Sidebar */
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            padding: 14px 18px;
-            border-radius: 14px;
-            color: #6b7084;
-            font-weight: 600;
-            font-size: 0.88rem;
-        }
-        .nav-link.activo {
-            background: #7287fe !important;
-            color: #ffffff !important;
-            font-weight: 700 !important;
-            box-shadow: 0 8px 20px rgba(114,135,254,0.3);
-        }
+<!-- Sobrescribe el título de la pestaña del navegador para la pantalla de perfil -->
+{% block title %}Mi Perfil - Hambre Cero{% endblock %}
 
-        /* Mini Ventana para Exportar Informe*/
-        .modal-toggle {
-            display: none;
-        }
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 17, 26, 0.55);
-            z-index: 999;
-            place-items: center;
-            padding: 20px;
-        }
-        .modal-toggle:checked ~ .modal-overlay {
-            display: grid;
-        }
-        .opcion-formato {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 18px;
-            border: 1.5px solid #e4e7f2;
-            border-radius: 14px;
-            cursor: pointer;
-            margin-bottom: 12px;
-        }
-        .opcion-formato:hover {
-            border-color: #7287fe;
-        }
+<!-- Bloque de contenido principal inyectado dentro de la plantilla padre dashboard.html -->
+{% block contenido %}
+<!-- Formulario POST que envía los cambios del usuario hacia la vista 'perfil' -->
+<form method="POST" action="{% url 'perfil' %}">
+    <!-- Token de seguridad CSRF obligatorio en formularios POST de Django -->
+    {% csrf_token %}
 
-        /* Modo Oscuro */
-        body.modo-oscuro {
-            background-color: #0f111a !important;
-            color: #f4f6fb !important;
-        }
-        body.modo-oscuro header,
-        body.modo-oscuro aside,
-        body.modo-oscuro .caja-blanca {
-            background-color: #181b28 !important;
-            border-color: #2b3044 !important;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.35) !important;
-        }
-        body.modo-oscuro .txt-principal {
-            color: #ffffff !important;
-        }
-        body.modo-oscuro .txt-secundario,
-        body.modo-oscuro .nav-link:not(.activo) {
-            color: #9da4be !important;
-        }
-        body.modo-oscuro .elem-gris,
-        body.modo-oscuro .btn-exportar,
-        body.modo-oscuro .opcion-formato {
-            background-color: #232738 !important;
-            color: #ffffff !important;
-            border-color: #363c56 !important;
-        }
-        body.modo-oscuro .linea-divisoria {
-            border-color: #262b3d !important;
-        }
-
-        /* Accesibilidad: Alto Contraste */
-        body.alto-contraste header,
-        body.alto-contraste aside,
-        body.alto-contraste .caja-blanca,
-        body.alto-contraste .elem-gris,
-        body.alto-contraste .btn-exportar,
-        body.alto-contraste .opcion-formato,
-        body.alto-contraste table,
-        body.alto-contraste tr,
-        body.alto-contraste td,
-        body.alto-contraste th {
-            border: 2px solid #7287fe !important;
-        }
-    </style>
-</head>
-<body class="{% if request.session.tema_oscuro %}modo-oscuro {% endif %}{% if request.session.alto_contraste %}alto-contraste{% endif %}" style="margin:0; font-family:'Plus Jakarta Sans',system-ui,sans-serif; background-color:#f4f6fb; color:#2b3044;">
-
-    <!-- Navegacion superior -->
-    <header style="width:100%; height:75px; background:#ffffff; box-sizing:border-box; padding:0 36px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 20px rgba(60,70,120,0.06); position:sticky; top:0; z-index:100;">
-        <div style="display:flex; align-items:center; gap:20px;">
-            <a href="{% url 'dashboard' %}" class="elem-gris" style="border:none; background:#f4f6fb; border-radius:12px; padding:10px 18px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#7287fe; cursor:pointer; display:flex; align-items:center; gap:8px; text-decoration:none;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                Menú Principal
-            </a>
-
-            <div class="linea-divisoria" style="border-radius:12px; overflow:hidden; border:1px solid #e4e7f2; display:flex; align-items:center;">
-                <img src="{% static 'users/img/logo.jpg' %}" alt="Logo" style="height:38px; width:auto; display:block;">
-            </div>
+    <!-- Encabezado de la sección con título, descripción y botón para guardar cambios -->
+    <div class="linea-divisoria" style="padding-bottom:20px; border-bottom:1px solid #e4e7f2; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
+        <div>
+            <!-- Título principal de la vista -->
+            <h1 class="txt-principal" style="font-size:1.9rem; font-weight:800; margin:0 0 6px; color:#2b3044;">Mi Perfil</h1>
+            <!-- Subtítulo descriptivo -->
+            <p class="txt-secundario" style="font-size:0.88rem; color:#6b7084; margin:0;">Consulta y actualiza los datos de tu cuenta</p>
         </div>
-
-        <div class="elem-gris" style="background:#f4f6fb; border-radius:999px; padding:10px 24px; font-size:0.85rem; font-weight:600; color:#6b7084; display:flex; align-items:center; gap:10px; min-width:320px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <span>Buscar donaciones o recursos...</span>
-        </div>
-
-        <div style="display:flex; align-items:center; gap:16px;">
-            <div class="elem-gris" style="position:relative; cursor:pointer; width:40px; height:40px; border-radius:12px; background:#f4f6fb; display:grid; place-items:center;">
-                <svg class="txt-principal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                {% if request.session.notif_caducidad|default:True %}
-                <div style="position:absolute; top:8px; right:8px; width:8px; height:8px; background:#e5484d; border-radius:50%; border:2px solid #fff;"></div>
-                {% endif %}
-            </div>
-
-                       <a href="{% url 'perfil' %}" class="caja-blanca" title="Mi perfil" style="display:flex; align-items:center; gap:12px; background:#ffffff; border:1px solid #e4e7f2; border-radius:999px; padding:6px 16px 6px 6px; text-decoration:none; cursor:pointer;">
-                <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(160deg,#6f7489 0%,#616475 100%); display:grid; place-items:center; color:#fff; font-weight:800; font-size:0.85rem;">
-                    {{ request.user.username|default:"C"|slice:":1"|upper }}
-                </div>
-                <span class="txt-principal" style="font-size:0.85rem; font-weight:700; color:#2b3044;">
-                    {{ request.user.username|default:"derpi" }}
-                </span>
-            </a>
-        </div>
-    </header>
-
-    <div style="width:100%; min-height:calc(100vh - 75px); display:flex;">
-
-        <!-- SIDEBAR IZQUIERDO: Adapta los enlaces automáticamente según el rol activo (Receptor o Donante) -->
-        <aside style="width:260px; box-sizing:border-box; padding:32px 20px; background:#ffffff; border-right:1px solid #e4e7f2; display:flex; flex-direction:column; justify-content:space-between; gap:20px;">
-            
-            {% block navegacion %}
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                {% if es_receptor or request.GET.rol == 'receptor' or request.resolver_match.url_name == 'dashboardReceptor' or request.user.receptor or request.session.rol_activo == 'receptor' and request.GET.rol != 'donante' and request.resolver_match.url_name != 'dashboardDonante' %}
-                    <!-- BOTONES DE RECEPTOR -->
-                    <a href="{% url 'dashboardReceptor' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboardReceptor' %}activo{% endif %}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                        Resumen
-                    </a>
-
-                    <a href="{% url 'consultarDonaciones' %}?rol=receptor" class="nav-link {% if request.resolver_match.url_name == 'consultarDonaciones' %}activo{% endif %}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H4v12h8"></path><path d="M16 16l3 3 5-5"></path></svg>
-                        Aceptar Donaciones
-                    </a>
-
-                    <a href="{% url 'historialDonaciones' %}?rol=receptor" class="nav-link {% if request.resolver_match.url_name == 'historialDonaciones' %}activo{% endif %}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                        Historial de Donaciones
-                    </a>
-
-                    <a href="{% url 'dashboardReceptor' %}" class="nav-link">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        Puntuación de Donaciones
-                    </a>
-                {% else %}
-                    <!-- BOTONES DE DONANTE -->
-                    <a href="{% url 'dashboardDonante' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboardDonante' or request.resolver_match.url_name == 'dashboard' %}activo{% endif %}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                        Resumen
-                    </a>
-
-                    <a href="{% url 'consultarDonaciones' %}?rol=donante" class="nav-link {% if request.resolver_match.url_name == 'consultarDonaciones' %}activo{% endif %}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H4v12h8"></path><path d="M16 16l3 3 5-5"></path></svg>
-                        Mis Donaciones
-                    </a>
-
-                    <a href="{% url 'cargarDonaciones' %}?rol=donante" class="nav-link {% if request.resolver_match.url_name == 'cargarDonaciones' %}activo{% endif %}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                        Nueva Donación
-                    </a>
-                {% endif %}
-
-                <!-- BOTÓN DE CONFIGURACIÓN -->
-                <a href="{% url 'configuracion' %}" class="nav-link {% if request.resolver_match.url_name == 'configuracion' %}activo{% endif %}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    Configuración
-                </a>
-            </div>
-            {% endblock %}
-
-            <div class="linea-divisoria" style="display:flex; flex-direction:column; gap:8px; border-top:1px solid #f0f2f8; padding-top:20px;">
-                <a href="#" class="txt-secundario" style="display:flex; align-items:center; gap:12px; text-decoration:none; padding:10px 14px; border-radius:12px; color:#6b7084; font-weight:600; font-size:0.82rem;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                    Documentación
-                </a>
-                <a href="#" class="txt-secundario" style="display:flex; align-items:center; gap:12px; text-decoration:none; padding:10px 14px; border-radius:12px; color:#6b7084; font-weight:600; font-size:0.82rem;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    Soporte Técnico
-                </a>
-            </div>
-        </aside>
-
-        <!-- PANEL DE CONTENIDO DINÁMICO -->
-        <main style="flex:1; box-sizing:border-box; padding:44px 50px; display:flex; flex-direction:column; gap:36px;">
-            {% block contenido %}
-            <form method="POST" action="{% url 'perfil' %}">
-                {% csrf_token %}
-
-                <div class="linea-divisoria" style="padding-bottom:20px; border-bottom:1px solid #e4e7f2; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:28px;">
-                    <div>
-                        <h1 class="txt-principal" style="font-size:1.9rem; font-weight:800; margin:0 0 6px; color:#2b3044;">Mi Perfil</h1>
-                        <p class="txt-secundario" style="font-size:0.88rem; color:#6b7084; margin:0;">Consulta y actualiza los datos de tu cuenta</p>
-                    </div>
-                    <button type="submit" style="background:#7287fe; border:none; border-radius:12px; padding:12px 24px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#ffffff; cursor:pointer; box-shadow:0 8px 20px rgba(114,135,254,0.3);">
-                        Guardar Cambios
-                    </button>
-                </div>
-
-                {% if messages %}
-                    {% for message in messages %}
-                        <div style="background:#eaf8f0; color:#12a559; padding:12px 18px; border-radius:12px; font-weight:700; font-size:0.85rem; margin-bottom:20px;">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-
-                <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; flex-direction:column; gap:20px; max-width:720px;">
-                    <div style="display:flex; align-items:center; gap:16px; padding-bottom:16px; border-bottom:1px solid #f4f6fb;" class="linea-divisoria">
-                        <div style="width:52px; height:52px; border-radius:50%; background:linear-gradient(160deg,#8aa0ff 0%,#7287fe 100%); display:grid; place-items:center; color:#fff; font-weight:800; font-size:1.2rem;">
-                            {{ request.user.username|slice:":1"|upper }}
-                        </div>
-                        <div>
-                            <h2 class="txt-principal" style="margin:0; font-size:1.15rem; font-weight:800; color:#2b3044;">{{ request.user.username }}</h2>
-                            <span class="txt-secundario" style="font-size:0.82rem; color:#6b7084;">
-                                {% if request.user.donante %}Donante{% elif request.user.receptor %}Receptor{% else %}Administrador{% endif %}
-                                {% if request.user.email %} · {{ request.user.email }}{% endif %}
-                            </span>
-                        </div>
-                    </div>
-
-                    {% if request.user.donante or request.user.receptor %}
-                    <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
-                        <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">
-                            {% if request.user.donante %}Nombre del Local / Razón Social{% else %}Nombre de la Organización{% endif %}
-                        </span>
-                        <input type="text" name="razon_social" value="{{ razon_social }}" placeholder="Ingresa el nombre o razón social" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                    </label>
-                    {% endif %}
-
-                    <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
-                        <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Teléfono</span>
-                        <input type="text" name="telefono" value="{{ request.user.telefono }}" placeholder="Ej. 55 1234 5678" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                    </label>
-
-                    <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
-                        <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Dirección</span>
-                        <input type="text" name="direccion" value="{{ request.user.direccion }}" placeholder="Ej. Av. Reforma 123, Col. Centro" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
-                    </label>
-                </div>
-            </form>
-            {% endblock %}
-        </main>
+        <!-- Botón que envía el formulario para actualizar los datos en base de datos -->
+        <button type="submit" style="background:#7287fe; border:none; border-radius:12px; padding:12px 24px; font:700 0.85rem 'Plus Jakarta Sans',sans-serif; color:#ffffff; cursor:pointer; box-shadow:0 8px 20px rgba(114,135,254,0.3);">
+            Guardar Cambios
+        </button>
     </div>
 
-</body>
-</html>
+    <!-- Muestra el aviso amarillo solo mientras el perfil siga incompleto -->
+    {% if perfil_incompleto %}
+        <div style="background:#fef4e6; color:#b45309; border:1px solid #fde68a; padding:12px 18px; border-radius:12px; font-weight:700; font-size:0.85rem; margin-bottom:20px;">
+            Para subir una donación, primero debes completar tu Nombre/Razón Social, Teléfono y Dirección.
+        </div>
+    {% endif %}
+
+    <!-- Muestra mensajes de confirmación cuando se guardan los datos -->
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'warning' not in message.tags %}
+                <div style="background:#eaf8f0; color:#12a559; padding:12px 18px; border-radius:12px; font-weight:700; font-size:0.85rem; margin-bottom:20px;">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <!-- Tarjeta contenedora con los datos editables del usuario -->
+    <div class="caja-blanca" style="background:#ffffff; border-radius:18px; padding:28px; box-shadow:0 6px 20px rgba(60,70,120,0.06); display:flex; flex-direction:column; gap:20px; max-width:720px;">
+        <!-- Cabecera de identidad con avatar inicial, nombre de usuario, rol y correo -->
+        <div style="display:flex; align-items:center; gap:16px; padding-bottom:16px; border-bottom:1px solid #f4f6fb;" class="linea-divisoria">
+            <!-- Avatar circular con la inicial del usuario -->
+            <div style="width:52px; height:52px; border-radius:50%; background:linear-gradient(160deg,#8aa0ff 0%,#7287fe 100%); display:grid; place-items:center; color:#fff; font-weight:800; font-size:1.2rem;">
+                {{ request.user.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <!-- Nombre de usuario de la sesión activa -->
+                <h2 class="txt-principal" style="margin:0; font-size:1.15rem; font-weight:800; color:#2b3044;">{{ request.user.username }}</h2>
+                <!-- Muestra el rol (Donante, Receptor o Administrador) y el correo si existe -->
+                <span class="txt-secundario" style="font-size:0.82rem; color:#6b7084;">
+                    {% if request.user.donante %}Donante{% elif request.user.receptor %}Receptor{% else %}Administrador{% endif %}
+                    {% if request.user.email %} · {{ request.user.email }}{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Campo de Razón Social / Organización (visible solo para cuentas Donante o Receptor) -->
+        {% if request.user.donante or request.user.receptor %}
+        <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
+            <!-- Etiqueta dinámica según el rol del usuario -->
+            <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">
+                {% if request.user.donante %}Nombre del Local / Razón Social{% else %}Nombre de la Organización{% endif %}
+            </span>
+            <!-- Input para editar nombre_local (Donante) o nombre_org (Receptor) -->
+            <input type="text" name="razon_social" value="{{ razon_social }}" placeholder="Ingresa el nombre o razón social" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+        {% endif %}
+
+        <!-- Campo editable para el teléfono de contacto -->
+        <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
+            <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Teléfono</span>
+            <input type="text" name="telefono" value="{{ request.user.telefono }}" placeholder="Ej. 55 1234 5678" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+
+        <!-- Campo editable para la dirección física -->
+        <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
+            <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Dirección</span>
+            <input type="text" name="direccion" value="{{ request.user.direccion }}" placeholder="Ej. Av. Reforma 123, Col. Centro" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+        </label>
+    </div>
+</form>
+{% endblock %}
