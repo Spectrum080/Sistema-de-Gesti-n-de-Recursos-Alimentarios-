@@ -12,6 +12,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 # Importa los modelos de usuarios y roles
 from .models import Usuario, Donante, Receptor
+# Importa el modelo Notificacion para consultar alertas pendientes
+from alertas.models import Notificacion
 
 
 # Calcula las métricas del dashboard respetando el encapsulamiento del rol activo
@@ -23,6 +25,10 @@ def _obtener_contexto_dashboard(request, es_receptor=False):
     else:
         donaciones_qs = request.user.obtener_mis_donaciones()
 
+    pendientes_qs = Notificacion.objects.filter(
+        destiny=request.user,
+        read=False,
+    )
     # Cuenta el total de donaciones correspondientes al rol
     total_donaciones = donaciones_qs.count()
     # Suma el peso en kilogramos de dichas donaciones
