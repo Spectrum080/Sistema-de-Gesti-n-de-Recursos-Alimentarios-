@@ -153,48 +153,10 @@
                         {% endif %}
                     </td>
 
-                    <!-- APARTADO DE COMENTARIOS (Abre ventana modal centrada en pantalla sin recortarse ni hacer scroll en tabla) -->
+                    <!-- APARTADO DE COMENTARIOS (Reutiliza el componente modal compartido) -->
                     <td style="padding:16px 14px;">
                         {% if es_receptor %}
-                            <!-- Botón que abre el modal centrado para agregar o editar comentarios -->
-                            <label for="modal-comentarios-{{ d.raw_id }}" class="pildora-tabla" style="background:#f4f6fb; color:#2b3044; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                {% if d.feedback %}Ver / Editar{% else %}+ Comentarios{% endif %}
-                            </label>
-                            <!-- Checkbox oculto que activa el modal centrado de Comentarios -->
-                            <input type="checkbox" id="modal-comentarios-{{ d.raw_id }}" class="modal-toggle">
-                            <!-- Ventana modal centrada en pantalla para escribir cómodamente el comentario -->
-                            <div class="modal-overlay">
-                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:440px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
-                                    <!-- Encabezado del modal de comentarios -->
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                        <h3 class="txt-principal" style="margin:0; font-size:1.12rem; font-weight:800; color:#2b3044;">Comentarios de la Donación #{{ d.id }}</h3>
-                                        <label for="modal-comentarios-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
-                                    </div>
-                                    <!-- Subtítulo orientativo dentro del modal -->
-                                    <p class="txt-secundario" style="font-size:0.82rem; color:#6b7084; margin:0 0 16px;">
-                                        Agrega información extra sobre por qué se aceptó, reservó o rechazó el alimento <strong>{{ d.alimento }}</strong>:
-                                    </p>
-                                    <!-- Formulario POST para guardar el comentario en Python -->
-                                    <form method="POST" action="{% url 'consultarDonaciones' %}" style="margin:0;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
-                                        <input type="hidden" name="rol" value="receptor">
-                                        <input type="hidden" name="categoria" value="{{ categoria_actual }}">
-                                        <input type="hidden" name="page" value="{{ page_obj.number }}">
-                                        <!-- Área de texto amplia y sin cortes para escribir el comentario -->
-                                        <textarea name="feedback" rows="4" placeholder="Ej. Se aceptó en óptimo estado / Se rechazó por envase dañado..." class="elem-gris txt-principal" style="width:100%; border:1.5px solid #e4e7f2; border-radius:12px; padding:12px 14px; font:600 0.85rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; resize:vertical; margin-bottom:18px; outline:none;">{{ d.feedback }}</textarea>
-                                        <!-- Botones inferiores de cancelar y guardar -->
-                                        <div style="display:flex; justify-content:flex-end; gap:10px;">
-                                            <label for="modal-comentarios-{{ d.raw_id }}" class="elem-gris" style="padding:10px 18px; border-radius:10px; background:#f4f6fb; color:#6b7084; font-weight:700; font-size:0.82rem; cursor:pointer;">
-                                                Cancelar
-                                            </label>
-                                            <button type="submit" name="nuevo_estado" value="GuardarFeedback" style="padding:10px 22px; border:none; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 6px 16px rgba(114,135,254,0.35);">
-                                                Guardar Comentario
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                            {% include 'alertas/_modal_comentarios_donacion.html' with prefijo_modal='cons' clase_pildora='pildora-tabla' accion_url='consultarDonaciones' %}
                         {% else %}
                             <!-- Vista del Donante: abre modal centrado para leer los comentarios del receptor sin amontonar la tabla -->
                             {% if d.feedback %}
@@ -224,81 +186,10 @@
                         {% endif %}
                     </td>
 
-                    <!-- APARTADO DE ESTADO (Para el Receptor abre un modal centrado amplio sin recortarse en la tabla) -->
+                    <!-- APARTADO DE ESTADO (Reutiliza el componente modal compartido) -->
                     <td style="padding:16px 14px;">
                         {% if es_receptor %}
-                            <!-- Botón de Estado que al darle clic abre el modal centrado de decisión -->
-                            {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                                <label for="modal-estado-{{ d.raw_id }}" class="pildora-tabla" style="background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                    <span>{{ d.estado }}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                </label>
-                            {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                                <label for="modal-estado-{{ d.raw_id }}" class="pildora-tabla" style="background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                    <span>{{ d.estado }}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                </label>
-                            {% else %}
-                                <label for="modal-estado-{{ d.raw_id }}" class="pildora-tabla" style="background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                    <span>{{ d.estado }}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                </label>
-                            {% endif %}
-
-                            <!-- Checkbox oculto que controla la apertura del modal centrado de Estado -->
-                            <input type="checkbox" id="modal-estado-{{ d.raw_id }}" class="modal-toggle">
-                            <!-- Ventana modal centrada en pantalla para cambiar el estado o quitar la donación sin cortes -->
-                            <div class="modal-overlay">
-                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:420px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
-                                    <!-- Encabezado del modal de estado -->
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                        <h3 class="txt-principal" style="margin:0; font-size:1.12rem; font-weight:800; color:#2b3044;">Cambiar Estado - #{{ d.id }} {{ d.alimento }}</h3>
-                                        <label for="modal-estado-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
-                                    </div>
-                                    <p class="txt-secundario" style="font-size:0.82rem; color:#6b7084; margin:0 0 16px;">
-                                        Selecciona la acción para esta donación y anota un comentario si lo deseas:
-                                    </p>
-
-                                    <!-- Formulario POST que procesa el cambio de estado, comentarios o eliminación en Python -->
-                                    <form method="POST" action="{% url 'consultarDonaciones' %}" style="margin:0;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
-                                        <input type="hidden" name="rol" value="receptor">
-                                        <input type="hidden" name="categoria" value="{{ categoria_actual }}">
-                                        <input type="hidden" name="page" value="{{ page_obj.number }}">
-
-                                        <!-- Campo amplio para anotar comentarios al momento de cambiar el estado -->
-                                        <label class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; margin-bottom:6px;">Comentarios (opcional):</label>
-                                        <textarea name="feedback" rows="2" placeholder="Escribe el motivo de aceptación, reserva o rechazo..." class="elem-gris txt-principal" style="width:100%; border:1.5px solid #e4e7f2; border-radius:12px; padding:10px 12px; font:600 0.82rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; resize:vertical; margin-bottom:16px; outline:none;">{{ d.feedback }}</textarea>
-
-                                        <!-- Botones grandes y claros para Aceptar, Reservar o Rechazar -->
-                                        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
-                                            <button type="submit" name="nuevo_estado" value="Aceptado" class="btn-opcion-estado" style="width:100%; border:none; background:#eaf8f0; color:#12a559; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
-                                                <span style="width:9px; height:9px; border-radius:50%; background:#12a559; display:inline-block;"></span>
-                                                Aceptar Donación
-                                            </button>
-                                            <button type="submit" name="nuevo_estado" value="Reservado" class="btn-opcion-estado" style="width:100%; border:none; background:#fef4e6; color:#e67e22; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
-                                                <span style="width:9px; height:9px; border-radius:50%; background:#e67e22; display:inline-block;"></span>
-                                                Reservar Donación
-                                            </button>
-                                            <button type="submit" name="nuevo_estado" value="Rechazado" class="btn-opcion-estado" style="width:100%; border:none; background:#fde8e8; color:#e5484d; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
-                                                <span style="width:9px; height:9px; border-radius:50%; background:#e5484d; display:inline-block;"></span>
-                                                Rechazar Donación
-                                            </button>
-                                        </div>
-
-                                        <!-- Pie del modal con opción de Quitar Donación o Cancelar -->
-                                        <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid #edf0f7;">
-                                            <button type="submit" name="nuevo_estado" value="Eliminar" class="btn-opcion-estado" style="border:none; background:transparent; color:#e5484d; padding:8px 10px; border-radius:8px; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                                Quitar Donación
-                                            </button>
-                                            <label for="modal-estado-{{ d.raw_id }}" class="elem-gris" style="padding:9px 18px; border-radius:10px; background:#f4f6fb; color:#6b7084; font-weight:700; font-size:0.82rem; cursor:pointer;">
-                                                Cancelar
-                                            </label>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                            {% include 'alertas/_modal_estado_donacion.html' with prefijo_modal='cons' clase_pildora='pildora-tabla' accion_url='consultarDonaciones' mostrar_regresar=False %}
                         {% else %}
                             <!-- Etiqueta de estado en modo lectura para el Donante -->
                             {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}

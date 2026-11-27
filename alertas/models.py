@@ -597,6 +597,8 @@ class Donacion(models.Model):
                 self.alimento.estado = 'RESERVADA'
             elif nuevo_estado == 'Rechazado':
                 self.alimento.estado = 'EN_REVISION'
+            elif nuevo_estado == 'Recibido':
+                self.alimento.estado = 'DISPONIBLE'
             self.alimento.save(update_fields=['estado'])
 
         # Almacena la informacion de la decision del receptor
@@ -604,6 +606,31 @@ class Donacion(models.Model):
             donacion=self,
             usuario_receptor=usuario,
             accion=nuevo_estado or 'GuardarFeedback',
+            comentario_feedback=comentario_feedback,
+        )
+
+    # Método encapsulado para regresar una donación desde el Historial hacia Consultar Donaciones (por atender)
+    def regresar_a_consulta(self, usuario, comentario_feedback=None):
+        # Libera la asignación del receptor para que vuelva a estar disponible para cualquier receptor
+        self.usuario_receptor = None
+        self.receptor = None
+        # Regresa el estado de la donación a 'Recibido' (por atender) y limpia la fecha de recepción
+        self.estado = 'Recibido'
+        self.fecha_recepcion = None
+        # Si el receptor escribió una aclaración al regresar la donación, actualiza el comentario visible al donante
+        if comentario_feedback is not None:
+            self.feedback = comentario_feedback.strip()
+        # Guarda los cambios en la tabla de donaciones
+        self.save()
+        # Devuelve el alimento vinculado al estado DISPONIBLE en el inventario
+        if self.alimento:
+            self.alimento.estado = 'DISPONIBLE'
+            self.alimento.save(update_fields=['estado'])
+        # Notifica al donante (y confirma al receptor) que la donación regresó a estado por atender
+        notificar_decision_receptor(
+            donacion=self,
+            usuario_receptor=usuario,
+            accion='Regresado',
             comentario_feedback=comentario_feedback,
         )
 

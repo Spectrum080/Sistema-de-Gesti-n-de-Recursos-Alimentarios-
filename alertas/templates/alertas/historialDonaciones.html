@@ -19,6 +19,10 @@
         border: none;
         line-height: 1.2;
     }
+    /* Efecto suave al pasar el cursor sobre las opciones del modal de estado */
+    .btn-opcion-estado:hover {
+        filter: brightness(0.96);
+    }
 </style>
 
 <!-- ENCABEZADO Y FILTRO POR CATEGORÍA PROCESADO 100% EN PYTHON -->
@@ -136,44 +140,14 @@
                         {% endif %}
                     </td>
 
-                    <!-- Apartado de Comentarios con modal centrado para evitar texto amontonado en la fila -->
+                    <!-- Apartado de Comentarios editable heredando el mismo modal de Consultar Donaciones -->
                     <td style="padding:16px 14px;">
-                        {% if d.feedback %}
-                            <!-- Botón que abre el comentario completo en el centro de la pantalla -->
-                            <label for="modal-hist-comentario-{{ d.raw_id }}" class="pildora-historial" style="background:#f4f6fb; color:#2b3044; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                Ver Comentarios
-                            </label>
-                            <input type="checkbox" id="modal-hist-comentario-{{ d.raw_id }}" class="modal-toggle">
-                            <div class="modal-overlay">
-                                <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:420px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                        <h3 class="txt-principal" style="margin:0; font-size:1.1rem; font-weight:800; color:#2b3044;">Comentarios - Donación #{{ d.id }}</h3>
-                                        <label for="modal-hist-comentario-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
-                                    </div>
-                                    <div class="elem-gris txt-principal" style="background:#f4f6fb; border-radius:12px; padding:16px; font-size:0.88rem; font-weight:600; color:#2b3044; line-height:1.5; margin-bottom:18px;">
-                                        {{ d.feedback }}
-                                    </div>
-                                    <div style="display:flex; justify-content:flex-end;">
-                                        <label for="modal-hist-comentario-{{ d.raw_id }}" style="padding:10px 22px; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
-                                            Cerrar
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        {% else %}
-                            <span class="txt-secundario" style="font-size:0.76rem; color:#94a3b8; font-weight:600; white-space:nowrap;">Sin comentarios</span>
-                        {% endif %}
+                        {% include 'alertas/_modal_comentarios_donacion.html' with prefijo_modal='hist' clase_pildora='pildora-historial' accion_url='historialDonaciones' %}
                     </td>
 
-                    <!-- Etiqueta de Estado sin bordes -->
+                    <!-- Apartado de Estado interactivo heredando el modal de Consultar Donaciones + opción de Regresar -->
                     <td style="padding:16px 14px;">
-                        {% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
-                            <span class="pildora-historial" style="background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
-                        {% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
-                            <span class="pildora-historial" style="background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
-                        {% else %}
-                            <span class="pildora-historial" style="background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font-weight:700; font-size:0.78rem;">{{ d.estado }}</span>
-                        {% endif %}
+                        {% include 'alertas/_modal_estado_donacion.html' with prefijo_modal='hist' clase_pildora='pildora-historial' accion_url='historialDonaciones' mostrar_regresar=True %}
                     </td>
                 </tr>
                 {% empty %}

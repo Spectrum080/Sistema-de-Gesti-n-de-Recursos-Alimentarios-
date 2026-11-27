@@ -1,0 +1,36 @@
+<!-- Componente reutilizable de mini ventana de Comentarios (compartido entre Consultar Donaciones e Historial) -->
+<label for="modal-comentarios-{{ prefijo_modal }}-{{ d.raw_id }}" class="{{ clase_pildora }}" style="background:#f4f6fb; color:#2b3044; padding:6px 14px; border-radius:999px; font:700 0.76rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+    {% if d.feedback %}Ver / Editar{% else %}+ Comentarios{% endif %}
+</label>
+
+<input type="checkbox" id="modal-comentarios-{{ prefijo_modal }}-{{ d.raw_id }}" class="modal-toggle">
+<div class="modal-overlay">
+    <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:440px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 class="txt-principal" style="margin:0; font-size:1.12rem; font-weight:800; color:#2b3044;">Comentarios de la Donación #{{ d.id }}</h3>
+            <label for="modal-comentarios-{{ prefijo_modal }}-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
+        </div>
+        <p class="txt-secundario" style="font-size:0.82rem; color:#6b7084; margin:0 0 16px;">
+            Agrega o corrige información sobre por qué se aceptó, reservó, rechazó o regresó el alimento <strong>{{ d.alimento }}</strong>:
+        </p>
+
+        <form method="POST" action="{% url accion_url %}" style="margin:0;">
+            {% csrf_token %}
+            <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
+            <input type="hidden" name="rol" value="receptor">
+            <input type="hidden" name="categoria" value="{{ categoria_actual }}">
+            <input type="hidden" name="page" value="{{ page_obj.number }}">
+
+            <textarea name="feedback" rows="4" placeholder="Ej. Se aceptó en óptimo estado / Se corrigió el estatus..." class="elem-gris txt-principal" style="width:100%; border:1.5px solid #e4e7f2; border-radius:12px; padding:12px 14px; font:600 0.85rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; resize:vertical; margin-bottom:18px; outline:none;">{{ d.feedback }}</textarea>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <label for="modal-comentarios-{{ prefijo_modal }}-{{ d.raw_id }}" class="elem-gris" style="padding:10px 18px; border-radius:10px; background:#f4f6fb; color:#6b7084; font-weight:700; font-size:0.82rem; cursor:pointer;">
+                    Cancelar
+                </label>
+                <button type="submit" name="nuevo_estado" value="GuardarFeedback" style="padding:10px 22px; border:none; border-radius:10px; background:#7287fe; color:#ffffff; font:700 0.82rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 6px 16px rgba(114,135,254,0.35);">
+                    Guardar Comentario
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

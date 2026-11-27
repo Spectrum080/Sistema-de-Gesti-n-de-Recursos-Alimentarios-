@@ -143,6 +143,50 @@ def detalle_donacion(request, donacion_id):
     return render(request, 'alertas/responderDonacion.html', {'donacion': donacion})
 
 
+# Función auxiliar compartida que procesa decisiones del Receptor tanto en Consulta como en Historial
+def _procesar_accion_receptor(request):
+    # Obtiene el identificador de la donación a modificar, regresar o eliminar
+    donacion_id = request.POST.get('donacion_id')
+    # Obtiene la acción solicitada (Aceptado, Reservado, Rechazado, Regresar, GuardarFeedback o Eliminar)
+    accion = (request.POST.get('nuevo_estado') or '').strip()
+    # Obtiene el comentario de retroalimentación (feedback) escrito por el receptor
+    comentario_feedback = request.POST.get('feedback')
+
+    # Si se proporcionó un ID de donación válido, busca el registro en la base de datos
+    if donacion_id:
+        # Recupera la donación junto con su alimento asociado
+        donacion = get_object_or_404(Donacion.objects.select_related('alimento'), pk=donacion_id)
+        # Encapsulamiento: impide modificar donaciones ya atendidas por otro receptor distinto
+        ya_asignada_a_otro = (
+            (donacion.usuario_receptor_id is not None and donacion.usuario_receptor_id != request.user.pk)
+            or (donacion.receptor_id is not None and donacion.receptor_id != request.user.pk)
+        )
+        if not ya_asignada_a_otro:
+            # Si el receptor presionó el botón para quitar/eliminar la donación
+            if accion == 'Eliminar':
+                donacion.eliminar_por_receptor()
+            # Si el receptor decidió regresar la donación al menú de Consultar Donaciones (por error)
+            elif accion == 'Regresar':
+                donacion.regresar_a_consulta(
+                    request.user,
+                    comentario_feedback=comentario_feedback,
+                )
+            # Si el receptor guardó únicamente el motivo/feedback sin cambiar el estado
+            elif accion == 'GuardarFeedback':
+                donacion.aplicar_decision_receptor(
+                    request.user,
+                    nuevo_estado=None,
+                    comentario_feedback=comentario_feedback,
+                )
+            # Si el receptor seleccionó Aceptar, Reservar o Rechazar la donación (o corrigió su estado)
+            elif accion in ('Aceptado', 'Reservado', 'Rechazado', 'Recibido'):
+                donacion.aplicar_decision_receptor(
+                    request.user,
+                    nuevo_estado=accion,
+                    comentario_feedback=comentario_feedback,
+                )
+
+
 # Vista para consultar donaciones (Donante ve solo las suyas; Receptor ve todas las que están por atender)
 @login_required
 def consultarDonaciones(request):
@@ -157,44 +201,7 @@ def consultarDonaciones(request):
 
     # Procesa las acciones enviadas por método POST desde los formularios de la tabla
     if request.method == 'POST' and es_receptor:
-        # Obtiene el identificador de la donación a modificar o eliminar
-        donacion_id = request.POST.get('donacion_id')
-        # Obtiene la acción solicitada (Aceptado, Reservado, Rechazado, GuardarFeedback o Eliminar)
-        accion = (request.POST.get('nuevo_estado') or '').strip()
-        # Obtiene el comentario de retroalimentación (feedback) escrito por el receptor
-        comentario_feedback = request.POST.get('feedback')
-
-        # Si se proporcionó un ID de donación válido, busca el registro en la base de datos
-        if donacion_id:
-            # Recupera la donación junto con su alimento asociado
-            donacion = get_object_or_404(Donacion.objects.select_related('alimento'), pk=donacion_id)
-            # Encapsulamiento: impide modificar donaciones ya atendidas por otro receptor
-            ya_asignada_a_otro = (
-                (donacion.usuario_receptor is not None and donacion.usuario_receptor != request.user)
-                or (donacion.receptor is not None and donacion.receptor.pk != request.user.pk)
-            )
-            if not ya_asignada_a_otro:
-                # Si el receptor presionó el botón para quitar/eliminar la donación
-                if accion == 'Eliminar':
-                    # Ejecuta el método encapsulado que borra la donación de la base de datos
-                    donacion.eliminar_por_receptor()
-                # Si el receptor guardó únicamente el motivo/feedback sin cambiar el estado
-                elif accion == 'GuardarFeedback':
-                    # Guarda el feedback y vincula la gestión al receptor actual
-                    donacion.aplicar_decision_receptor(
-                        request.user,
-                        nuevo_estado=None,
-                        comentario_feedback=comentario_feedback,
-                    )
-                # Si el receptor seleccionó Aceptar, Reservar o Rechazar la donación
-                elif accion in ('Aceptado', 'Reservado', 'Rechazado', 'Recibido'):
-                    # Ejecuta el método encapsulado que actualiza el estado, guarda el feedback y asigna el receptor
-                    donacion.aplicar_decision_receptor(
-                        request.user,
-                        nuevo_estado=accion,
-                        comentario_feedback=comentario_feedback,
-                    )
-
+        _procesar_accion_receptor(request)
         # Redirige a la misma página y categoría tras procesar la acción en Python
         return redirect(
             f"/alertas/consultarDonaciones/?rol={rol_actual}&categoria={categoria_actual}&page={pagina_actual}"
@@ -234,10 +241,17 @@ def historialDonaciones(request):
         return redirect('/alertas/consultarDonaciones/?rol=donante')
     # Define la etiqueta de rol para conservarla en la navegación
     rol_actual = 'receptor' if es_receptor else 'donante'
-    # Obtiene la categoría filtrada por GET
-    categoria_actual = request.GET.get('categoria', 'TODAS')
-    # Obtiene el número de página actual por GET
-    pagina_actual = request.GET.get('page', 1)
+    # Obtiene la categoría filtrada por GET o POST
+    categoria_actual = request.GET.get('categoria') or request.POST.get('categoria') or 'TODAS'
+    # Obtiene el número de página actual por GET o POST
+    pagina_actual = request.GET.get('page') or request.POST.get('page') or 1
+
+    # Permite al receptor corregir estado, editar comentarios o regresar la donación a Consultar Donaciones
+    if request.method == 'POST' and es_receptor:
+        _procesar_accion_receptor(request)
+        return redirect(
+            f"/alertas/historialDonaciones/?rol={rol_actual}&categoria={categoria_actual}&page={pagina_actual}"
+        )
 
     # Consulta únicamente el historial de donaciones aceptadas, rechazadas o reservadas por este receptor
     donaciones_filtradas, total_general = _obtener_lista_donaciones(

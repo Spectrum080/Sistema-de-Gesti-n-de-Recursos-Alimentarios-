@@ -1,0 +1,81 @@
+<!-- Componente reutilizable de mini ventana de Estado (compartido entre Consultar Donaciones e Historial) -->
+{% if d.estado == 'Rechazado' or d.estado == 'Rechazada' or d.estado == 'Cancelada' %}
+    <label for="modal-estado-{{ prefijo_modal }}-{{ d.raw_id }}" class="{{ clase_pildora }}" style="background:#fde8e8; color:#e5484d; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+        <span>{{ d.estado }}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </label>
+{% elif d.estado == 'Reservado' or d.estado == 'Reservada' or d.estado == 'Pendiente' %}
+    <label for="modal-estado-{{ prefijo_modal }}-{{ d.raw_id }}" class="{{ clase_pildora }}" style="background:#fef4e6; color:#e67e22; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+        <span>{{ d.estado }}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </label>
+{% else %}
+    <label for="modal-estado-{{ prefijo_modal }}-{{ d.raw_id }}" class="{{ clase_pildora }}" style="background:#eaf8f0; color:#12a559; padding:6px 14px; border-radius:999px; font:700 0.78rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+        <span>{{ d.estado }}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </label>
+{% endif %}
+
+<!-- Checkbox oculto que controla la apertura de la mini ventana centrada de Estado -->
+<input type="checkbox" id="modal-estado-{{ prefijo_modal }}-{{ d.raw_id }}" class="modal-toggle">
+<div class="modal-overlay">
+    <div class="caja-blanca" style="background:#ffffff; width:100%; max-width:430px; border-radius:20px; padding:28px; box-shadow:0 18px 40px rgba(15,17,26,0.35); box-sizing:border-box; text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 class="txt-principal" style="margin:0; font-size:1.12rem; font-weight:800; color:#2b3044;">Cambiar Estado - #{{ d.id }} {{ d.alimento }}</h3>
+            <label for="modal-estado-{{ prefijo_modal }}-{{ d.raw_id }}" class="txt-secundario" style="cursor:pointer; font-weight:800; font-size:1.1rem; color:#6b7084; padding:4px 8px;">✕</label>
+        </div>
+        <p class="txt-secundario" style="font-size:0.82rem; color:#6b7084; margin:0 0 16px;">
+            {% if mostrar_regresar %}
+                Si hubo una equivocación, corrige el estado o regresa la donación a <strong>Consultar Donaciones</strong>. El cambio se actualizará al donante:
+            {% else %}
+                Selecciona la acción para esta donación y anota un comentario si lo deseas:
+            {% endif %}
+        </p>
+
+        <!-- Formulario POST hacia la vista correspondiente (Consultar o Historial) -->
+        <form method="POST" action="{% url accion_url %}" style="margin:0;">
+            {% csrf_token %}
+            <input type="hidden" name="donacion_id" value="{{ d.raw_id }}">
+            <input type="hidden" name="rol" value="receptor">
+            <input type="hidden" name="categoria" value="{{ categoria_actual }}">
+            <input type="hidden" name="page" value="{{ page_obj.number }}">
+
+            <label class="txt-secundario" style="display:block; font-size:0.75rem; font-weight:700; color:#6b7084; margin-bottom:6px;">Comentarios (opcional):</label>
+            <textarea name="feedback" rows="2" placeholder="Escribe el motivo del cambio, corrección o aclaración..." class="elem-gris txt-principal" style="width:100%; border:1.5px solid #e4e7f2; border-radius:12px; padding:10px 12px; font:600 0.82rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; box-sizing:border-box; resize:vertical; margin-bottom:16px; outline:none;">{{ d.feedback }}</textarea>
+
+            <!-- Opciones de decisión / corrección de estado -->
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+                <button type="submit" name="nuevo_estado" value="Aceptado" class="btn-opcion-estado" style="width:100%; border:none; background:#eaf8f0; color:#12a559; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
+                    <span style="width:9px; height:9px; border-radius:50%; background:#12a559; display:inline-block;"></span>
+                    Aceptar Donación
+                </button>
+                <button type="submit" name="nuevo_estado" value="Reservado" class="btn-opcion-estado" style="width:100%; border:none; background:#fef4e6; color:#e67e22; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
+                    <span style="width:9px; height:9px; border-radius:50%; background:#e67e22; display:inline-block;"></span>
+                    Reservar Donación
+                </button>
+                <button type="submit" name="nuevo_estado" value="Rechazado" class="btn-opcion-estado" style="width:100%; border:none; background:#fde8e8; color:#e5484d; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.86rem 'Plus Jakarta Sans',sans-serif;">
+                    <span style="width:9px; height:9px; border-radius:50%; background:#e5484d; display:inline-block;"></span>
+                    Rechazar Donación
+                </button>
+
+                {% if mostrar_regresar %}
+                <!-- Botón exclusivo del Historial para devolver la donación a Consultar Donaciones si hubo equivocación -->
+                <button type="submit" name="nuevo_estado" value="Regresar" class="btn-opcion-estado" style="width:100%; border:1.5px solid #c7d2fe; background:#eff2fe; color:#4338ca; padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:800 0.85rem 'Plus Jakarta Sans',sans-serif;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                    Regresar a Consultar Donaciones
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Pie del modal con opción de Quitar Donación o Cancelar -->
+            <div class="linea-divisoria" style="display:flex; justify-content:space-between; align-items:center; padding-top:14px; border-top:1px solid #edf0f7;">
+                <button type="submit" name="nuevo_estado" value="Eliminar" class="btn-opcion-estado" style="border:none; background:transparent; color:#e5484d; padding:8px 10px; border-radius:8px; font:700 0.8rem 'Plus Jakarta Sans',sans-serif; cursor:pointer;">
+                    Quitar Donación
+                </button>
+                <label for="modal-estado-{{ prefijo_modal }}-{{ d.raw_id }}" class="elem-gris" style="padding:9px 18px; border-radius:10px; background:#f4f6fb; color:#6b7084; font-weight:700; font-size:0.82rem; cursor:pointer;">
+                    Cancelar
+                </label>
+            </div>
+        </form>
+    </div>
+</div>

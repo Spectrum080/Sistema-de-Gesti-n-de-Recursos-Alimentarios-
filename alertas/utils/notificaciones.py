@@ -241,6 +241,7 @@ def notificar_decision_receptor(donacion, usuario_receptor, accion, comentario_f
         'Aceptado': (f"Donación aceptada: {nombre_alimento}", 'success'),
         'Reservado': (f"Donación reservada: {nombre_alimento}", 'info'),
         'Rechazado': (f"Donación rechazada: {nombre_alimento}", 'warning'),
+        'Regresado': (f"Donación regresada a pendientes: {nombre_alimento}", 'warning'),
     }
     # Obtiene el par (título, nivel) o usa un valor genérico por defecto
     titulo_donante, level_donante = configuracion_accion.get(
@@ -251,13 +252,20 @@ def notificar_decision_receptor(donacion, usuario_receptor, accion, comentario_f
     # 1) Notificación para el donante dueño de la donación
     usuario_donante = getattr(donacion, 'usuario_donante', None)
     if usuario_donante is not None:
+        if accion_texto == 'Regresado':
+            mensaje_donante = (
+                f"La donación #{donacion.id} ('{nombre_alimento}', {donacion.cantidad}) "
+                f"fue regresada a estado 'Recibido' (disponible para atención).{detalle_feedback}"
+            )
+        else:
+            mensaje_donante = (
+                f"La donación #{donacion.id} ('{nombre_alimento}', {donacion.cantidad}) "
+                f"tuvo la acción '{accion_texto}'.{detalle_feedback}"
+            )
         crear_notificacion(
             destiny=usuario_donante,
             titulo=titulo_donante,
-            mensaje=(
-                f"La donación #{donacion.id} ('{nombre_alimento}', {donacion.cantidad}) "
-                f"tuvo la acción '{accion_texto}'.{detalle_feedback}"
-            ),
+            mensaje=mensaje_donante,
             rol_destino=ROL_DONANTE,
             level=level_donante,
         )
