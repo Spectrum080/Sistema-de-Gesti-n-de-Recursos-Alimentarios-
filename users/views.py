@@ -1,7 +1,11 @@
 # Importa el módulo csv para la generación de reportes descargables
 import csv
-# Importa la función de agregación Sum para sumar el peso de las donaciones
-from django.db.models import Sum
+# Importa timedelta para filtrar donaciones por periodo (último día / última semana)
+from datetime import timedelta
+# Importa la función de agregación Sum y consultas Q
+from django.db.models import Sum, Q
+# Importa utilidades de zona horaria de Django
+from django.utils import timezone
 # Importa HttpResponse para devolver archivos PDF y CSV al navegador
 from django.http import HttpResponse
 # Importa funciones para renderizar plantillas y redirigir rutas
@@ -12,6 +16,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 # Importa los modelos de usuarios y roles
 from .models import Usuario, Donante, Receptor
+# Importa los generadores de PDF formales para Donante y Receptor
+from .pdf_utils import generar_pdf_donante, generar_pdf_receptor
 # Importa el modelo Notificacion para consultar alertas pendientes
 from alertas.models import Notificacion
 
@@ -222,23 +228,56 @@ def perfil(request):
     })
 
 
-# Exporta el informe de donaciones respetando el encapsulamiento del usuario en sesión
+# Exporta el informe de donaciones respetando el encapsulamiento y el periodo elegido (todas, semana, dia)
 @login_required
 def exportar_informe(request):
-    # Obtiene el formato deseado (csv o pdf)
-    formato = request.GET.get('formato', 'csv')
+    # Obtiene el formato deseado (pdf o csv) y el periodo seleccionado
+    formato = request.GET.get('formato', 'pdf')
+    periodo = request.GET.get('periodo', 'todas')
     # Determina si el usuario actual exporta como Receptor o como Donante respetando su rol real
     es_receptor = hasattr(request.user, 'receptor') or (
         not hasattr(request.user, 'donante') and request.session.get('rol_activo') == 'receptor'
     )
 
-    # Obtiene las donaciones correspondientes al rol encapsulado del usuario
+    # Obtiene las donaciones encapsuladas: para Receptor su historial de trabajo; para Donante sus entregas
     if es_receptor:
-        donaciones_qs = request.user.obtener_donaciones_para_receptor()
+        donaciones_qs = request.user.obtener_mi_historial_receptor()
     else:
         donaciones_qs = request.user.obtener_mis_donaciones()
 
-    # Prepara las filas del reporte
+    # Aplica el filtro de periodo (último 1 día o última semana)
+    ahora = timezone.now()
+    if periodo == 'dia':
+        limite = ahora - timedelta(days=1)
+    elif periodo == 'semana':
+        limite = ahora - timedelta(days=7)
+    else:
+        limite = None
+
+    if limite is not None:
+        if es_receptor:
+            # Para el receptor filtra por fecha en que gestionó la donación (o fecha de registro si falta)
+            donaciones_qs = donaciones_qs.filter(
+                Q(fecha_recepcion__gte=limite)
+                | Q(fecha_recepcion__isnull=True, fecha_registro__gte=limite)
+            )
+        else:
+            donaciones_qs = donaciones_qs.filter(fecha_registro__gte=limite)
+
+    # Si el formato elegido es PDF, genera la plantilla formal correspondiente a cada rol
+    if formato == 'pdf':
+        if es_receptor:
+            pdf_bytes = generar_pdf_receptor(request.user, donaciones_qs, periodo=periodo)
+            nombre_archivo = f"informe_gestion_receptor_{periodo}.pdf"
+        else:
+            pdf_bytes = generar_pdf_donante(request.user, donaciones_qs, periodo=periodo)
+            nombre_archivo = f"recibo_donacion_hambre_cero_{periodo}.pdf"
+
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+        return response
+
+    # Prepara las filas del reporte CSV
     registros = []
     for d in donaciones_qs:
         caducidad_str = (
@@ -258,57 +297,9 @@ def exportar_informe(request):
             d.estado,
         ])
 
-    # Si el formato elegido es PDF, construye el documento PDF en binario
-    if formato == 'pdf':
-        lineas = [
-            "REPORTE DE INVENTARIO - HAMBRE CERO",
-            "----------------------------------------------------------------",
-            "ALIMENTO           CANTIDAD     TIPO            CADUCIDAD     ESTADO",
-            "------------------------------------------------------------------",
-        ]
-        for r in registros:
-            nombre_corto = (r[0][:16] + '..') if len(r[0]) > 18 else r[0]
-            cant_corta = (r[1][:10] + '..') if len(r[1]) > 12 else r[1]
-            lineas.append(f"{nombre_corto:<18} {cant_corta:<12} {r[2]:<15} {r[3]:<13} {r[4]}")
-
-        contenido_stream = "BT /F1 10 Tf 40 750 Td 16 TL "
-        for linea in lineas:
-            texto_limpio = (
-                linea.encode('latin-1', errors='replace').decode('latin-1')
-                .replace("(", "\\(")
-                .replace(")", "\\)")
-            )
-            contenido_stream += f"({texto_limpio}) Tj T* "
-        contenido_stream += "ET"
-        stream_bytes = contenido_stream.encode('latin-1', errors='replace')
-
-        objetos = [
-            b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
-            b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
-            b"3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>\nendobj\n",
-            b"4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
-            f"5 0 obj\n<< /Length {len(stream_bytes)} >>\nstream\n".encode('latin-1') + stream_bytes + b"\nendstream\nendobj\n"
-        ]
-
-        pdf = b"%PDF-1.4\n"
-        offsets = []
-        for obj in objetos:
-            offsets.append(len(pdf))
-            pdf += obj
-
-        xref_offset = len(pdf)
-        pdf += f"xref\n0 {len(objetos) + 1}\n0000000000 65535 f \n".encode('latin-1')
-        for off in offsets:
-            pdf += f"{off:010d} 00000 n \n".encode('latin-1')
-        pdf += f"trailer\n<< /Size {len(objetos) + 1} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF".encode('latin-1')
-
-        response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="informe_donaciones.pdf"'
-        return response
-
     # Genera la respuesta en formato CSV compatible con Excel
     response = HttpResponse(content_type='text/csv; charset=utf-8')
-    response['Content-Disposition'] = 'attachment; filename="informe_donaciones.csv"'
+    response['Content-Disposition'] = f'attachment; filename="informe_donaciones_{periodo}.csv"'
     response.write('\ufeff')
 
     writer = csv.writer(response)
