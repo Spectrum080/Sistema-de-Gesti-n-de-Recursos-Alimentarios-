@@ -65,10 +65,13 @@
                 <input type="text" name="username" required placeholder="Ingresa tu usuario" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
             </label>
 
-            <!-- Password -->
+            <!-- Password con botón para mostrar / ocultar contraseña -->
             <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                 <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Contraseña</span>
-                <input type="password" name="password" required placeholder="••••••••" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input id="login-password" type="password" name="password" required placeholder="••••••••" style="flex:1; width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    <button type="button" aria-label="Mostrar u ocultar contraseña" onclick="var i=document.getElementById('login-password'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'Mostrar':'Ocultar';" style="border:none; background:#eff2fe; color:#7287fe; border-radius:8px; padding:5px 10px; font:700 0.72rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; flex-shrink:0;">Mostrar</button>
+                </div>
             </label>
 
             <!-- Remember me / Forgot password -->
@@ -86,26 +89,15 @@
             <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">Ingresar</button>
         </form>
 
-
-        <!-- Separador -->
-        <div style="display:flex; align-items:center; gap:14px; margin:32px 0 26px; font-size:0.82rem; color:#6b7084;">
+        <!-- Separador ortográfico corregido según la RAE ('o' sin tilde) -->
+        <div style="display:flex; align-items:center; gap:14px; margin:30px 0 24px; font-size:0.82rem; color:#6b7084;">
             <div style="flex:1; height:1px; background:#e4e7f2;"></div>
-            ó
+            o
             <div style="flex:1; height:1px; background:#e4e7f2;"></div>
         </div>
 
-        <!-- Redes sociales -->
-        <div style="display:flex; justify-content:center; gap:18px; margin-bottom:28px;">
-            <button type="button" aria-label="Continuar con Facebook" style="width:54px; height:54px; border-radius:50%; border:none; background:#fff; display:grid; place-items:center; cursor:pointer; box-shadow:0 8px 22px rgba(60,70,120,0.12);">
-                <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1877f2"/><path fill="#fff" d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.5 1.6-1.5h1.7V4.4c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2v2.3H7.6V14h2.7v8z"/></svg>
-            </button>
-            <!-- <button type="button" aria-label="Continuar con Google" style="width:54px; height:54px; border-radius:50%; border:none; background:#fff; display:grid; place-items:center; cursor:pointer; box-shadow:0 8px 22px rgba(60,70,120,0.12);">
-                <svg width="26" height="26" viewBox="0 0 48 48"><path fill="#ea4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285f4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#fbbc05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34a853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
-            </button> -->
-        </div>
-
-        <p style="text-align:center; font-size:0.82rem; margin:0;">Todavía no tienes cuenta? <a href="{% url 'Sing_up' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">Crear una cuenta</a></p>
-        <p style="text-align:center; font-size:0.82rem; margin:0;"> </br> Derehos reservados © 2026 - Hambre Cero</p>
+        <p style="text-align:center; font-size:0.82rem; margin:0;">¿Todavía no tienes cuenta? <a href="{% url 'Sing_up' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">Crear una cuenta</a></p>
+        <p style="text-align:center; font-size:0.82rem; color:#6b7084; margin:16px 0 0;">Derechos reservados © 2026 - Hambre Cero</p>
         </main>
         
     </div>

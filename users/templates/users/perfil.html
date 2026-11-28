@@ -25,17 +25,21 @@
         </button>
     </div>
 
-    <!-- Muestra el aviso amarillo solo mientras el perfil siga incompleto -->
+    <!-- Muestra el aviso amarillo solo mientras el perfil siga incompleto o con datos inválidos -->
     {% if perfil_incompleto %}
         <div style="background:#fef4e6; color:#b45309; border:1px solid #fde68a; padding:12px 18px; border-radius:12px; font-weight:700; font-size:0.85rem; margin-bottom:20px;">
-            Para subir una donación, primero debes completar tu Nombre/Razón Social, Teléfono y Dirección.
+            Para subir una donación, primero debes completar correctamente tu Nombre/Razón Social, Teléfono (10 a 15 dígitos) y Dirección.
         </div>
     {% endif %}
 
-    <!-- Muestra mensajes de confirmación cuando se guardan los datos -->
+    <!-- Muestra mensajes de error (rojo) o confirmación (verde) enviados por Django -->
     {% if messages %}
         {% for message in messages %}
-            {% if 'warning' not in message.tags %}
+            {% if 'error' in message.tags %}
+                <div style="background:#fde8e8; color:#c81e1e; border:1px solid #f8b4b4; padding:12px 18px; border-radius:12px; font-weight:700; font-size:0.85rem; margin-bottom:12px;">
+                    {{ message }}
+                </div>
+            {% elif 'warning' not in message.tags %}
                 <div style="background:#eaf8f0; color:#12a559; padding:12px 18px; border-radius:12px; font-weight:700; font-size:0.85rem; margin-bottom:20px;">
                     {{ message }}
                 </div>
@@ -70,20 +74,20 @@
                 {% if request.user.donante %}Nombre del Local / Razón Social{% else %}Nombre de la Organización{% endif %}
             </span>
             <!-- Input para editar nombre_local (Donante) o nombre_org (Receptor) -->
-            <input type="text" name="razon_social" value="{{ razon_social }}" placeholder="Ingresa el nombre o razón social" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+            <input type="text" name="razon_social" value="{{ razon_social }}" required minlength="3" maxlength="150" placeholder="Ingresa el nombre o razón social" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
         </label>
         {% endif %}
 
-        <!-- Campo editable para el teléfono de contacto -->
+        <!-- Campo editable para el teléfono de contacto (solo números y separadores, máx. 20 caracteres) -->
         <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
-            <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Teléfono</span>
-            <input type="text" name="telefono" value="{{ request.user.telefono }}" placeholder="Ej. 55 1234 5678" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+            <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Teléfono (10 dígitos)</span>
+            <input type="tel" name="telefono" value="{{ telefono_valor|default:request.user.telefono }}" required minlength="10" maxlength="13" pattern="^\+?[\d\s\-()]{10,20}$" title="Ingresa solo números (10 a 15 dígitos), ej. 55 1234 5678" placeholder="Ej. 55 1234 5678" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
         </label>
 
         <!-- Campo editable para la dirección física -->
         <label class="elem-gris" style="display:block; background:#f4f6fb; border-radius:14px; padding:14px 18px; box-sizing:border-box;">
             <span class="txt-secundario" style="display:block; font-size:0.75rem; color:#6b7084; margin-bottom:6px; font-weight:700;">Dirección</span>
-            <input type="text" name="direccion" value="{{ request.user.direccion }}" placeholder="Ej. Av. Reforma 123, Col. Centro" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+            <input type="text" name="direccion" value="{{ direccion_valor|default:request.user.direccion }}" required minlength="5" maxlength="255" placeholder="Ej. Av. Reforma 123, Col. Centro" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
         </label>
     </div>
 </form>

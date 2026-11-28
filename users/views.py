@@ -18,6 +18,14 @@ from django.contrib.auth.decorators import login_required
 from .models import Usuario, Donante, Receptor
 # Importa los generadores de PDF formales para Donante y Receptor
 from .pdf_utils import generar_pdf_donante, generar_pdf_receptor
+# Importa validadores estrictos y sanitización de entradas
+from .validators import (
+    limpiar_texto_seguro,
+    validar_correo_estricto,
+    validar_direccion,
+    validar_razon_social,
+    validar_telefono,
+)
 # Importa el modelo Notificacion para consultar alertas pendientes
 from alertas.models import Notificacion
 
@@ -103,30 +111,53 @@ def dashboardReceptor(request):
     return render(request, 'users/dashboardReceptor.html', context)
 
 
-# Gestiona el registro de nuevas cuentas de usuario como Donante o Receptor
+# Gestiona el registro de nuevas cuentas de usuario como Donante o Receptor con validación estricta
 def Sing_up(request):
     # Si se envió el formulario de registro por POST
     if request.method == 'POST':
-        # Captura los datos ingresados por el usuario
-        username = request.POST['username']
-        email = request.POST['email']
-        password = request.POST['password']
-        confirm = request.POST['confirm_password']
-        tipo = request.POST['UserTypes']
+        # Captura y limpia los datos ingresados por el usuario
+        username = limpiar_texto_seguro(request.POST.get('username', ''), max_len=150)
+        email_raw = request.POST.get('email', '')
+        password = request.POST.get('password', '')
+        confirm = request.POST.get('confirm_password', '')
+        tipo = request.POST.get('UserTypes', '').strip()
+        form_data = {'username': username, 'email': email_raw.strip(), 'UserTypes': tipo}
 
-        # Verifica que ambas contraseñas coincidan
+        # Valida nombre de usuario
+        if len(username) < 3:
+            messages.error(request, 'El nombre de usuario debe tener al menos 3 caracteres.')
+            return render(request, 'users/Sing_up.html', {'form_data': form_data})
+
+        # Valida formato sintáctico y dominio semántico del correo (bloquea typos como 'gmai.com')
+        email, err_email = validar_correo_estricto(email_raw)
+        if err_email:
+            messages.error(request, err_email)
+            return render(request, 'users/Sing_up.html', {'form_data': form_data})
+
+        # Verifica que ambas contraseñas coincidan y tengan longitud mínima
         if password != confirm:
-            messages.error(request, 'Las contraseñas no coinciden')
-            return render(request, 'users/Sing_up.html')
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return render(request, 'users/Sing_up.html', {'form_data': form_data})
+        if len(password) < 6:
+            messages.error(request, 'La contraseña debe tener al menos 6 caracteres.')
+            return render(request, 'users/Sing_up.html', {'form_data': form_data})
 
-        # Verifica que el nombre de usuario no esté duplicado
-        if Usuario.objects.filter(username=username).exists():
-            messages.error(request, 'Ese usuario ya existe')
-            return render(request, 'users/Sing_up.html')
+        # Valida tipo de usuario permitido
+        if tipo not in ('Donante', 'Receptor'):
+            messages.error(request, 'Selecciona un tipo de usuario válido (Donante o Receptor).')
+            return render(request, 'users/Sing_up.html', {'form_data': form_data})
+
+        # Verifica que el nombre de usuario y correo no estén duplicados
+        if Usuario.objects.filter(username__iexact=username).exists():
+            messages.error(request, 'Ese nombre de usuario ya existe.')
+            return render(request, 'users/Sing_up.html', {'form_data': form_data})
+        if Usuario.objects.filter(email__iexact=email).exists():
+            messages.error(request, 'Ese correo electrónico ya está registrado.')
+            return render(request, 'users/Sing_up.html', {'form_data': form_data})
 
         # Selecciona la clase Donante o Receptor según el rol elegido
         Modelo = Donante if tipo == 'Donante' else Receptor
-        # Instancia el nuevo usuario con su nombre y correo
+        # Instancia el nuevo usuario con su nombre y correo normalizado
         user = Modelo(username=username, email=email)
         # Encripta la contraseña de forma segura
         user.set_password(password)
@@ -168,7 +199,7 @@ def configuracion(request):
     # Muestra la plantilla de configuración
     return render(request, 'users/configuracion.html')
 
-# Verifica que telefono, dirección y razon social del usuario esten completos
+# Verifica que telefono, dirección y razon social del usuario estén completos Y tengan formato válido
 def perfil_completo(user):
     # Por defecto evalua al usuario base, por ejemplo un Administrador
     usuario = user
@@ -183,47 +214,86 @@ def perfil_completo(user):
         usuario = user.receptor
         campo = 'nombre_org'
 
-    # Reúne los datos obligatorios para poder subir formularios
-    datos = [usuario.telefono, usuario.direccion]
-    # Si el rol tiene razón social, la incluye en la validación
+    # Valida formato real de teléfono y dirección (no permite datos corruptos o basura)
+    _, err_tel = validar_telefono(usuario.telefono)
+    _, err_dir = validar_direccion(usuario.direccion)
+    if err_tel or err_dir:
+        return False
+    # Si el rol tiene razón social/organización, también verifica que sea válida
     if campo:
-        datos.append(getattr(usuario, campo))
-    # Retorna True únicamente si ningún dato está vacío
-    return all(dato and dato.strip() for dato in datos)
+        _, err_razon = validar_razon_social(getattr(usuario, campo, ''))
+        if err_razon:
+            return False
+    return True
 
 
-# Permite visualizar y actualizar los datos del perfil del usuario autenticado
+# Permite visualizar y actualizar los datos del perfil del usuario autenticado con validación estricta
 @login_required
 def perfil(request):
-
     # Obtiene la instancia del usuario en sesión
     usuario = request.user
     # Variable para identificar el campo de razón social según el rol
     campo_razon = None
+    etiqueta_razon = 'Nombre / Razón Social'
     # Si es Donante, usa el campo nombre_local
     if hasattr(usuario, 'donante'):
         usuario = usuario.donante
         campo_razon = 'nombre_local'
+        etiqueta_razon = 'Nombre del Local / Razón Social'
     # Si es Receptor, usa el campo nombre_org
     elif hasattr(usuario, 'receptor'):
         usuario = usuario.receptor
         campo_razon = 'nombre_org'
+        etiqueta_razon = 'Nombre de la Organización'
 
-    # Si se enviaron cambios por POST, actualiza teléfono, dirección y razón social
+    # Si se enviaron cambios por POST, valida y sanitiza todos los campos antes de persistir
     if request.method == 'POST':
-        usuario.telefono = request.POST.get('telefono', '')
-        usuario.direccion = request.POST.get('direccion', '')
+        raw_tel = request.POST.get('telefono', '')
+        raw_dir = request.POST.get('direccion', '')
+        raw_razon = request.POST.get('razon_social', '')
+
+        errores = []
+        tel_limpio, err_tel = validar_telefono(raw_tel)
+        if err_tel:
+            errores.append(err_tel)
+
+        dir_limpia, err_dir = validar_direccion(raw_dir)
+        if err_dir:
+            errores.append(err_dir)
+
+        razon_limpia = ''
         if campo_razon:
-            setattr(usuario, campo_razon, request.POST.get('razon_social', ''))
+            razon_limpia, err_razon = validar_razon_social(raw_razon, etiqueta=etiqueta_razon)
+            if err_razon:
+                errores.append(err_razon)
+
+        # Si hay errores, NO guarda en base de datos y muestra cada error al usuario
+        if errores:
+            for err in errores:
+                messages.error(request, err)
+            return render(request, 'users/perfil.html', {
+                'razon_social': raw_razon.strip(),
+                'telefono_valor': raw_tel.strip(),
+                'direccion_valor': raw_dir.strip(),
+                'perfil_incompleto': not perfil_completo(request.user),
+            })
+
+        # Guarda únicamente datos validados y sanitizados
+        usuario.telefono = tel_limpio
+        usuario.direccion = dir_limpia
+        if campo_razon:
+            setattr(usuario, campo_razon, razon_limpia)
         usuario.save()
-        messages.success(request, 'Perfil actualizado')
+        messages.success(request, 'Perfil actualizado correctamente.')
         return redirect('perfil')
 
-    # Obtiene el valor actual de la razón social para mostrarlo en el formulario
+    # Obtiene el valor actual de los campos para mostrarlos en el formulario
     razon_social = getattr(usuario, campo_razon, '') if campo_razon else ''
-    # Renderiza la vista de perfil indicando si aún falta completar datos obligatorios
+    # Renderiza la vista de perfil indicando si aún falta completar datos obligatorios válidos
     return render(request, 'users/perfil.html', {
         'razon_social': razon_social,
+        'telefono_valor': usuario.telefono,
+        'direccion_valor': usuario.direccion,
         'perfil_incompleto': not perfil_completo(request.user),
     })
 

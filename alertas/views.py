@@ -11,10 +11,24 @@ from .models import Donacion, Alimento, CategoriaAlimento, CentroAcopio, Movimie
 # Importación local para notificar únicamente al donante sobre su nueva entrega
 from alertas.utils.notificaciones import notificar_donacion_registrada
 
+# Importa utilidades de zona horaria para validar fechas contra el día actual
+from django.utils import timezone
 # Importa el sistema de mensajes de Django para avisos de validación (ej. perfil incompleto)
 from django.contrib import messages
 # Importa el decorador para exigir sesión iniciada en vistas protegidas
 from django.contrib.auth.decorators import login_required
+# Importa validadores centralizados y sanitización de entradas
+from users.validators import (
+    limpiar_texto_seguro,
+    validar_direccion,
+    validar_fecha_caducidad,
+    validar_fecha_entrega,
+    validar_rango_horario,
+    validar_razon_social,
+    validar_telefono,
+)
+# Importa validación estricta de perfil completo
+from users.views import perfil_completo
 
 
 
@@ -277,7 +291,7 @@ def historialDonaciones(request):
     })
 
 
-# Vista que procesa en Python el registro de nuevas donaciones, sus datos de logística y su evidencia fotográfica
+# Vista que procesa en Python el registro de nuevas donaciones con validación sanitaria, horaria y de sanitización
 @login_required
 def cargarDonaciones(request):
     # Un receptor no puede subir donaciones desde el flujo de donante
@@ -286,32 +300,132 @@ def cargarDonaciones(request):
     # Fija el rol en sesión como donante al abrir el formulario de carga
     request.session['rol_activo'] = 'donante'
 
-    # Bloqueo del commit 67de301: exige que el donante complete su perfil antes de subir una donación
+    # Exige que el perfil del donante esté completo y con datos válidos (no corruptos) antes de donar
     if request.user.is_authenticated and hasattr(request.user, 'donante'):
-        perfil = request.user.donante
-        if not perfil.nombre_local or not perfil.telefono or not perfil.direccion:
+        if not perfil_completo(request.user):
             messages.warning(
                 request,
-                "Para subir una donación, primero debes completar tu Nombre/Razón Social, Teléfono y Dirección.",
+                "Para subir una donación, primero debes completar correctamente tu Nombre/Razón Social, Teléfono y Dirección.",
             )
             return redirect('perfil')
 
-    # Si el formulario fue enviado mediante POST
+    # Fecha actual del servidor en formato ISO (YYYY-MM-DD) para el atributo HTML5 min=""
+    fecha_hoy_iso = timezone.localdate().isoformat()
+
+    # Si el formulario fue enviado mediante POST, valida TODAS las reglas de negocio antes de guardar
     if request.method == 'POST':
-        # Obtiene el nombre o descripción del contenido (soporta ambos nombres de campo por compatibilidad)
-        titulo = (
-            request.POST.get('descripcion_contenido')
-            or request.POST.get('titulo')
-            or ''
-        ).strip()
-        # Obtiene la categoría seleccionada (soporta el campo de 67de301 y el anterior)
+        errores = []
+
+        # Captura valores crudos para validar y preservar en caso de error
+        nombre_donante_raw = request.POST.get('nombre_donante', '')
+        telefono_raw = request.POST.get('telefono', '')
+        direccion_raw = request.POST.get('direccion', '')
+        titulo_raw = request.POST.get('descripcion_contenido') or request.POST.get('titulo') or ''
         clasificacion = (
             request.POST.get('tipo_de_categoria_comida')
             or request.POST.get('clasificacion')
             or 'OTRO'
         ).strip() or 'OTRO'
-        # Obtiene el tipo de conservación o lo deduce automáticamente según la categoría
         tipo = request.POST.get('tipo', '').strip()
+        num_cantidad_raw = (
+            request.POST.get('numero_cantidad')
+            or request.POST.get('num_cantidad')
+            or ''
+        ).strip()
+        txt_unidad = limpiar_texto_seguro(
+            request.POST.get('tipo_de_unidad_medida') or request.POST.get('txt_unidad') or '',
+            max_len=40,
+        )
+        cantidad_directa = limpiar_texto_seguro(request.POST.get('cantidad', ''), max_len=60)
+        fecha_caducidad_raw = request.POST.get('fecha_caducidad', '').strip()
+        tipo_de_conservacion = limpiar_texto_seguro(request.POST.get('tipo_de_conservacion', ''), max_len=50)
+        metodo_entrega = limpiar_texto_seguro(request.POST.get('metodo_entrega', 'A_CONVENIR'), max_len=50) or 'A_CONVENIR'
+        fecha_entrega_raw = request.POST.get('fecha_entrega', '').strip()
+        hora_desde_raw = request.POST.get('hora_desde', '').strip()
+        hora_hasta_raw = request.POST.get('hora_hasta', '').strip()
+        notas_entrega = limpiar_texto_seguro(request.POST.get('notas_entrega', ''), max_len=250)
+        declaracion = request.POST.get('declaracion') in ('on', 'si', 'True', 'true')
+
+        # 1) Validación y sanitización de datos del donante (impide propagar teléfonos/textos corruptos)
+        nombre_donante_limpio, err_nom = validar_razon_social(nombre_donante_raw, etiqueta='Nombre o Razón Social')
+        if err_nom:
+            errores.append(err_nom)
+
+        telefono_limpio, err_tel = validar_telefono(telefono_raw)
+        if err_tel:
+            errores.append(err_tel)
+
+        direccion_limpia, err_dir = validar_direccion(direccion_raw)
+        if err_dir:
+            errores.append(err_dir)
+
+        # 2) Validación de descripción del alimento y cantidad positiva
+        titulo = limpiar_texto_seguro(titulo_raw, max_len=150)
+        if len(titulo) < 3:
+            errores.append('La descripción del contenido debe tener al menos 3 caracteres válidos.')
+
+        if num_cantidad_raw:
+            try:
+                cantidad_num = float(num_cantidad_raw)
+                if cantidad_num <= 0 or cantidad_num > 100000:
+                    errores.append('La cantidad debe ser un número mayor a 0 y menor o igual a 100,000.')
+            except ValueError:
+                cantidad_num = 0.0
+                errores.append('La cantidad debe ser un valor numérico válido.')
+        elif cantidad_directa:
+            match_num = re.search(r'(\d+(?:\.\d+)?)', cantidad_directa)
+            cantidad_num = float(match_num.group(1)) if match_num else 0.0
+            if cantidad_num <= 0:
+                errores.append('La cantidad debe ser mayor a 0.')
+        else:
+            cantidad_num = 0.0
+            errores.append('La cantidad es obligatoria.')
+
+        # 3) Regla sanitaria crítica: bloquea alimentos caducados (fecha_caducidad >= hoy)
+        fecha_caducidad, err_cad = validar_fecha_caducidad(fecha_caducidad_raw)
+        if err_cad:
+            errores.append(err_cad)
+
+        # 4) Validación de fecha preferida de entrega (hoy <= fecha_entrega <= fecha_caducidad)
+        fecha_entrega, err_fent = validar_fecha_entrega(fecha_entrega_raw, fecha_caducidad=fecha_caducidad)
+        if err_fent:
+            errores.append(err_fent)
+
+        # 5) Regla cronológica de horario: bloquea inversión de rango (hora_desde >= hora_hasta)
+        hora_desde, hora_hasta, err_hora = validar_rango_horario(hora_desde_raw, hora_hasta_raw)
+        if err_hora:
+            errores.append(err_hora)
+
+        # 6) Declaración obligatoria de responsabilidad e higiene
+        if not declaracion:
+            errores.append('Debes aceptar la Declaración de Responsabilidad e Higiene para publicar la donación.')
+
+        # Si existe al menos un error, rechaza el guardado y re-renderiza el formulario preservando datos
+        if errores:
+            form_data = {
+                'nombre': nombre_donante_raw.strip(),
+                'telefono': telefono_raw.strip(),
+                'direccion': direccion_raw.strip(),
+                'clasificacion': clasificacion,
+                'numero_cantidad': num_cantidad_raw,
+                'unidad': txt_unidad,
+                'descripcion_contenido': titulo_raw.strip(),
+                'fecha_caducidad': fecha_caducidad_raw,
+                'tipo_de_conservacion': tipo_de_conservacion,
+                'metodo_entrega': metodo_entrega,
+                'fecha_entrega': fecha_entrega_raw,
+                'hora_desde': hora_desde_raw,
+                'hora_hasta': hora_hasta_raw,
+                'notas_entrega': notas_entrega,
+                'declaracion': declaracion,
+            }
+            return render(request, 'alertas/cargarDonaciones.html', {
+                'datos': form_data,
+                'errores': errores,
+                'fecha_hoy': fecha_hoy_iso,
+            })
+
+        # Deduce el tipo de alimento según la categoría si no se envió explícitamente
         if not tipo:
             if clasificacion == 'AGUA_EMBOTELLADA':
                 tipo = 'BEBIDA'
@@ -322,56 +436,28 @@ def cargarDonaciones(request):
             else:
                 tipo = 'NO_PERECEDERO'
 
-        # Obtiene la cantidad numérica y la unidad de medida (soporta formulario de 67de301 y anterior)
-        num_cantidad = (
-            request.POST.get('numero_cantidad')
-            or request.POST.get('num_cantidad')
-            or ''
-        ).strip()
-        txt_unidad = (
-            request.POST.get('tipo_de_unidad_medida')
-            or request.POST.get('txt_unidad')
-            or ''
-        ).strip()
-        cantidad_directa = request.POST.get('cantidad', '').strip()
-
         # Construye la cantidad legible evitando duplicar la unidad
-        if num_cantidad:
-            if txt_unidad and txt_unidad.lower() not in num_cantidad.lower():
-                cantidad_txt = f"{num_cantidad} {txt_unidad}"
+        if num_cantidad_raw:
+            if txt_unidad and txt_unidad.lower() not in num_cantidad_raw.lower():
+                cantidad_txt = f"{num_cantidad_raw} {txt_unidad}"
             else:
-                cantidad_txt = num_cantidad
+                cantidad_txt = num_cantidad_raw
         else:
             cantidad_txt = cantidad_directa or '1 unidad'
 
-        # Obtiene fecha de caducidad, datos de contacto y logística de entrega (commit 67de301)
-        fecha_caducidad = request.POST.get('fecha_caducidad') or None
-        tipo_de_conservacion = request.POST.get('tipo_de_conservacion', '').strip()
-        descripcion = (request.POST.get('descripcion') or tipo_de_conservacion or titulo).strip()
-        telefono = request.POST.get('telefono', '').strip()
-        direccion = request.POST.get('direccion', '').strip()
-        nombre_donante_form = request.POST.get('nombre_donante', '').strip()
-        metodo_entrega = request.POST.get('metodo_entrega', 'A_CONVENIR').strip()
-        fecha_entrega = request.POST.get('fecha_entrega') or None
-        hora_desde = request.POST.get('hora_desde') or None
-        hora_hasta = request.POST.get('hora_hasta') or None
-        notas_entrega = request.POST.get('notas_entrega', '').strip()
-        declaracion = request.POST.get('declaracion') in ('on', 'si', 'True', 'true')
+        descripcion = limpiar_texto_seguro(
+            request.POST.get('descripcion') or tipo_de_conservacion or titulo,
+            max_len=300,
+        )
         requiere_frio = tipo_de_conservacion in ('REFRIGERADO', 'CONGELADO')
-
-        # Extrae la parte numérica de la cantidad para cálculos de inventario y peso
-        match_num = re.search(r'(\d+(?:\.\d+)?)', cantidad_txt)
-        cantidad_num = float(match_num.group(1)) if match_num else 1.0
 
         # Recupera la fotografía subida (soporta el input de 67de301 y el anterior)
         evidencia_data_uri = ''
         archivo_imagen = request.FILES.get('imagen_evidencia_donacion') or request.FILES.get('imagen')
         if archivo_imagen:
-            # Genera respaldo en Base64 para el modal rápido de la tabla sin perder el archivo original
             mime_type = archivo_imagen.content_type or 'image/jpeg'
             b64_contenido = base64.b64encode(archivo_imagen.read()).decode('ascii')
             evidencia_data_uri = f"data:{mime_type};base64,{b64_contenido}"
-            # Rebobina el puntero del archivo para que Django pueda guardarlo en ImageField
             archivo_imagen.seek(0)
 
         # Obtiene el centro de acopio principal y la categoría correspondiente
@@ -396,12 +482,12 @@ def cargarDonaciones(request):
         # Obtiene el perfil Donante y define el nombre visible del donante
         donante_obj = getattr(request.user, 'donante', None) if request.user.is_authenticated else None
         nombre_donante = (
-            nombre_donante_form
+            nombre_donante_limpio
             or (donante_obj.nombre_local if donante_obj and donante_obj.nombre_local else None)
             or (request.user.username if request.user.is_authenticated else 'Donante Directo')
         )
 
-        # Crea la donación encapsulada al Donante (receptor queda vacío hasta ser atendida) con todos los campos de 67de301
+        # Crea la donación encapsulada al Donante (receptor vacío hasta ser atendida) con datos validados
         nueva_donacion = Donacion.objects.create(
             donante=donante_obj,
             usuario_donante=request.user if request.user.is_authenticated else None,
@@ -414,11 +500,11 @@ def cargarDonaciones(request):
             peso_kg=cantidad_num,
             tipo=tipo,
             estado='Recibido',
-            direccion_entrega=direccion,
+            direccion_entrega=direccion_limpia,
             evidencia_imagen=evidencia_data_uri,
             fecha_caducidad=fecha_caducidad,
             descripcion=descripcion,
-            telefono_contacto=telefono,
+            telefono_contacto=telefono_limpio,
             tipo_conservacion=tipo_de_conservacion,
             requiere_refrigeracion=requiere_frio,
             metodo_envio=metodo_entrega,
@@ -446,7 +532,7 @@ def cargarDonaciones(request):
         # Redirige a Mis Donaciones para que el donante vea reflejada su entrega
         return redirect('/alertas/consultarDonaciones/?rol=donante')
 
-    # Prellena los datos del donante en GET usando su perfil (lógica del commit 67de301)
+    # Prellena los datos del donante en GET usando su perfil validado
     datos_donante = {
         'nombre': '',
         'telefono': '',
@@ -458,8 +544,11 @@ def cargarDonaciones(request):
         datos_donante['telefono'] = getattr(perfil, 'telefono', '')
         datos_donante['direccion'] = getattr(perfil, 'direccion', '')
 
-    # Muestra el formulario de carga con los datos prellenados
-    return render(request, 'alertas/cargarDonaciones.html', {'datos': datos_donante})
+    # Muestra el formulario de carga con los datos prellenados y la fecha mínima permitida (hoy)
+    return render(request, 'alertas/cargarDonaciones.html', {
+        'datos': datos_donante,
+        'fecha_hoy': fecha_hoy_iso,
+    })
 
 
 # Protege la vista para que solo usuarios con sesión iniciada puedan ver y gestionar sus notificaciones

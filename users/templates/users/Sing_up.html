@@ -1,59 +1,72 @@
 {% extends "users/login.html" %}
 {% load static %}
 
-{% block title %}Sign up{% endblock %}
+{% block title %}Registrarse{% endblock %}
 
 {% block contenido %}
 <div style="width:70%; box-sizing:border-box; padding:50px; background:#fcfcfe; display:flex; align-items:center; justify-content:center;">
 <main style="width:100%; max-width:440px; color:#2b3044;">
     <h1 style="font-size:2.4rem; font-weight:800; margin:0 0 8px;">Registrarse</h1>
-    <p style="font-size:0.9rem; color:#6b7084; margin:0 0 36px;">Crea una cuenta nueva para continuar</p>
+    <p style="font-size:0.9rem; color:#6b7084; margin:0 0 28px;">Crea una cuenta nueva para continuar</p>
 
     <form method="post">
         {% csrf_token %}
-        {% for m in messages %}
-        <p style="color:#e5484d; font-size:0.85rem;">{{ m }}</p>
-        {% endfor %}
+        {% if messages %}
+            {% for m in messages %}
+            <div style="background:#fde8e8; color:#c81e1e; border:1px solid #f8b4b4; padding:10px 14px; border-radius:12px; font-size:0.82rem; font-weight:600; margin-bottom:16px;">
+                {{ m }}
+            </div>
+            {% endfor %}
+        {% endif %}
 
         <!-- Campo Usuario para Registro -->
-        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
             <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Usuario</span>
-            <input type="text" name="username" required placeholder="nombre de usuario" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+            <input type="text" name="username" value="{{ form_data.username|default:'' }}" required minlength="3" maxlength="150" placeholder="Nombre de usuario" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
         </label>
 
         <!-- Campo Email para Registro -->
-        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
             <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Email</span>
-            <input type="email" name="email" required placeholder="correo@ejemplo.com" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+            <input type="email" name="email" value="{{ form_data.email|default:'' }}" required placeholder="correo@ejemplo.com" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
         </label>
 
-        <!-- Campo Password para Registro -->
-        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:32px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+        <!-- Campo Password con botón Mostrar / Ocultar -->
+        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
             <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Contraseña</span>
-            <input type="password" name="password" required placeholder="••••••••" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <input id="signup-password" type="password" name="password" required minlength="6" placeholder="••••••••" style="flex:1; width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                <button type="button" aria-label="Mostrar u ocultar contraseña" onclick="var i=document.getElementById('signup-password'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'Mostrar':'Ocultar';" style="border:none; background:#eff2fe; color:#7287fe; border-radius:8px; padding:5px 10px; font:700 0.72rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; flex-shrink:0;">Mostrar</button>
+            </div>
         </label>
 
-        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:32px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
+        <!-- Confirmar Password con botón Mostrar / Ocultar -->
+        <label style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
             <span style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px;">Confirmar contraseña</span>
-            <input type="password" name="confirm_password" required placeholder="••••••••" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <input id="signup-confirm" type="password" name="confirm_password" required minlength="6" placeholder="••••••••" style="flex:1; width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                <button type="button" aria-label="Mostrar u ocultar confirmación" onclick="var i=document.getElementById('signup-confirm'); i.type=i.type==='password'?'text':'password'; this.textContent=i.type==='password'?'Mostrar':'Ocultar';" style="border:none; background:#eff2fe; color:#7287fe; border-radius:8px; padding:5px 10px; font:700 0.72rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; flex-shrink:0;">Mostrar</button>
+            </div>
         </label>
 
-        <select id="UserTypes" name="UserTypes" required style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:20px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; width:100%; border:none; outline:none; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; color:#6b7084;">
-            <option value="" disabled selected hidden>Seleccionar tipo de usuario</option>
-            <option value="Donante">Donante</option>
-            <option value="Receptor">Receptor</option>
+        <select id="UserTypes" name="UserTypes" required style="display:block; position:relative; background:#fff; border-radius:14px; padding:14px 20px; margin-bottom:22px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; width:100%; border:none; outline:none; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044;">
+            <option value="" disabled {% if not form_data.UserTypes %}selected{% endif %} hidden>Seleccionar tipo de usuario</option>
+            <option value="Donante" {% if form_data.UserTypes == 'Donante' %}selected{% endif %}>Donante</option>
+            <option value="Receptor" {% if form_data.UserTypes == 'Receptor' %}selected{% endif %}>Receptor</option>
         </select>
 
         <!-- Botón de Registro -->
         <button type="submit" style="width:100%; border:none; border-radius:999px; padding:18px; background:#7287fe; color:#fff; font:700 0.95rem 'Plus Jakarta Sans',sans-serif; cursor:pointer; box-shadow:0 12px 28px rgba(114,135,254,0.4);">Crear cuenta</button>
     </form>
-        <div style="display:flex; align-items:center; gap:14px; margin:32px 0 26px; font-size:0.82rem; color:#6b7084;">
-                <div style="flex:1; height:1px; background:#e4e7f2;"></div>
-                ó
-                <div style="flex:1; height:1px; background:#e4e7f2;"></div>
-            </div>
 
-    <p style="text-align:center; font-size:0.82rem; margin-top:28px;">¿Ya tienes cuenta? <a href="{% url 'login' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">Inicia sesión</a></p>
-</main> 
+    <!-- Separador ortográfico corregido ('o' sin tilde) -->
+    <div style="display:flex; align-items:center; gap:14px; margin:28px 0 22px; font-size:0.82rem; color:#6b7084;">
+        <div style="flex:1; height:1px; background:#e4e7f2;"></div>
+        o
+        <div style="flex:1; height:1px; background:#e4e7f2;"></div>
+    </div>
+
+    <p style="text-align:center; font-size:0.82rem; margin:0;">¿Ya tienes cuenta? <a href="{% url 'login' %}" style="color:#7287fe; font-weight:600; text-decoration:none;">Inicia sesión</a></p>
+</main>
 </div>
 {% endblock %}

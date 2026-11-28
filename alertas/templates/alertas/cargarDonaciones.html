@@ -33,11 +33,23 @@
     <!-- ================= FORMULARIO DE DONACIÓN ================= -->
     <main class="caja-blanca" style="width:100%; max-width:720px; background:#fff; padding:40px 45px; border-radius:20px; box-shadow:0 10px 28px rgba(30,40,120,0.08); box-sizing:border-box; margin:0 auto;">
 
+        <!-- Bloque de errores de validación de reglas de negocio (caducidad, rango horario, formato) -->
+        {% if errores %}
+        <div style="background:#fde8e8; color:#9b1c1c; border:1px solid #f8b4b4; border-radius:14px; padding:16px 20px; margin-bottom:24px; font-size:0.84rem; line-height:1.5;">
+            <strong style="display:block; margin-bottom:6px;">No se pudo registrar la donación. Corrige lo siguiente:</strong>
+            <ul style="margin:0; padding-left:18px;">
+                {% for err in errores %}
+                    <li style="font-weight:600;">{{ err }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <!-- Envía los datos por POST con soporte de fotografía a la vista cargarDonaciones -->
         <form method="post" action="{% url 'cargarDonaciones' %}" enctype="multipart/form-data" id="formDonacion">
             {% csrf_token %}
 
-            <!-- SECCIÓN 1: INFORMACIÓN DEL DONANTE (prellenada con los datos de su perfil) -->
+            <!-- SECCIÓN 1: INFORMACIÓN DEL DONANTE (prellenada con los datos validados del perfil) -->
             <div style="margin-bottom:30px;">
                 <h2 class="txt-principal" style="display:flex; align-items:center; gap:10px; font-size:1.05rem; font-weight:800; color:#2b3044; margin:0 0 16px;">
                     <svg viewBox="0 0 24 24" width="22" height="22" fill="#5563e8" aria-hidden="true" style="flex-shrink:0;">
@@ -49,12 +61,12 @@
                 <div style="display:flex; flex-wrap:wrap; gap:16px; margin-bottom:16px;">
                     <label class="elem-gris" style="flex:1 1 220px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Nombre o Razón Social *</span>
-                        <input type="text" name="nombre_donante" value="{{ datos.nombre }}" required placeholder="Ej. Restaurante San Marcos" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                        <input type="text" name="nombre_donante" value="{{ datos.nombre }}" required minlength="3" maxlength="150" placeholder="Ej. Restaurante San Marcos" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                     </label>
 
                     <label class="elem-gris" style="flex:1 1 220px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                        <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Teléfono de Contacto *</span>
-                        <input type="tel" name="telefono" value="{{ datos.telefono }}" required placeholder="Ej. 55 1234 5678" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                        <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Teléfono de Contacto * (10 a 15 dígitos)</span>
+                        <input type="tel" name="telefono" value="{{ datos.telefono }}" required minlength="10" maxlength="20" pattern="^\+?[\d\s\-()]{10,20}$" title="Ingresa solo números (10 a 15 dígitos), ej. 55 1234 5678" placeholder="Ej. 55 1234 5678" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                     </label>
                 </div>
 
@@ -64,7 +76,7 @@
                     </svg>
                     <div style="flex:1; min-width:0;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Dirección *</span>
-                        <input type="text" name="direccion" value="{{ datos.direccion }}" required placeholder="Ej. Av. Reforma 123, Col. Centro" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                        <input type="text" name="direccion" value="{{ datos.direccion }}" required minlength="5" maxlength="255" placeholder="Ej. Av. Reforma 123, Col. Centro" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                     </div>
                 </label>
             </div>
@@ -85,65 +97,65 @@
                     <label class="elem-gris" style="flex:1.2 1 160px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Categoría *</span>
                         <select name="tipo_de_categoria_comida" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
-                            <option value="" disabled selected style="color:#6b7084;">Selecciona</option>
-                            <option value="AGUA_EMBOTELLADA" style="color:#2b3044;">Agua Embotellada y Bebidas</option>
-                            <option value="COMIDA_ENLATADA" style="color:#2b3044;">Comida Enlatada y Conservas</option>
-                            <option value="GRANOS_ABARROTES" style="color:#2b3044;">Granos, Semillas y Abarrotes</option>
-                            <option value="COMIDA_PREPARADA" style="color:#2b3044;">Comida Preparada / Platillos</option>
-                            <option value="FRUTAS_VERDURAS" style="color:#2b3044;">Frutas y Verduras Frescas</option>
-                            <option value="LACTEOS" style="color:#2b3044;">Lácteos y Huevos</option>
-                            <option value="PANADERIA" style="color:#2b3044;">Panadería y Repostería</option>
-                            <option value="INFANTIL" style="color:#2b3044;">Alimento Infantil y Fórmula</option>
-                            <option value="DESPENSA" style="color:#2b3044;">Despensa Básica Armable</option>
-                            <option value="OTRO" style="color:#2b3044;">Otro</option>
+                            <option value="" disabled {% if not datos.clasificacion %}selected{% endif %} style="color:#6b7084;">Selecciona</option>
+                            <option value="AGUA_EMBOTELLADA" {% if datos.clasificacion == 'AGUA_EMBOTELLADA' %}selected{% endif %} style="color:#2b3044;">Agua Embotellada y Bebidas</option>
+                            <option value="COMIDA_ENLATADA" {% if datos.clasificacion == 'COMIDA_ENLATADA' %}selected{% endif %} style="color:#2b3044;">Comida Enlatada y Conservas</option>
+                            <option value="GRANOS_ABARROTES" {% if datos.clasificacion == 'GRANOS_ABARROTES' %}selected{% endif %} style="color:#2b3044;">Granos, Semillas y Abarrotes</option>
+                            <option value="COMIDA_PREPARADA" {% if datos.clasificacion == 'COMIDA_PREPARADA' %}selected{% endif %} style="color:#2b3044;">Comida Preparada / Platillos</option>
+                            <option value="FRUTAS_VERDURAS" {% if datos.clasificacion == 'FRUTAS_VERDURAS' %}selected{% endif %} style="color:#2b3044;">Frutas y Verduras Frescas</option>
+                            <option value="LACTEOS" {% if datos.clasificacion == 'LACTEOS' %}selected{% endif %} style="color:#2b3044;">Lácteos y Huevos</option>
+                            <option value="PANADERIA" {% if datos.clasificacion == 'PANADERIA' %}selected{% endif %} style="color:#2b3044;">Panadería y Repostería</option>
+                            <option value="INFANTIL" {% if datos.clasificacion == 'INFANTIL' %}selected{% endif %} style="color:#2b3044;">Alimento Infantil y Fórmula</option>
+                            <option value="DESPENSA" {% if datos.clasificacion == 'DESPENSA' %}selected{% endif %} style="color:#2b3044;">Despensa Básica Armable</option>
+                            <option value="OTRO" {% if datos.clasificacion == 'OTRO' %}selected{% endif %} style="color:#2b3044;">Otro</option>
                         </select>
                     </label>
 
                     <label class="elem-gris" style="flex:1 1 110px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Cantidad *</span>
-                        <input type="number" name="numero_cantidad" min="0" step="any" required placeholder="Ej. 10" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                        <input type="number" name="numero_cantidad" value="{{ datos.numero_cantidad|default:'' }}" min="0.01" max="100000" step="any" required placeholder="Ej. 10" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                     </label>
 
                     <label class="elem-gris" style="flex:1 1 130px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Unidad *</span>
                         <select name="tipo_de_unidad_medida" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
-                            <option value="" disabled selected style="color:#6b7084;">Selecciona</option>
-                            <option value="KILOGRAMO" style="color:#2b3044;">Kilogramos (Kg)</option>
-                            <option value="PORCION" style="color:#2b3044;">Porciones / Platillos</option>
-                            <option value="CAJA" style="color:#2b3044;">Cajas / Bultos</option>
-                            <option value="LITRO" style="color:#2b3044;">Litros (L)</option>
-                            <option value="UNIDAD" style="color:#2b3044;">Unidades / Piezas</option>
-                            <option value="OTRO" style="color:#2b3044;">Otro</option>
+                            <option value="" disabled {% if not datos.unidad %}selected{% endif %} style="color:#6b7084;">Selecciona</option>
+                            <option value="KILOGRAMO" {% if datos.unidad == 'KILOGRAMO' %}selected{% endif %} style="color:#2b3044;">Kilogramos (Kg)</option>
+                            <option value="PORCION" {% if datos.unidad == 'PORCION' %}selected{% endif %} style="color:#2b3044;">Porciones / Platillos</option>
+                            <option value="CAJA" {% if datos.unidad == 'CAJA' %}selected{% endif %} style="color:#2b3044;">Cajas / Bultos</option>
+                            <option value="LITRO" {% if datos.unidad == 'LITRO' %}selected{% endif %} style="color:#2b3044;">Litros (L)</option>
+                            <option value="UNIDAD" {% if datos.unidad == 'UNIDAD' %}selected{% endif %} style="color:#2b3044;">Unidades / Piezas</option>
+                            <option value="OTRO" {% if datos.unidad == 'OTRO' %}selected{% endif %} style="color:#2b3044;">Otro</option>
                         </select>
                     </label>
                 </div>
 
                 <label class="elem-gris" style="display:block; background:#f8f9fe; border-radius:14px; padding:12px 18px; margin-bottom:16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                     <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Descripción del Contenido *</span>
-                    <input type="text" name="descripcion_contenido" required placeholder="Ej. Charolas de guisados frescos, pan dulce variado..." class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    <input type="text" name="descripcion_contenido" value="{{ datos.descripcion_contenido|default:'' }}" required minlength="3" maxlength="150" placeholder="Ej. Charolas de guisados frescos, pan dulce variado..." class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                 </label>
 
                 <div style="display:flex; flex-wrap:wrap; gap:16px;">
                     <label class="elem-gris" style="flex:1 1 220px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
-                        <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Fecha de Caducidad / Consumo *</span>
-                        <input type="date" name="fecha_caducidad" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+                        <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Fecha de Caducidad / Consumo * (hoy o posterior)</span>
+                        <input type="date" name="fecha_caducidad" value="{{ datos.fecha_caducidad|default:'' }}" min="{{ fecha_hoy }}" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
                     </label>
 
                     <label class="elem-gris" style="flex:1 1 220px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Requisito de Conservación *</span>
                         <select name="tipo_de_conservacion" required class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
-                            <option value="" disabled selected style="color:#6b7084;">Selecciona</option>
-                            <option value="TEMPERATURA_AMBIENTE" style="color:#2b3044;">Temperatura Ambiente</option>
-                            <option value="REFRIGERADO" style="color:#2b3044;">Refrigerado (0°C a 4°C)</option>
-                            <option value="CONGELADO" style="color:#2b3044;">Congelado (-18°C o más bajo)</option>
-                            <option value="CONSUMO_INMEDIATO" style="color:#2b3044;">Consumo Inmediato / Caliente</option>
-                            <option value="CONSERVACION_ESPECIAL" style="color:#2b3044;">Conservación Especial</option>
+                            <option value="" disabled {% if not datos.tipo_de_conservacion %}selected{% endif %} style="color:#6b7084;">Selecciona</option>
+                            <option value="TEMPERATURA_AMBIENTE" {% if datos.tipo_de_conservacion == 'TEMPERATURA_AMBIENTE' %}selected{% endif %} style="color:#2b3044;">Temperatura Ambiente</option>
+                            <option value="REFRIGERADO" {% if datos.tipo_de_conservacion == 'REFRIGERADO' %}selected{% endif %} style="color:#2b3044;">Refrigerado (0°C a 4°C)</option>
+                            <option value="CONGELADO" {% if datos.tipo_de_conservacion == 'CONGELADO' %}selected{% endif %} style="color:#2b3044;">Congelado (-18°C o más bajo)</option>
+                            <option value="CONSUMO_INMEDIATO" {% if datos.tipo_de_conservacion == 'CONSUMO_INMEDIATO' %}selected{% endif %} style="color:#2b3044;">Consumo Inmediato / Caliente</option>
+                            <option value="CONSERVACION_ESPECIAL" {% if datos.tipo_de_conservacion == 'CONSERVACION_ESPECIAL' %}selected{% endif %} style="color:#2b3044;">Conservación Especial</option>
                         </select>
                     </label>
                 </div>
             </div>
 
-            <!-- SECCIÓN 3: INFORMACIÓN DE LA ENTREGA (commit 67de301) -->
+            <!-- SECCIÓN 3: INFORMACIÓN DE LA ENTREGA -->
             <div style="margin-bottom:30px;">
                 <h2 class="txt-principal" style="display:flex; align-items:center; gap:10px; font-size:1.05rem; font-weight:800; color:#2b3044; margin:0 0 16px;">
                     <svg viewBox="0 0 24 24" width="22" height="22" fill="#5563e8" aria-hidden="true" style="flex-shrink:0;">
@@ -158,7 +170,7 @@
                 <!-- Opciones: quién entrega -->
                 <div style="display:flex; flex-wrap:wrap; gap:14px; margin-bottom:16px;">
                     <label class="elem-gris" style="flex:1 1 190px; min-width:0; display:flex; align-items:flex-start; gap:12px; background:#f8f9fe; border:2px solid #e3e6fb; border-radius:14px; padding:14px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; cursor:pointer;">
-                        <input type="radio" name="metodo_entrega" value="DONANTE_ENTREGA" required style="flex-shrink:0; width:18px; height:18px; margin:2px 0 0; accent-color:#5563e8; cursor:pointer;">
+                        <input type="radio" name="metodo_entrega" value="DONANTE_ENTREGA" {% if datos.metodo_entrega == 'DONANTE_ENTREGA' %}checked{% endif %} required style="flex-shrink:0; width:18px; height:18px; margin:2px 0 0; accent-color:#5563e8; cursor:pointer;">
                         <span>
                             <strong class="txt-principal" style="display:block; font-size:0.88rem; color:#2b3044; margin-bottom:2px;">Yo llevo la comida</strong>
                             <small class="txt-secundario" style="display:block; font-size:0.74rem; line-height:1.4; color:#6b7084;">Tú la entregas en el lugar del receptor.</small>
@@ -166,7 +178,7 @@
                     </label>
 
                     <label class="elem-gris" style="flex:1 1 190px; min-width:0; display:flex; align-items:flex-start; gap:12px; background:#f8f9fe; border:2px solid #e3e6fb; border-radius:14px; padding:14px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; cursor:pointer;">
-                        <input type="radio" name="metodo_entrega" value="RECEPTOR_RECOGE" style="flex-shrink:0; width:18px; height:18px; margin:2px 0 0; accent-color:#5563e8; cursor:pointer;">
+                        <input type="radio" name="metodo_entrega" value="RECEPTOR_RECOGE" {% if datos.metodo_entrega == 'RECEPTOR_RECOGE' %}checked{% endif %} style="flex-shrink:0; width:18px; height:18px; margin:2px 0 0; accent-color:#5563e8; cursor:pointer;">
                         <span>
                             <strong class="txt-principal" style="display:block; font-size:0.88rem; color:#2b3044; margin-bottom:2px;">El receptor la recoge</strong>
                             <small class="txt-secundario" style="display:block; font-size:0.74rem; line-height:1.4; color:#6b7084;">Pasan a tu dirección de recolección.</small>
@@ -174,7 +186,7 @@
                     </label>
 
                     <label class="elem-gris" style="flex:1 1 190px; min-width:0; display:flex; align-items:flex-start; gap:12px; background:#f8f9fe; border:2px solid #e3e6fb; border-radius:14px; padding:14px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box; cursor:pointer;">
-                        <input type="radio" name="metodo_entrega" value="A_CONVENIR" style="flex-shrink:0; width:18px; height:18px; margin:2px 0 0; accent-color:#5563e8; cursor:pointer;">
+                        <input type="radio" name="metodo_entrega" value="A_CONVENIR" {% if datos.metodo_entrega == 'A_CONVENIR' %}checked{% endif %} style="flex-shrink:0; width:18px; height:18px; margin:2px 0 0; accent-color:#5563e8; cursor:pointer;">
                         <span>
                             <strong class="txt-principal" style="display:block; font-size:0.88rem; color:#2b3044; margin-bottom:2px;">Lo acordamos</strong>
                             <small class="txt-secundario" style="display:block; font-size:0.74rem; line-height:1.4; color:#6b7084;">Nos ponemos de acuerdo por teléfono.</small>
@@ -182,28 +194,28 @@
                     </label>
                 </div>
 
-                <!-- Fecha y horario -->
+                <!-- Fecha y horario (Desde debe ser menor que Hasta) -->
                 <div style="display:flex; flex-wrap:wrap; gap:14px; margin-bottom:16px;">
                     <label class="elem-gris" style="flex:1.4 1 170px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Fecha preferida</span>
-                        <input type="date" name="fecha_entrega" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
+                        <input type="date" name="fecha_entrega" value="{{ datos.fecha_entrega|default:'' }}" min="{{ fecha_hoy }}" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0; cursor:pointer;">
                     </label>
 
                     <label class="elem-gris" style="flex:1 1 110px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Desde</span>
-                        <input type="time" name="hora_desde" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                        <input type="time" name="hora_desde" value="{{ datos.hora_desde|default:'' }}" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                     </label>
 
                     <label class="elem-gris" style="flex:1 1 110px; min-width:0; display:block; background:#f8f9fe; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                         <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Hasta</span>
-                        <input type="time" name="hora_hasta" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                        <input type="time" name="hora_hasta" value="{{ datos.hora_hasta|default:'' }}" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                     </label>
                 </div>
 
                 <!-- Indicaciones -->
                 <label class="elem-gris" style="display:block; background:#f8f9fe; border-radius:14px; padding:12px 18px; box-shadow:0 6px 20px rgba(60,70,120,0.08); box-sizing:border-box;">
                     <span class="txt-secundario" style="display:block; font-size:0.72rem; color:#6b7084; margin-bottom:4px; font-weight:600;">Indicaciones para la entrega (Opcional)</span>
-                    <input type="text" name="notas_entrega" maxlength="250" placeholder="Ej. Preguntar por Marta en la entrada trasera" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
+                    <input type="text" name="notas_entrega" value="{{ datos.notas_entrega|default:'' }}" maxlength="250" placeholder="Ej. Preguntar por Marta en la entrada trasera" class="txt-principal" style="width:100%; border:none; outline:none; background:transparent; font:600 0.88rem 'Plus Jakarta Sans',sans-serif; color:#2b3044; padding:0;">
                 </label>
             </div>
 
@@ -225,7 +237,7 @@
 
             <!-- DECLARACIÓN DE RESPONSABILIDAD E HIGIENE -->
             <label style="display:flex; align-items:flex-start; gap:12px; background:#FFFBEB; border:1px solid #FDE68A; border-radius:14px; padding:16px 18px; margin-bottom:24px; cursor:pointer; font-size:0.78rem; line-height:1.55; color:#6b7084; font-weight:500; box-sizing:border-box;">
-                <input type="checkbox" name="declaracion" value="si" required style="flex-shrink:0; width:16px; height:16px; margin:3px 0 0;">
+                <input type="checkbox" name="declaracion" value="si" {% if datos.declaracion %}checked{% endif %} required style="flex-shrink:0; width:16px; height:16px; margin:3px 0 0;">
                 <span>
                     <strong style="color:#2b3044;">Declaración de Responsabilidad e Higiene:</strong>
                     Certifico que estos alimentos se encuentran en condiciones aptas para el consumo humano, manipulados bajo estándares estrictos de higiene y conservación, dentro de su fecha de consumo seguro.

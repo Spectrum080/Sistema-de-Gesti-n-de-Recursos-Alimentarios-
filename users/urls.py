@@ -1,12 +1,14 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
+from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
-    # Autenticación y registro de usuarios
+    # Autenticación y registro de usuarios (ruta corregida /users/signup/ con redirección compatible desde /users/Sing_up/)
     path('login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('Sing_up/', views.Sing_up, name='Sing_up'),
+    path('signup/', views.Sing_up, name='Sing_up'),
+    path('Sing_up/', RedirectView.as_view(pattern_name='Sing_up', permanent=False)),
     
     # Rutas de Dashboard y Roles
     path('mi-perfil/', views.perfil, name='perfil'),

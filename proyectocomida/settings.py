@@ -127,14 +127,10 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
-
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+# Email (usa consola en desarrollo; preparado para SMTP si se configuran variables de entorno)
+# https://docs.djangoproject.com/en/5.2/topics/email/
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'soporte@hambrecero.org'
 
 LOGIN_URL = '/users/login/'
 LOGIN_REDIRECT_URL = 'dashboard'
